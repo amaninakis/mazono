@@ -1,0 +1,23 @@
+# Home lab / private use (reach it through Tailscale):
+#   docker compose up -d
+#   tailscale serve --bg 8080        # gives you https://<machine>.<tailnet>.ts.net
+#
+# Public server with your own domain and automatic HTTPS:
+#   set SITE_ADDRESS=harvest.example.com and use ports 80:80 and 443:443 below.
+
+services:
+  harvestlog:
+    build: .
+    image: harvestlog:latest
+    restart: unless-stopped
+    environment:
+      SITE_ADDRESS: ${SITE_ADDRESS:-:80}
+    ports:
+      - "8080:80"
+      # - "80:80"
+      # - "443:443"
+    volumes:
+      - caddy_data:/data # HTTPS certificates
+
+volumes:
+  caddy_data:
