@@ -6,6 +6,7 @@ import {
   defaultTaskTypeId,
   fieldProgress,
   fieldSeasonHarvest,
+  harvestYields,
   parseDecimal,
   perTree,
 } from './progress';
@@ -124,6 +125,27 @@ describe('harvest maths', () => {
       entry({ fieldId: 'B', trees: 6, quantities: [{ unitId: 's', amount: 7 }] }),
     ];
     expect(fieldSeasonHarvest(entries, 'A', 'h', '2025-11-20')).toEqual({ trees: 20, amounts: { s: 15.5 } });
+  });
+  it('tree yield and field yield differ when not all trees are harvested', () => {
+    const f = field('A', 30);
+    const entries = [
+      entry({ trees: 12, quantities: [{ unitId: 's', amount: 18 }] }),
+      entry({ trees: 8, quantities: [{ unitId: 's', amount: 12 }] }),
+    ];
+    const y = harvestYields(entries, f, 'h', '2025-11-20');
+    expect(y.treesHarvested).toBe(20);
+    expect(y.treeYield).toEqual({ s: 1.5 });
+    expect(y.fieldYield).toEqual({ s: 1 });
+  });
+  it('works without trees entered, using the field tree count', () => {
+    const y = harvestYields([entry({ quantities: [{ unitId: 's', amount: 30 }] })], field('A', 30), 'h', '2025-11-20');
+    expect(y.treeYield).toBeNull();
+    expect(y.fieldYield).toEqual({ s: 1 });
+  });
+  it('has no field yield when the field tree count is unknown', () => {
+    const y = harvestYields([entry({ trees: 10, quantities: [{ unitId: 's', amount: 15 }] })], field('A', 0), 'h', '2025-11-20');
+    expect(y.treeYield).toEqual({ s: 1.5 });
+    expect(y.fieldYield).toBeNull();
   });
   it('parses comma decimals', () => {
     expect(parseDecimal('8,5')).toBe(8.5);

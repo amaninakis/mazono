@@ -1,7 +1,18 @@
 {
-  "app": { "name": "HarvestLog" },
-  "nav": { "today": "Σήμερα", "journal": "Ημερολόγιο", "oil": "Λάδι", "money": "Οικονομικά", "more": "Περισσότερα" },
-  "more": { "reports": "Αναφορές", "settings": "Ρυθμίσεις" },
+  "app": {
+    "name": "HarvestLog"
+  },
+  "nav": {
+    "today": "Σήμερα",
+    "journal": "Ημερολόγιο",
+    "oil": "Λάδι",
+    "money": "Οικονομικά",
+    "more": "Περισσότερα"
+  },
+  "more": {
+    "reports": "Αναφορές",
+    "settings": "Ρυθμίσεις"
+  },
   "task": {
     "harvest": "Μάζεμα",
     "pruning": "Κλάδεμα",
@@ -84,13 +95,15 @@
     "saved": "Αποθηκεύτηκε",
     "updated": "Η εγγραφή ενημερώθηκε",
     "perTree": "{{value}} {{unit}} / δέντρο",
-    "seasonAvg": "Μέσος όρος σεζόν στο χωράφι {{field}}: {{value}}",
     "treesDoneLeft": "{{done}} δέντρα · απομένουν {{left}}",
     "fieldClosed": "Το χωράφι {{field}} τελείωσε για αυτή τη σεζόν",
     "newTaskTitle": "Νέος τύπος εργασίας",
     "newTaskName": "Όνομα εργασίας",
     "newTaskKind": "Τι καταγράφετε;",
-    "create": "Δημιουργία"
+    "create": "Δημιουργία",
+    "todayTreeYield": "Σήμερα: {{value}} ανά δέντρο",
+    "seasonTreeYield": "{{field}} φέτος: {{value}} ανά δέντρο που μαζέψατε",
+    "seasonFieldYield": "{{field}} φέτος: {{value}} ανά δέντρο του χωραφιού"
   },
   "inputKind": {
     "harvest": "Δέντρα και μονάδες που μαζέψατε",

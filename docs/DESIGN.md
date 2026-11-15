@@ -27,6 +27,13 @@ HarvestLog is a self-hosted, open-source app that replaces the yearly olive spre
 - English and Greek from day one, with every string translatable. Numbers and dates follow the user's locale (Greek uses comma decimals).
 - Web first (installable PWA), with a code structure that can be wrapped into Android/iOS apps later without a rewrite.
 
+**Users are not technical.** Many growers are not tech-savvy. Using the app must need nothing beyond general familiarity with phone apps:
+
+- Plain words in the grower's language, no technical terms on the main screens.
+- Every setting has a sensible default; nothing is required except what the task needs.
+- Self-hosting is done once by a helper (family member, cooperative, technician). The grower only opens a link and adds it to the home screen, with a short in-app guide for that step.
+- Mistakes are easy to undo; nothing is lost by tapping the wrong button.
+
 ## Background: how growers track this today
 
 The design is based on a real grower's spreadsheet covering several seasons. Its useful lessons:
@@ -65,6 +72,7 @@ The app is a TypeScript PWA with a local database on the device. A small sync se
 - Touch targets are at least 48 px. Steppers must be usable with gloves.
 - Store quantities in base units (kg, trees, units) and format them only for display.
 - Every user-facing string goes through i18n, in both `en.json` and `el.json`.
+- Write for non-technical users: plain words, no jargon on the main screens, a default for every choice.
 - Every record has a UUID `id`, a `farmId`, `updatedAt`, and is soft-deleted (`deletedAt`) so it can sync.
 - Data can always be exported (JSON now, CSV later), so users are never locked in.
 
@@ -97,6 +105,17 @@ The **season** is the backbone. A harvest season runs across two calendar years:
 
 Trees remaining in a field for a task = trees in the field − trees logged for that task type in the current season. A field also counts as finished when an entry marks it "field finished", because not every tree is harvested every year.
 
+**Field yield and tree yield.** When not all trees of a field are harvested, the two per-tree figures differ:
+
+| Figure | Calculation | Example: field of 30 trees, 20 harvested, 30 sacks |
+| --- | --- | --- |
+| Tree yield | output ÷ trees harvested | 1.5 sacks per harvested tree |
+| Field yield | output ÷ all trees in the field | 1.0 sack per tree |
+
+Tree yield shows how productive the bearing trees were. Field yield shows what the whole field produced, and is the figure for comparing fields and seasons (alternate bearing). Farm yield = total output ÷ trees in all fields. Both are calculated in `harvestYields()` in `app/src/core/progress.ts`.
+
+**Trees worked is optional.** If the user never enters it, the app still works: field and farm yield use the field's tree count, tree yield shows "–", and trees left cannot be counted, so the field is closed with "Field finished" (planned: the app offers it at the end of the harvest).
+
 Users join farms through a membership with a role; one person can belong to several farms. Harvest entries link to extractions through an **allocation** record, so one day's harvest can feed several mill batches.
 
 ## Today screen (home) — v0.1
@@ -120,7 +139,7 @@ The app opens here. Everything for one entry sits on a single scrollable page wi
 
 Every kind also has a "field finished" toggle and notes. Workers and hours appear only with the Labour module on. Users can create their own task types (spraying, irrigation, tilling…) by choosing one of these four kinds; no new code is needed.
 
-After saving, a confirmation shows units per tree for the day and the season average for that field, with **Undo**. The form keeps the date and task, so logging the next field is quick.
+After saving, a confirmation shows units per tree for the day, and for the season so far in that field both the tree yield and the field yield (when they differ), with **Undo**. The form keeps the date and task, so logging the next field is quick.
 
 ## Journal and calendar — v0.1
 
@@ -172,7 +191,7 @@ Totals: income, expenses, net result, and the value of remaining stock at the la
 3. **Yield through the season**: yield of each extraction by date, to help decide when to harvest.
 4. **Economics per season**: income, expenses, net; cost per kg of net oil; break-even price.
 
-Ideas for later: harvest progress compared with last season; kg per unit over time; charges as % of oil per season; acidity by field and date; rain and temperature vs yield (Open-Meteo); labour days per field; CSV/PDF export of any report.
+Ideas for later: harvest progress compared with last season; kg per unit over time; charges as % of oil per season; acidity by field and date; rain vs yield (see Weather integration); labour days per field; CSV/PDF export of any report.
 
 ## Settings
 
@@ -183,6 +202,35 @@ Ideas for later: harvest progress compared with last season; kg per unit over ti
 - **Mill and charges**: mills, charge types with default %, storage locations. *(v0.2)*
 - **Finance**: categories, tax estimate %. *(v0.3)*
 - **Users and farms**: invitations, roles, switching farms, instance admin. *(v0.5)*
+
+## Future features
+
+These are planned but not yet scheduled in detail. Open an issue before starting on one.
+
+**Daily reminder**
+
+- Once a task has been logged in the current season, a notification at 16:00 on any day with no entry: "Nothing logged today — what did you do?". Tapping it opens Today.
+- The time can be changed, or reminders turned off, in Settings.
+- The user can mark a task as "ended for this season" (on Today or from the reminder). When every started task has ended, reminders stop until a new task is logged.
+- Limitation: a web app gets scheduled notifications only through web push from the server (on iPhone only when added to the home screen, iOS 16.4+). Reminders therefore arrive with the sync server; the native apps can schedule them on the phone itself.
+
+**Location-aware default field**
+
+- Each field can store its centre: "Use my current location" while standing in it, or a pin on a map (OpenStreetMap).
+- On Today, if the phone is within about 300 m of a field's centre, that field is preselected, ahead of "last field worked". If several are close, the nearest wins.
+- Location is used only while the app is open, only with permission, and never leaves the farm's own data.
+
+**Equipment log**
+
+- Equipment list (tractor, olive shaker, chainsaw, brush cutter, sprayer, nets): name, type, purchase date, notes.
+- Use: link equipment to task entries, or log hours and fuel.
+- Service: date, work done, cost (added to Money as an expense), next service due by date or hours, with a reminder.
+
+**Weather integration**
+
+- Daily rain and temperature from local weather services: in Greece the meteo.gr / National Observatory of Athens stations, with Open-Meteo as a free worldwide fallback. The nearest station is chosen from the fields' locations.
+- Reports: rain in chosen months (e.g. Sep–Nov) against oil yield and olives per tree, one point per season. With few seasons the app labels it as an indication, not proof.
+- Open question: meteo.gr has no official public API, so its terms need checking; a CSV import of station data is the fallback.
 
 ## Decisions
 
@@ -195,7 +243,7 @@ Ideas for later: harvest progress compared with last season; kg per unit over ti
 | Labour | Opt-in module, off by default. |
 | Fertilizer cost per field | Not included. |
 | Spreadsheet import | To be decided; maybe selected seasons, or test data only. |
-| Weather | Later. |
+| Weather | Planned: local weather services, rain vs oil yield in reports (see Future features). |
 | Licence | MIT for now. |
 | Hosting | Docker on any host: a VPS with public access, or a home lab reached through Tailscale. |
 
@@ -217,4 +265,4 @@ Ideas for later: harvest progress compared with last season; kg per unit over ti
 3. **v0.3 — Money**: expenses, sales (deducting stock), other income, totals by season and calendar year.
 4. **v0.4 — Reports**: the four reports above, CSV export.
 5. **v0.5 — Self-hosting**: sync server, login, farms and roles, backups, translator guide.
-6. **v1.0+**: Android/iOS builds (Capacitor), Labour reports, spreadsheet import, weather data, receipt photos, more languages.
+6. **v1.0+**: Android/iOS builds (Capacitor), weather integration, daily reminders, location-aware default field, equipment log, Labour reports, spreadsheet import, receipt photos, more languages.

@@ -1,7 +1,18 @@
 {
-  "app": { "name": "HarvestLog" },
-  "nav": { "today": "Today", "journal": "Journal", "oil": "Oil", "money": "Money", "more": "More" },
-  "more": { "reports": "Reports", "settings": "Settings" },
+  "app": {
+    "name": "HarvestLog"
+  },
+  "nav": {
+    "today": "Today",
+    "journal": "Journal",
+    "oil": "Oil",
+    "money": "Money",
+    "more": "More"
+  },
+  "more": {
+    "reports": "Reports",
+    "settings": "Settings"
+  },
   "task": {
     "harvest": "Harvest",
     "pruning": "Pruning",
@@ -84,13 +95,15 @@
     "saved": "Saved",
     "updated": "Entry updated",
     "perTree": "{{value}} {{unit}} / tree",
-    "seasonAvg": "Season average in {{field}}: {{value}}",
     "treesDoneLeft": "{{done}} trees · {{left}} left",
     "fieldClosed": "{{field}} is finished for this season",
     "newTaskTitle": "New task type",
     "newTaskName": "Task name",
     "newTaskKind": "What do you record?",
-    "create": "Create"
+    "create": "Create",
+    "todayTreeYield": "Today: {{value}} per tree",
+    "seasonTreeYield": "{{field}} this season: {{value}} per harvested tree",
+    "seasonFieldYield": "{{field}} this season: {{value}} per tree in the field"
   },
   "inputKind": {
     "harvest": "Trees and collected units",

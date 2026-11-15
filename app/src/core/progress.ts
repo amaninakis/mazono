@@ -123,6 +123,38 @@ export function fieldSeasonHarvest(
   return { trees, amounts };
 }
 
+export interface HarvestYields {
+  /** Season output per unit, e.g. { sackId: 30 }. */
+  amounts: Record<string, number>;
+  treesHarvested: number;
+  /** Output ÷ trees actually harvested. Null when no trees were entered. */
+  treeYield: Record<string, number> | null;
+  /** Output ÷ all trees in the field. Null when the field has no tree count. */
+  fieldYield: Record<string, number> | null;
+}
+
+/**
+ * Season yields for one field. Tree yield and field yield differ when not every tree in
+ * the field was harvested. Entering trees is optional: without it, only field yield exists.
+ */
+export function harvestYields(
+  entries: TaskEntry[],
+  field: Field,
+  taskTypeId: string,
+  date: ISODate,
+  seasonStartMonth = 10,
+): HarvestYields {
+  const { trees, amounts } = fieldSeasonHarvest(entries, field.id, taskTypeId, date, seasonStartMonth);
+  const per = (n: number) =>
+    Object.fromEntries(Object.entries(amounts).map(([u, a]) => [u, a / n]));
+  return {
+    amounts,
+    treesHarvested: trees,
+    treeYield: trees > 0 ? per(trees) : null,
+    fieldYield: field.trees > 0 ? per(field.trees) : null,
+  };
+}
+
 /** Parse a number typed with either comma or dot as decimal separator. */
 export function parseDecimal(input: string): number | null {
   const s = input.trim().replace(/\s/g, '').replace(',', '.');

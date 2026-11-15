@@ -8,7 +8,7 @@ import {
   defaultFieldId,
   defaultTaskTypeId,
   fieldProgress,
-  fieldSeasonHarvest,
+  harvestYields,
   perTree,
   sortForPicker,
 } from '../core/progress';
@@ -164,17 +164,22 @@ export default function Today() {
   const summaryLines = (e: TaskEntry): string[] => {
     const lines: string[] = [];
     const f = fieldName(e.fieldId);
-    if (kind === 'harvest' && e.trees) {
-      const pt = perTree(e.quantities ?? [], e.trees);
-      const today = Object.entries(pt)
-        .map(([u, v]) => t('today.perTree', { value: formatNumber(v, loc), unit: unitName(u) }))
-        .join(' · ');
-      if (today) lines.push(today);
-      const season = fieldSeasonHarvest([...entries, e], e.fieldId, e.taskTypeId, e.date, settings.seasonStartMonth);
-      const avg = Object.entries(perTree(Object.entries(season.amounts).map(([unitId, amount]) => ({ unitId, amount })), season.trees))
-        .map(([u, v]) => t('today.perTree', { value: formatNumber(v, loc), unit: unitName(u) }))
-        .join(' · ');
-      if (avg && avg !== today) lines.push(t('today.seasonAvg', { field: f, value: avg }));
+    const fld = fields.find((x) => x.id === e.fieldId);
+    if (kind === 'harvest' && fld) {
+      const fmtPer = (pt: Record<string, number>) =>
+        Object.entries(pt)
+          .map(([u, v]) => `${formatNumber(v, loc)} ${unitName(u)}`)
+          .join(' · ');
+      const today = e.trees ? fmtPer(perTree(e.quantities ?? [], e.trees)) : '';
+      if (today) lines.push(t('today.todayTreeYield', { value: today }));
+      const y = harvestYields([...entries, e], fld, e.taskTypeId, e.date, settings.seasonStartMonth);
+      if (y.treeYield && fmtPer(y.treeYield) !== today) {
+        lines.push(t('today.seasonTreeYield', { field: f, value: fmtPer(y.treeYield) }));
+      }
+      const fieldValue = y.fieldYield && fmtPer(y.fieldYield);
+      if (fieldValue && fieldValue !== (y.treeYield && fmtPer(y.treeYield))) {
+        lines.push(t('today.seasonFieldYield', { field: f, value: fieldValue }));
+      }
     }
     if (kind === 'quantity' && e.amount && e.trees) {
       lines.push(t('today.perTree', { value: formatNumber(e.amount / e.trees, loc), unit: e.amountUnit }));

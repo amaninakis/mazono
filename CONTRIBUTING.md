@@ -22,6 +22,7 @@ npm run build
 - Add every new user-facing text to both `en.json` and `el.json` (a test checks they match).
   If you don't speak Greek, add the English text to `el.json` too and mention it in the pull request.
 - Make sure the app still works offline and on a phone-sized screen.
+- Remember that many users are not technical: use plain words and give every choice a sensible default.
 
 ## Translations
 
