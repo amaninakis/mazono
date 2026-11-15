@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { useTranslation } from 'i18next-vue';
-import { computed, ref } from 'vue';
+import { computed, ref, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { addDays, todayISO } from '../core/dates';
 import { AMOUNT_UNITS } from '../core/defaults';
@@ -14,6 +14,7 @@ import {
   sortForPicker,
 } from '../core/progress';
 import type { InputKind, TaskEntry, UnitAmount } from '../core/types';
+import { unitLabel } from '../core/units';
 import { locale } from '../i18n';
 import NewTaskModal from '../ui/NewTaskModal.vue';
 import NewUnitModal from '../ui/NewUnitModal.vue';
@@ -77,6 +78,29 @@ const progress = computed(() =>
     : [],
 );
 const current = computed(() => progress.value.find((p) => p.field.id === fieldId.value));
+/** Trees still to do in the chosen field; the trees counter cannot go above it. */
+const maxTrees = computed(() => current.value?.remaining ?? undefined);
+
+// Reaching the last tree of the field switches "field finished" on (and off again if the
+// number goes back down), unless the user has set the switch by hand.
+let autoFinished = false;
+watch([trees, () => current.value?.remaining], ([n, remaining]) => {
+  if (kind.value === 'done' || remaining == null) return;
+  if (remaining > 0 && n === remaining) {
+    if (!finished.value) {
+      finished.value = true;
+      autoFinished = true;
+    }
+  } else if (autoFinished) {
+    finished.value = false;
+    autoFinished = false;
+  }
+});
+function setFinished(v: boolean) {
+  finished.value = v;
+  autoFinished = false;
+}
+
 const leftAfter = computed(() =>
   current.value?.remaining != null ? Math.max(current.value.remaining - (trees.value ?? 0), 0) : null,
 );
@@ -91,7 +115,8 @@ const products = computed(() => [
   ...new Set(farm.value.entries.filter((e) => e.product).map((e) => e.product!)),
 ]);
 
-const unitName = (id: string) => farm.value.units.find((u) => u.id === id)?.name ?? '?';
+const unitById = (id: string) => farm.value.units.find((u) => u.id === id);
+const unitName = (id: string) => unitById(id)?.name ?? '?';
 const fieldName = (id?: string) => farm.value.fields.find((f) => f.id === id)?.name ?? '';
 
 function chooseType(id: string) {
@@ -117,6 +142,7 @@ function addUnitRow() {
 }
 
 function resetForNext() {
+  autoFinished = false;
   trees.value = null;
   quantities.value = emptyQuantities();
   amount.value = null;
@@ -187,7 +213,7 @@ function summaryLines(e: TaskEntry): string[] {
   if (kind.value === 'harvest' && fld) {
     const fmtPer = (pt: Record<string, number>) =>
       Object.entries(pt)
-        .map(([u, v]) => `${formatNumber(v, loc)} ${unitName(u)}`)
+        .map(([u, v]) => `${formatNumber(v, loc)} ${unitLabel(unitById(u), v)}`)
         .join(' · ');
     const todayYield = e.trees ? fmtPer(perTree(e.quantities ?? [], e.trees)) : '';
     if (todayYield) lines.push(t('today.todayTreeYield', { value: todayYield }));
@@ -284,7 +310,7 @@ function summaryLines(e: TaskEntry): string[] {
     <template v-if="fieldId">
       <section v-if="kind !== 'done'" class="card">
         <label class="label" for="trees">{{ treesLabel }}</label>
-        <Stepper id="trees" v-model="trees" :label="treesLabel" />
+        <Stepper id="trees" v-model="trees" :label="treesLabel" :max="maxTrees" />
         <p v-if="leftAfter != null && kind !== 'quantity'" class="hint">
           {{ t('today.leftAfter', { left: leftAfter, field: current!.field.name }) }}
         </p>
@@ -292,26 +318,28 @@ function summaryLines(e: TaskEntry): string[] {
 
       <section v-if="kind === 'harvest'" class="card">
         <span class="label">{{ t('today.collected') }}</span>
-        <div v-for="(q, i) in quantities" :key="i" class="qty-row">
-          <select class="input select" :aria-label="t('today.collected')" :value="q.unitId" @change="onUnitChange(i, $event)">
-            <option v-for="u in activeUnits" :key="u.id" :value="u.id">{{ u.name }}</option>
-            <option value="__new">{{ t('today.newUnit') }}</option>
-          </select>
+        <div v-for="(q, i) in quantities" :key="i" class="qty-row unit-qty">
+          <div class="qty-top">
+            <select class="input select" :aria-label="t('today.collected')" :value="q.unitId" @change="onUnitChange(i, $event)">
+              <option v-for="u in activeUnits" :key="u.id" :value="u.id">{{ u.name }}</option>
+              <option value="__new">{{ t('today.newUnit') }}</option>
+            </select>
+            <button
+              v-if="quantities.length > 1"
+              type="button"
+              class="icon-btn"
+              :aria-label="t('common.delete')"
+              @click="quantities.splice(i, 1)"
+            >
+              ×
+            </button>
+          </div>
           <Stepper
             :model-value="q.amount"
             :label="unitName(q.unitId)"
-            :step="0.5"
+            half
             @update:model-value="(v) => (q.amount = v ?? 0)"
           />
-          <button
-            v-if="quantities.length > 1"
-            type="button"
-            class="icon-btn"
-            :aria-label="t('common.delete')"
-            @click="quantities.splice(i, 1)"
-          >
-            ×
-          </button>
         </div>
         <button type="button" class="btn ghost small" @click="addUnitRow">+ {{ t('today.addUnitRow') }}</button>
       </section>
@@ -333,9 +361,10 @@ function summaryLines(e: TaskEntry): string[] {
 
       <section class="card">
         <Toggle
-          v-model="finished"
+          :model-value="finished"
           :label="t('today.fieldFinished')"
           :help="kind === 'done' ? undefined : t('today.fieldFinishedHelp')"
+          @update:model-value="setFinished"
         />
         <div v-if="farm.settings.labourEnabled" class="two-col">
           <div>

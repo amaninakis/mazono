@@ -81,6 +81,7 @@ async function saveSetup() {
   for (const u of selected.value) {
     await repo.addUnit({
       name: unitLabel(u),
+      pluralName: u.name ? undefined : t(`unitPresetPlural.${u.key}`),
       approxKg: parseDecimal(u.approxKg) ?? undefined,
       isDefault: u.key === def,
       archived: false,

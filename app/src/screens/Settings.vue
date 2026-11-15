@@ -224,6 +224,13 @@ async function importData(e: Event) {
             @blur="(e) => val(e).trim() && repo.update('units', u.id, { name: val(e).trim() })"
           />
           <input
+            class="input"
+            :aria-label="t('setup.pluralName')"
+            :placeholder="t('setup.pluralName')"
+            :value="u.pluralName ?? ''"
+            @blur="(e) => repo.update('units', u.id, { pluralName: val(e).trim() || undefined })"
+          />
+          <input
             class="input small"
             inputmode="decimal"
             :placeholder="t('setup.approxKg')"

@@ -140,10 +140,14 @@ The app opens here. Everything for one entry sits on a single scrollable page wi
 
 | Kind | Used by | Inputs |
 | --- | --- | --- |
-| harvest | Harvest | trees, plus one row per unit (mix units, 0.5 steps) |
+| harvest | Harvest | trees, plus one row per unit (mix units; whole steps with a separate +½ button) |
 | trees | Pruning | trees |
 | quantity | Fertilizer | product (autocomplete), amount, unit (kg / bags / L), optional trees |
 | done | Weed whacking | only "field finished" |
+
+The trees counter cannot go above the trees left in the field. Reaching the last tree switches "field finished" on automatically (and off again if the number goes back down, unless the user set the switch by hand).
+
+Units have a singular and an optional plural name ("1 τσουβάλι", "8,5 τσουβάλια"); the plural is used for amounts above one. The presets come with plurals in every language.
 
 Every kind also has a "field finished" toggle and notes. Workers and hours appear only with the Labour module on. Users can create their own task types (spraying, irrigation, tilling…) by choosing one of these four kinds; no new code is needed.
 

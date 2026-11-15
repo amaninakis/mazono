@@ -5,6 +5,7 @@ import { useRoute, useRouter } from 'vue-router';
 import { addDays, monthGrid, parseISODate, todayISO } from '../core/dates';
 import { formatNumber } from '../core/format';
 import type { TaskEntry, TaskType } from '../core/types';
+import { unitLabel } from '../core/units';
 import { locale } from '../i18n';
 import { taskName, useFarm } from '../ui/farm';
 import { showToast } from '../ui/toast';
@@ -74,14 +75,14 @@ async function remove(e: TaskEntry) {
   showToast({ title: t('journal.deleted'), action: { label: t('common.undo'), run: () => void repo.restore('entries', e.id) } });
 }
 
-const unitName = (id: string) => farm.value.units.find((u) => u.id === id)?.name ?? '?';
+const unitById = (id: string) => farm.value.units.find((u) => u.id === id);
 const fieldName = (id: string) => farm.value.fields.find((f) => f.id === id)?.name ?? t('journal.unknownField');
 
 function details(e: TaskEntry) {
   const loc = locale.value;
   const parts: string[] = [];
   if (e.trees) parts.push(t('journal.trees', { count: e.trees }));
-  for (const q of e.quantities ?? []) parts.push(`${formatNumber(q.amount, loc)} ${unitName(q.unitId)}`);
+  for (const q of e.quantities ?? []) parts.push(`${formatNumber(q.amount, loc)} ${unitLabel(unitById(q.unitId), q.amount)}`);
   if (e.amount) parts.push(`${e.product ? e.product + ' · ' : ''}${formatNumber(e.amount, loc)} ${e.amountUnit ?? ''}`);
   if (e.workers) parts.push(`${e.workers} × ${formatNumber(e.hours ?? 0, loc)} h`);
   if (e.fieldFinished) parts.push(t('journal.fieldFinished'));

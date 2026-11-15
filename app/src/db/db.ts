@@ -1,4 +1,5 @@
 import Dexie, { type EntityTable } from 'dexie';
+import { presetPlural } from '../core/units';
 import type { Farm, FarmSettings, Field, TaskEntry, TaskType, Unit } from '../core/types';
 
 interface Meta {
@@ -27,6 +28,20 @@ export class HarvestDB extends Dexie {
       taskTypes: 'id, farmId',
       entries: 'id, farmId, [farmId+date], fieldId, taskTypeId',
     });
+    // v2: units get a plural name. Fill it in for units created from the presets.
+    this.version(2)
+      .stores({})
+      .upgrade((tx) =>
+      tx
+        .table<Unit>('units')
+        .toCollection()
+        .modify((u) => {
+          if (!u.pluralName) {
+            const plural = presetPlural(u.name);
+            if (plural) u.pluralName = plural;
+          }
+        }),
+    );
   }
 }
 
