@@ -5,7 +5,7 @@ import { useRouter } from 'vue-router';
 import { parseISODate, todayISO } from '../core/dates';
 import { formatMoney, formatNumber } from '../core/format';
 import { inPeriod, lastSalePrice, moneyTotals, taxEstimate, type Period } from '../core/money';
-import { stockLevels } from '../core/oil';
+import { isUntrackedSale, stockLevels, trackedVintages } from '../core/oil';
 import type { Transaction, TransactionKind } from '../core/types';
 import { formatLocale } from '../i18n';
 import { categoryName, useFarm } from '../ui/farm';
@@ -55,8 +55,12 @@ const list = computed(() =>
     .filter((x) => inPeriod(x.date, period.value, startMonth.value) && (filter.value === 'all' || x.kind === filter.value))
     .sort((a, b) => (a.date < b.date ? 1 : a.date > b.date ? -1 : b.updatedAt - a.updatedAt)),
 );
+const tracked = computed(() => trackedVintages(farm.value.extractions, farm.value.settings.seasonStartMonth));
 function detail(x: Transaction) {
-  if (x.kind === 'sale') return `${kgFmt(x.kg ?? 0)} ${t('common.kg')} × ${eur(x.pricePerKg ?? 0)}`;
+  if (x.kind === 'sale') {
+    const base = `${kgFmt(x.kg ?? 0)} ${t('common.kg')} × ${eur(x.pricePerKg ?? 0)}`;
+    return isUntrackedSale(x, tracked.value) ? `${base} · ${t('tx.notFromStock')}` : base;
+  }
   const c = farm.value.categories.find((y) => y.id === x.categoryId);
   return c ? categoryName(t, c) : '';
 }

@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { categoryForParty, defaultSaleSource, inPeriod, lastSalePrice, moneyTotals, partyNames, taxEstimate } from './money';
-import { stockLevels } from './oil';
+import { isUntrackedSale, stockLevels, trackedVintages } from './oil';
 import type { Extraction, Transaction } from './types';
 
 const base = { farmId: 'f', updatedAt: 0 };
@@ -62,5 +62,24 @@ describe('sales and stock', () => {
     expect(defaultSaleSource({ 2024: { mill: 10 }, 2025: { mill: 50 } }, 'mill')).toEqual({ vintage: 2024, locationId: 'mill' });
     expect(defaultSaleSource({ 2025: { home: 7 } }, 'mill')).toEqual({ vintage: 2025, locationId: 'home' });
     expect(defaultSaleSource({}, 'mill')).toBeUndefined();
+  });
+});
+
+describe('sales of oil not recorded in the app', () => {
+  const x2025: Extraction = {
+    ...base, id: 'x', date: '2025-11-25', oliveKg: 800, oilKg: 180, charges: [], allocations: [],
+    storage: [{ locationId: 'mill', kg: 150 }],
+  };
+  const oldSale = tx({ kind: 'sale', kg: 200, vintage: 2024, locationId: 'mill', amount: 1600, date: '2026-02-10' });
+
+  it('does not reduce stock while that season has no extractions', () => {
+    expect(isUntrackedSale(oldSale, trackedVintages([x2025]))).toBe(true);
+    expect(stockLevels([x2025], [], 10, [oldSale])).toEqual({ 2025: { mill: 150 } });
+  });
+
+  it('is deducted once the season\'s extraction is entered later', () => {
+    const x2024: Extraction = { ...x2025, id: 'y', date: '2024-12-01', storage: [{ locationId: 'mill', kg: 250 }] };
+    expect(isUntrackedSale(oldSale, trackedVintages([x2025, x2024]))).toBe(false);
+    expect(stockLevels([x2025, x2024], [], 10, [oldSale])[2024]).toEqual({ mill: 50 });
   });
 });

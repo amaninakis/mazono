@@ -142,7 +142,24 @@ export function batchUnits(x: Pick<Extraction, 'allocations'>): Record<string, n
 
 /* ---------- stock ---------- */
 
-/** Oil on hand per vintage and location: `stock[vintage][locationId] = kg`. Sales take oil out. */
+/** Seasons that have at least one extraction recorded, i.e. whose oil the app knows about. */
+export function trackedVintages(extractions: Extraction[], seasonStartMonth = 10): Set<number> {
+  return new Set(live(extractions).map((x) => seasonOf(x.date, seasonStartMonth)));
+}
+
+/**
+ * A sale of oil from a season with no extractions in the app (e.g. oil from before the
+ * user started). It counts as income but does not reduce stock, until that season's
+ * extractions are entered; from then on it is deducted like any other sale.
+ */
+export function isUntrackedSale(tx: Transaction, tracked: Set<number>): boolean {
+  return tx.kind === 'sale' && tx.vintage != null && !tracked.has(tx.vintage);
+}
+
+/**
+ * Oil on hand per vintage and location: `stock[vintage][locationId] = kg`. Sales take oil
+ * out, except sales of seasons whose extractions are not in the app (see isUntrackedSale).
+ */
 export function stockLevels(
   extractions: Extraction[],
   movements: StockMovement[],
@@ -162,8 +179,11 @@ export function stockLevels(
     add(m.vintage, m.fromLocationId, -m.kg);
     if (m.kind === 'transfer' && m.toLocationId) add(m.vintage, m.toLocationId, m.kg);
   }
+  const tracked = trackedVintages(extractions, seasonStartMonth);
   for (const tx of live(transactions)) {
-    if (tx.kind === 'sale' && tx.kg && tx.vintage != null && tx.locationId) add(tx.vintage, tx.locationId, -tx.kg);
+    if (tx.kind !== 'sale' || !tx.kg || tx.vintage == null || !tx.locationId) continue;
+    if (isUntrackedSale(tx, tracked)) continue;
+    add(tx.vintage, tx.locationId, -tx.kg);
   }
   return s;
 }
