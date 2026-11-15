@@ -118,7 +118,11 @@
     "todayTreeYield": "Today: {{value}} per tree",
     "seasonTreeYield": "{{field}} this season: {{value}} per harvested tree",
     "seasonFieldYield": "{{field}} this season: {{value}} per tree in the field",
-    "addHalf": "Add half"
+    "addHalf": "Add half",
+    "moreFields": "More fields",
+    "prevFields": "Previous fields",
+    "swipeForMore": "{{count}} fields · swipe for more ›",
+    "allFieldsCount": "{{count}} fields"
   },
   "inputKind": {
     "harvest": "Trees and collected units",
