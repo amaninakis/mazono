@@ -1,6 +1,7 @@
 import type { TFunction } from 'i18next';
 import { inject, provide, type ComputedRef, type InjectionKey } from 'vue';
 import type {
+  Category,
   ChargeType,
   Extraction,
   FarmSettings,
@@ -10,6 +11,7 @@ import type {
   StorageLocation,
   TaskEntry,
   TaskType,
+  Transaction,
   Unit,
 } from '../core/types';
 import type { FarmRepo } from '../db/repo';
@@ -27,6 +29,8 @@ export interface FarmData {
   locations: StorageLocation[];
   extractions: Extraction[];
   stockMovements: StockMovement[];
+  categories: Category[];
+  transactions: Transaction[];
 }
 
 const FarmKey: InjectionKey<ComputedRef<FarmData>> = Symbol('farm');
@@ -52,4 +56,8 @@ export function chargeName(t: TFunction, c: ChargeType): string {
 
 export function locationName(t: TFunction, l: StorageLocation): string {
   return l.builtin && l.name === l.builtin ? t(`location.${l.builtin}`) : l.name;
+}
+
+export function categoryName(t: TFunction, c: Category): string {
+  return c.builtin && c.name === c.builtin ? t(`category.${c.builtin}`) : c.name;
 }

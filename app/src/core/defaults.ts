@@ -34,3 +34,9 @@ export const BUILTIN_CHARGES = ['millFee', 'bugSpraying', 'vat'] as const;
 
 /** Built-in places to keep oil. The first is where net oil goes by default. */
 export const BUILTIN_LOCATIONS = ['mill', 'home'] as const;
+
+/** Built-in expense and income categories (names come from translations). */
+export const BUILTIN_CATEGORIES = {
+  expense: ['fuel', 'supplies', 'equipment', 'labour', 'transport', 'otherExpense'],
+  income: ['subsidy', 'vatRefund', 'otherIncome'],
+} as const;

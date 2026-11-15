@@ -1,11 +1,13 @@
 import { createRouter, createWebHistory } from 'vue-router';
 import Extraction from './screens/Extraction.vue';
 import Journal from './screens/Journal.vue';
+import Money from './screens/Money.vue';
 import Oil from './screens/Oil.vue';
 import More from './screens/More.vue';
 import Settings from './screens/Settings.vue';
 import Soon from './screens/Soon.vue';
 import Today from './screens/Today.vue';
+import Transaction from './screens/Transaction.vue';
 
 export const router = createRouter({
   history: createWebHistory(),
@@ -16,7 +18,9 @@ export const router = createRouter({
     { path: '/oil', name: 'oil', component: Oil },
     { path: '/oil/new', name: 'extraction-new', component: Extraction },
     { path: '/oil/:id', name: 'extraction', component: Extraction },
-    { path: '/money', name: 'money', component: Soon, props: { textKey: 'soon.money' } },
+    { path: '/money', name: 'money', component: Money },
+    { path: '/money/new/:kind', name: 'transaction-new', component: Transaction },
+    { path: '/money/:id', name: 'transaction', component: Transaction },
     { path: '/reports', name: 'reports', component: Soon, props: { textKey: 'soon.reports' } },
     { path: '/more', name: 'more', component: More },
     { path: '/settings', name: 'settings', component: Settings },

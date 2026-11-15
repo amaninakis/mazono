@@ -1,6 +1,7 @@
 import { BUILTIN_TASKS } from '../core/defaults';
 import type {
   BaseRecord,
+  Category,
   ChargeType,
   Extraction,
   FarmSettings,
@@ -11,10 +12,11 @@ import type {
   StorageLocation,
   TaskEntry,
   TaskType,
+  Transaction,
   Unit,
 } from '../core/types';
 import { uuid } from '../core/uuid';
-import { db as defaultDb, oilDefaults, type HarvestDB } from './db';
+import { db as defaultDb, moneyDefaults, oilDefaults, type HarvestDB } from './db';
 
 export { uuid };
 const now = () => Date.now();
@@ -31,7 +33,9 @@ export type FarmTable =
   | 'chargeTypes'
   | 'locations'
   | 'extractions'
-  | 'stockMovements';
+  | 'stockMovements'
+  | 'categories'
+  | 'transactions';
 
 const FARM_TABLES: FarmTable[] = [
   'fields',
@@ -43,6 +47,8 @@ const FARM_TABLES: FarmTable[] = [
   'locations',
   'extractions',
   'stockMovements',
+  'categories',
+  'transactions',
 ];
 
 interface TableRow {
@@ -55,6 +61,8 @@ interface TableRow {
   locations: StorageLocation;
   extractions: Extraction;
   stockMovements: StockMovement;
+  categories: Category;
+  transactions: Transaction;
 }
 
 type AnyTable = {
@@ -134,7 +142,7 @@ export class FarmRepo {
     for (const t of FARM_TABLES) tables[t] = await this.table(t).where('farmId').equals(this.farmId).toArray();
     return {
       format: 'harvestlog-export',
-      version: 2,
+      version: 3,
       exportedAt: new Date().toISOString(),
       farm: await this.db.farms.get(this.farmId),
       settings: await this.settings(),
@@ -149,7 +157,15 @@ export async function createFarm(name: string, language: Language, database: Har
   const oil = oilDefaults(farmId, uuid);
   await database.transaction(
     'rw',
-    [database.farms, database.settings, database.taskTypes, database.chargeTypes, database.locations, database.meta],
+    [
+      database.farms,
+      database.settings,
+      database.taskTypes,
+      database.chargeTypes,
+      database.locations,
+      database.categories,
+      database.meta,
+    ],
     async () => {
       await database.farms.put({ id: farmId, name, createdAt: now() });
       await database.settings.put({
@@ -173,6 +189,7 @@ export async function createFarm(name: string, language: Language, database: Har
       );
       await database.chargeTypes.bulkPut(oil.chargeTypes);
       await database.locations.bulkPut(oil.locations);
+      await database.categories.bulkPut(moneyDefaults(farmId, uuid));
       await database.meta.put({ key: 'currentFarmId', value: farmId });
     },
   );
@@ -202,6 +219,8 @@ export async function importFarm(data: unknown, database: HarvestDB = defaultDb)
       await database.chargeTypes.bulkPut(oil.chargeTypes);
       await database.locations.bulkPut(oil.locations);
     }
+    // Backups from before v0.3 have no categories: add the defaults.
+    if (!d.categories?.length) await database.categories.bulkPut(moneyDefaults(farmId, uuid));
     await database.meta.put({ key: 'currentFarmId', value: farmId });
   });
   return farmId;

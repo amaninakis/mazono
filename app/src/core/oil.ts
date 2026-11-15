@@ -5,6 +5,7 @@ import type {
   ISODate,
   StockMovement,
   TaskEntry,
+  Transaction,
   Unit,
   UnitAmount,
 } from './types';
@@ -141,11 +142,12 @@ export function batchUnits(x: Pick<Extraction, 'allocations'>): Record<string, n
 
 /* ---------- stock ---------- */
 
-/** Oil on hand per vintage and location: `stock[vintage][locationId] = kg`. */
+/** Oil on hand per vintage and location: `stock[vintage][locationId] = kg`. Sales take oil out. */
 export function stockLevels(
   extractions: Extraction[],
   movements: StockMovement[],
   seasonStartMonth = 10,
+  transactions: Transaction[] = [],
 ): Record<number, Record<string, number>> {
   const s: Record<number, Record<string, number>> = {};
   const add = (vintage: number, loc: string, kg: number) => {
@@ -159,6 +161,9 @@ export function stockLevels(
   for (const m of live(movements)) {
     add(m.vintage, m.fromLocationId, -m.kg);
     if (m.kind === 'transfer' && m.toLocationId) add(m.vintage, m.toLocationId, m.kg);
+  }
+  for (const tx of live(transactions)) {
+    if (tx.kind === 'sale' && tx.kg && tx.vintage != null && tx.locationId) add(tx.vintage, tx.locationId, -tx.kg);
   }
   return s;
 }

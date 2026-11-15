@@ -85,3 +85,33 @@ describe('v0.2 data', () => {
     expect(await db2.chargeTypes.count()).toBe(3);
   });
 });
+
+describe('v0.3 data', () => {
+  it('new farms get expense and income categories', async () => {
+    const db = new HarvestDB('test-' + Math.random());
+    const r = await createFarm('F', 'el', db);
+    const cats = await db.categories.where('farmId').equals(r.farmId).toArray();
+    expect(cats.filter((c) => c.kind === 'expense')).toHaveLength(6);
+    expect(cats.filter((c) => c.kind === 'income').map((c) => c.builtin).sort()).toEqual(['otherIncome', 'subsidy', 'vatRefund']);
+  });
+
+  it('farms from before v0.3 get them when the database upgrades', async () => {
+    const name = 'upgrade4-' + Math.random();
+    const old = new (await import('dexie')).default(name);
+    old.version(3).stores({ meta: 'key', farms: 'id', settings: 'farmId', fields: 'id, farmId', units: 'id, farmId', taskTypes: 'id, farmId', entries: 'id, farmId, [farmId+date], fieldId, taskTypeId', mills: 'id, farmId', chargeTypes: 'id, farmId', locations: 'id, farmId', extractions: 'id, farmId, [farmId+date]', stockMovements: 'id, farmId' });
+    await old.table('farms').put({ id: 'farm1', name: 'Old', createdAt: 0 });
+    old.close();
+    const db = new HarvestDB(name);
+    expect(await db.categories.where('farmId').equals('farm1').count()).toBe(9);
+  });
+
+  it('backups include transactions', async () => {
+    const db = new HarvestDB('test-' + Math.random());
+    const r = await createFarm('F', 'en', db);
+    await r.put('transactions', { date: '2025-12-01', kind: 'sale', party: 'Coop', amount: 850, kg: 100, pricePerKg: 8.5 });
+    const db2 = new HarvestDB('test-' + Math.random());
+    await importFarm(JSON.parse(JSON.stringify(await r.exportAll())), db2);
+    expect(await db2.transactions.count()).toBe(1);
+    expect(await db2.categories.count()).toBe(9);
+  });
+});

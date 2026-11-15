@@ -5,7 +5,7 @@ import { useRouter } from 'vue-router';
 import { parseISODate, seasonLabel, seasonOf, todayISO } from '../core/dates';
 import { formatNumber, formatYield } from '../core/format';
 import { chargeShare, chargesKg, netOil, oilByEntry, seasonTotals, stockLevels, unitWeights } from '../core/oil';
-import type { StockMovement } from '../core/types';
+import type { StockMovement, Transaction } from '../core/types';
 import { formatLocale } from '../i18n';
 import StockMoveModal from '../ui/StockMoveModal.vue';
 import { chargeName, locationName, useFarm } from '../ui/farm';
@@ -67,7 +67,9 @@ const perField = computed(() => {
 
 /* ---------- stock ---------- */
 const locations = computed(() => farm.value.locations.slice().sort((a, b) => a.order - b.order));
-const stock = computed(() => stockLevels(farm.value.extractions, farm.value.stockMovements, startMonth.value));
+const stock = computed(() =>
+  stockLevels(farm.value.extractions, farm.value.stockMovements, startMonth.value, farm.value.transactions),
+);
 const stockRows = computed(() =>
   Object.entries(stock.value)
     .map(([v, byLoc]) => ({ vintage: Number(v), byLoc, total: Object.values(byLoc).reduce((s, x) => s + x, 0) }))
@@ -80,8 +82,17 @@ const usedLocations = computed(() =>
 const stockTotal = computed(() => stockRows.value.reduce((s, r) => s + r.total, 0));
 
 const moveKind = ref<'transfer' | 'ownUse' | null>(null);
-const movements = computed(() =>
-  farm.value.stockMovements.slice().sort((a, b) => (a.date < b.date ? 1 : a.date > b.date ? -1 : b.updatedAt - a.updatedAt)).slice(0, 10),
+/** Recent stock movements, including oil sales (which are edited on the Money page). */
+type Move = { m?: StockMovement; sale?: Transaction; date: string; vintage: number; updatedAt: number };
+const movements = computed<Move[]>(() =>
+  [
+    ...farm.value.stockMovements.map((m) => ({ m, date: m.date, vintage: m.vintage, updatedAt: m.updatedAt })),
+    ...farm.value.transactions
+      .filter((x) => x.kind === 'sale' && x.vintage != null)
+      .map((x) => ({ sale: x, date: x.date, vintage: x.vintage!, updatedAt: x.updatedAt })),
+  ]
+    .sort((a, b) => (a.date < b.date ? 1 : a.date > b.date ? -1 : b.updatedAt - a.updatedAt))
+    .slice(0, 10),
 );
 const locName = (id?: string) => {
   const l = farm.value.locations.find((x) => x.id === id);
@@ -201,12 +212,15 @@ async function removeMove(m: StockMovement) {
       <template v-if="movements.length">
         <span class="label">{{ t('oil.movements') }}</span>
         <ul class="list moves">
-          <li v-for="m in movements" :key="m.id" class="row-between">
+          <li v-for="mv in movements" :key="(mv.m ?? mv.sale)!.id" class="row-between">
             <span>
-              <small class="muted">{{ day(m.date) }} · {{ seasonLabel(m.vintage, startMonth) }}</small><br />
-              {{ moveLine(m) }}
+              <small class="muted">{{ day(mv.date) }} · {{ seasonLabel(mv.vintage, startMonth) }}</small><br />
+              <template v-if="mv.m">{{ moveLine(mv.m) }}</template>
+              <RouterLink v-else :to="`/money/${mv.sale!.id}`">
+                {{ t('oil.saleLine', { kg: fmt(mv.sale!.kg ?? 0), party: mv.sale!.party || '–' }) }}
+              </RouterLink>
             </span>
-            <button type="button" class="icon-btn" :aria-label="t('common.delete')" @click="removeMove(m)">🗑</button>
+            <button v-if="mv.m" type="button" class="icon-btn" :aria-label="t('common.delete')" @click="removeMove(mv.m)">🗑</button>
           </li>
         </ul>
       </template>

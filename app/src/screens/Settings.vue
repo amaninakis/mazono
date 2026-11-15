@@ -11,7 +11,7 @@ import { formatNumber } from '../core/format';
 import { formatLocaleFor } from '../core/locale';
 import { LANGUAGES, formatLocale, locale, setLanguage } from '../i18n';
 import Toggle from '../ui/Toggle.vue';
-import { chargeName, locationName, taskName, useFarm } from '../ui/farm';
+import { categoryName, chargeName, locationName, taskName, useFarm } from '../ui/farm';
 import { showToast } from '../ui/toast';
 
 const { t } = useTranslation();
@@ -58,6 +58,15 @@ const chargeList = computed(() => visible(farm.value.chargeTypes).sort((a, b) =>
 const locationList = computed(() => visible(farm.value.locations).sort((a, b) => a.order - b.order));
 const weights = computed(() => unitWeights(farm.value.units, farm.value.extractions));
 const newMill = ref('');
+const newCategory = ref<Record<'expense' | 'income', string>>({ expense: '', income: '' });
+const categoryList = (kind: 'expense' | 'income') =>
+  visible(farm.value.categories.filter((c) => c.kind === kind)).sort((a, b) => a.order - b.order);
+async function addCategory(kind: 'expense' | 'income') {
+  const name = newCategory.value[kind].trim();
+  if (!name) return;
+  await repo.value.put('categories', { kind, name, archived: false, order: farm.value.categories.length });
+  newCategory.value[kind] = '';
+}
 const newChargeName = ref('');
 const newLocation = ref('');
 
@@ -76,7 +85,7 @@ async function addLocation() {
   await repo.value.put('locations', { name: newLocation.value.trim(), archived: false, order: farm.value.locations.length });
   newLocation.value = '';
 }
-function renameBuiltin(table: 'chargeTypes' | 'locations', id: string, current: string, e: Event) {
+function renameBuiltin(table: 'chargeTypes' | 'locations' | 'categories', id: string, current: string, e: Event) {
   const v = val(e).trim();
   if (v && v !== current) void repo.value.update(table, id, { name: v });
 }
@@ -389,6 +398,45 @@ async function importData(e: Event) {
         <input v-model="newLocation" class="input" :placeholder="t('settings.addLocation')" @keydown.enter="addLocation" />
         <button type="button" class="btn small" @click="addLocation">{{ t('common.add') }}</button>
       </div>
+    </section>
+
+    <section id="money" class="card">
+      <h2>{{ t('settings.finance') }}</h2>
+      <label class="label" for="s-tax">{{ t('settings.taxPercent') }}</label>
+      <input
+        id="s-tax"
+        class="input small"
+        inputmode="decimal"
+        :value="settings.taxPercent ?? ''"
+        placeholder="%"
+        @blur="(e) => repo.updateSettings({ taxPercent: parseDecimal(val(e)) ?? undefined })"
+      />
+      <template v-for="kind in ['expense', 'income'] as const" :key="kind">
+        <span class="label">{{ kind === 'expense' ? t('settings.expenseCategories') : t('settings.incomeCategories') }}</span>
+        <ul class="list">
+          <li v-for="c in categoryList(kind)" :key="c.id" :class="['field-row', { off: c.archived }]">
+            <input
+              :key="`${c.id}-${locale}`"
+              class="input"
+              :aria-label="t('common.name')"
+              :value="categoryName(t, c)"
+              @blur="(e) => renameBuiltin('categories', c.id, categoryName(t, c), e)"
+            />
+            <button type="button" class="btn ghost small" @click="repo.update('categories', c.id, { archived: !c.archived })">
+              {{ c.archived ? t('common.unarchive') : t('common.archive') }}
+            </button>
+          </li>
+        </ul>
+        <div class="inline-add">
+          <input
+            v-model="newCategory[kind]"
+            class="input"
+            :placeholder="t('settings.addCategory')"
+            @keydown.enter="addCategory(kind)"
+          />
+          <button type="button" class="btn small" @click="addCategory(kind)">{{ t('common.add') }}</button>
+        </div>
+      </template>
     </section>
 
     <section class="card">

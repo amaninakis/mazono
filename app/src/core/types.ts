@@ -29,6 +29,8 @@ export interface FarmSettings {
   language: Language;
   yieldFormat: YieldFormat;
   dateFormat?: DateFormat;
+  /** Optional tax estimate, % of a positive net result. */
+  taxPercent?: number;
   seasonStartMonth: number; // 1-12, default 10 (October)
   labourEnabled: boolean;
   setupDone: boolean;
@@ -159,5 +161,49 @@ export interface StockMovement extends BaseRecord {
   fromLocationId: string;
   toLocationId?: string; // transfers only
   kg: number;
+  notes?: string;
+}
+
+/* ---------- v0.3: money ---------- */
+
+export type TransactionKind = 'expense' | 'sale' | 'income';
+
+export type BuiltinCategory =
+  | 'fuel'
+  | 'supplies'
+  | 'equipment'
+  | 'labour'
+  | 'transport'
+  | 'otherExpense'
+  | 'subsidy'
+  | 'vatRefund'
+  | 'otherIncome';
+
+/** Expense or income category (sales need none). */
+export interface Category extends BaseRecord {
+  kind: 'expense' | 'income';
+  builtin?: BuiltinCategory;
+  name: string;
+  archived: boolean;
+  order: number;
+}
+
+/** Money in or out. An oil sale also takes its kg out of stock. */
+export interface Transaction extends BaseRecord {
+  date: ISODate;
+  kind: TransactionKind;
+  /** Business, buyer or source, e.g. "Kalogridis fuel", "Agrocoop", "ΟΠΕΚΕΠΕ". */
+  party: string;
+  categoryId?: string;
+  /** Total in euros. For a sale: kg × price per kg. */
+  amount: number;
+  // sales
+  kg?: number;
+  pricePerKg?: number;
+  vintage?: number;
+  locationId?: string;
+  // expenses
+  invoiceNo?: string;
+  fieldId?: string;
   notes?: string;
 }
