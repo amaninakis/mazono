@@ -1,10 +1,10 @@
 import { createRouter, createWebHistory } from 'vue-router'
-import ComingSoon from './screens/ComingSoon.vue'
 import ExtractionPage from './screens/ExtractionPage.vue'
 import JournalPage from './screens/JournalPage.vue'
 import MoneyPage from './screens/MoneyPage.vue'
 import MorePage from './screens/MorePage.vue'
 import OilPage from './screens/OilPage.vue'
+import ReportsPage from './screens/ReportsPage.vue'
 import SettingsPage from './screens/SettingsPage.vue'
 import TodayPage from './screens/TodayPage.vue'
 import TransactionPage from './screens/TransactionPage.vue'
@@ -21,12 +21,7 @@ export const router = createRouter({
     { path: '/money', name: 'money', component: MoneyPage },
     { path: '/money/new/:kind', name: 'transaction-new', component: TransactionPage },
     { path: '/money/:id', name: 'transaction', component: TransactionPage },
-    {
-      path: '/reports',
-      name: 'reports',
-      component: ComingSoon,
-      props: { textKey: 'soon.reports' },
-    },
+    { path: '/reports', name: 'reports', component: ReportsPage },
     { path: '/more', name: 'more', component: MorePage },
     { path: '/settings', name: 'settings', component: SettingsPage },
     { path: '/:rest(.*)', redirect: '/' },

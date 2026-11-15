@@ -7,9 +7,20 @@ production season by season, and compare fields and years.
 
 Available in **English** and **Ελληνικά**. Works offline on your phone as an installable web app (PWA).
 
-> Status: **v0.3 – money**. Reports are coming next (see [Roadmap](#roadmap)).
+> Status: **v0.4 – reports**. Self-hosting with sync is next (see [Roadmap](#roadmap)).
 
 ## What it does
+
+### Reports (v0.4)
+
+- **Fields by season**: oil, oil per tree or harvest per tree for every field and season, shaded so
+  good and poor years (alternate bearing) stand out.
+- **Seasons over the years**: net oil per season as a bar chart, with olives, oil and yield.
+- **Yield through the season**: the yield of each mill visit by date, up to three seasons on one chart,
+  to help decide when to harvest.
+- **Cost of your oil**: per calendar year, income, expenses and net result set against the oil of the
+  season that starts that year, giving the cost per kg and the break-even price.
+- **CSV export** of every report, ready for Excel (Greek or English number style).
 
 ### Money (v0.3)
 
@@ -111,7 +122,8 @@ A test checks that every language has the same keys as English.
 2. **v0.2 – Mill and stock** ✅: extractions, yield (1/x or %), oil charges (mill fee, bug spraying,
    VAT…), linking harvest days to extractions (with splits), oil stock by season and location
 3. **v0.3 – Money** ✅: expenses, oil sales, subsidies and other income, totals by calendar year
-4. **v0.4 – Reports**: field × season comparison, season totals, yield through the season, economics
+4. **v0.4 – Reports** ✅: field × season comparison, season totals, yield through the season, cost of
+   your oil per year, CSV export
 5. **v0.5 – Self-hosting**: sync server, login, multiple farms and users with roles, backups
 6. **v1.0+**: Android/iOS apps (Capacitor), daily reminders, location-aware default field,
    equipment log, tasks per tree (numbered or NFC-tagged trees), weather integration, labour reports, spreadsheet import
