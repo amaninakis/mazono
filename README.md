@@ -53,6 +53,12 @@ npm test         # unit tests
 npm run build    # production build in app/dist
 ```
 
+## Design and contributing
+
+- [docs/DESIGN.md](docs/DESIGN.md) — what the app should become, the data model, every screen,
+  decisions taken and the roadmap. Start here before proposing a feature.
+- [CONTRIBUTING.md](CONTRIBUTING.md) — how to prepare a pull request.
+
 ## Project layout
 
 ```
