@@ -1,6 +1,13 @@
 import type { Field, TaskEntry, TaskType } from './types'
 import { describe, expect, it } from 'vitest'
-import { addDays, monthGrid, seasonLabel, seasonOf, seasonRange } from './dates'
+import {
+  addDays,
+  monthGrid,
+  parseTypedDate,
+  seasonLabel,
+  seasonOf,
+  seasonRange,
+} from './dates'
 import { formatMoney, formatYield } from './format'
 import {
   defaultFieldId,
@@ -267,5 +274,34 @@ describe('money format', () => {
     expect(formatMoney(1234.5, 'en-GB')).toBe('€1,234.50')
     expect(formatMoney(-60.5, 'en-US')).toBe('−€60.50')
     expect(formatMoney(-60.5, 'el-GR')).toBe('−60,50 €')
+  })
+})
+
+describe('parseTypedDate', () => {
+  const today = '2026-11-15'
+
+  it('reads day/month/year in Greek and British order', () => {
+    expect(parseTypedDate('16/2/2026', 'el-GR', today)).toBe('2026-02-16')
+    expect(parseTypedDate('16.02.2026', 'en-DE', today)).toBe('2026-02-16')
+    expect(parseTypedDate('16-2-26', 'en-GB', today)).toBe('2026-02-16')
+  })
+
+  it('reads month/day/year in US order', () => {
+    expect(parseTypedDate('2/16/2026', 'en-US', today)).toBe('2026-02-16')
+  })
+
+  it('uses this year when the year is left out', () => {
+    expect(parseTypedDate('3 10', 'el-GR', today)).toBe('2026-10-03')
+  })
+
+  it('accepts ISO dates in any locale', () => {
+    expect(parseTypedDate('2025-12-01', 'en-US', today)).toBe('2025-12-01')
+  })
+
+  it('rejects text and impossible dates', () => {
+    expect(parseTypedDate('', 'el-GR', today)).toBeNull()
+    expect(parseTypedDate('tomorrow', 'el-GR', today)).toBeNull()
+    expect(parseTypedDate('31/2/2026', 'el-GR', today)).toBeNull()
+    expect(parseTypedDate('15', 'el-GR', today)).toBeNull()
   })
 })

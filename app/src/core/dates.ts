@@ -86,3 +86,62 @@ export function byNewest(
 
   return (right.updatedAt ?? 0) - (left.updatedAt ?? 0)
 }
+
+/**
+ * Order of day, month and year in a locale's short date, e.g. ['day', 'month', 'year'] for
+ * 15/11/2026.
+ */
+export function dateFieldOrder(locale: string): ('day' | 'month' | 'year')[] {
+  const order: ('day' | 'month' | 'year')[] = []
+  for (const part of new Intl.DateTimeFormat(locale).formatToParts(new Date(2026, 10, 15))) {
+    if (part.type === 'day' || part.type === 'month' || part.type === 'year') {
+      order.push(part.type)
+    }
+  }
+
+  return order
+}
+
+/**
+ * Read a date the user typed, in the order the app shows dates (e.g. 15/11/2026 or
+ * 11/15/2026). Accepts `/`, `.`, `-` or spaces between the numbers, a two-digit year (26 →
+ * 2026), no year (15/11 → this year) and ISO (2026-11-15). Returns null when it is not a real
+ * date.
+ */
+export function parseTypedDate(text: string, locale: string, today: ISODate): ISODate | null {
+  const numbers = text
+    .trim()
+    .split(/[\s./-]+/)
+    .filter(Boolean)
+  if (
+    numbers.length < 2 ||
+    numbers.length > 3 ||
+    numbers.some((part) => !/^\d+$/.test(part))
+  ) {
+    return null
+  }
+
+  let order = dateFieldOrder(locale)
+  if (numbers[0].length === 4) {
+    order = ['year', 'month', 'day']
+  } else if (numbers.length === 2) {
+    order = order.filter((field) => field !== 'year')
+  }
+
+  const values: Record<string, number> = { year: Number(today.slice(0, 4)) }
+  order.forEach((field, i) => {
+    values[field] = Number(numbers[i])
+  })
+  const { day, month } = values as { day: number; month: number }
+  let year = values.year
+  if (year < 100) {
+    year += 2000
+  }
+
+  const date = new Date(year, month - 1, day)
+  if (date.getFullYear() !== year || date.getMonth() !== month - 1 || date.getDate() !== day) {
+    return null
+  }
+
+  return toISODate(date)
+}
