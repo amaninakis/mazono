@@ -209,6 +209,7 @@ Totals per **calendar year**: income, expenses, net result, and the value of rem
 
 - One `Transaction` record per expense, oil sale or other income, and `Category` records for expense and income categories (built-in ones are translated; users can rename, add and archive).
 - An oil sale stores its kg, € per kg, season (vintage) and place; `stockLevels()` subtracts it, so stock and money cannot disagree. The kg cannot exceed what that season's oil has in that place.
+- **Oil not recorded in the app** (e.g. sold before the user started): a sale can come from a season with no extractions in the app. It counts as income but does not reduce stock, and is marked "not from recorded stock". As soon as that season's extractions are entered, the sale is deducted from that season's stock automatically (`isUntrackedSale()` / `trackedVintages()`), so entering past data later never double-counts.
 - The category last used with a business is filled in when the business is typed again (`categoryForParty()`).
 - Tax estimate = net result × tax % when the result is positive. Remaining stock is valued at the price of the most recent sale.
 - Money amounts use the date and number format setting: "1.234,50 €" in Greek style, "€1,234.50" otherwise.

@@ -337,6 +337,9 @@
     "deleted": "Deleted",
     "newCategory": "New category…",
     "newCategoryName": "Name of the category",
-    "inYear": "In {{period}}"
+    "inYear": "In {{period}}",
+    "untrackedOption": "{{season}} · not recorded in the app",
+    "untrackedHelp": "The app has no extractions for season {{season}}, so this sale counts as income but does not reduce the oil in stock. If you enter that season’s extractions later, the sale will be taken from its stock automatically.",
+    "notFromStock": "not from recorded stock"
   }
 }

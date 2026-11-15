@@ -4,7 +4,17 @@ import { computed, ref } from 'vue';
 import { useRouter } from 'vue-router';
 import { parseISODate, seasonLabel, seasonOf, todayISO } from '../core/dates';
 import { formatNumber, formatYield } from '../core/format';
-import { chargeShare, chargesKg, netOil, oilByEntry, seasonTotals, stockLevels, unitWeights } from '../core/oil';
+import {
+  chargeShare,
+  chargesKg,
+  isUntrackedSale,
+  netOil,
+  oilByEntry,
+  seasonTotals,
+  stockLevels,
+  trackedVintages,
+  unitWeights,
+} from '../core/oil';
 import type { StockMovement, Transaction } from '../core/types';
 import { formatLocale } from '../i18n';
 import StockMoveModal from '../ui/StockMoveModal.vue';
@@ -86,13 +96,14 @@ const usedLocations = computed(() =>
 const stockTotal = computed(() => stockRows.value.reduce((s, r) => s + r.total, 0));
 
 const moveKind = ref<'transfer' | 'ownUse' | null>(null);
+const tracked = computed(() => trackedVintages(farm.value.extractions, startMonth.value));
 /** Recent stock movements, including oil sales (which are edited on the Money page). */
 type Move = { m?: StockMovement; sale?: Transaction; date: string; vintage: number; updatedAt: number };
 const movements = computed<Move[]>(() =>
   [
     ...farm.value.stockMovements.map((m) => ({ m, date: m.date, vintage: m.vintage, updatedAt: m.updatedAt })),
     ...farm.value.transactions
-      .filter((x) => x.kind === 'sale' && x.vintage != null)
+      .filter((x) => x.kind === 'sale' && x.vintage != null && !isUntrackedSale(x, tracked.value))
       .map((x) => ({ sale: x, date: x.date, vintage: x.vintage!, updatedAt: x.updatedAt })),
   ]
     .sort((a, b) => (a.date < b.date ? 1 : a.date > b.date ? -1 : b.updatedAt - a.updatedAt))

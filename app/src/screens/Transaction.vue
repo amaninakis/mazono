@@ -1,11 +1,11 @@
 <script setup lang="ts">
 import { useTranslation } from 'i18next-vue';
-import { computed, ref } from 'vue';
+import { computed, ref, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
-import { seasonLabel, todayISO } from '../core/dates';
+import { seasonLabel, seasonOf, todayISO } from '../core/dates';
 import { formatMoney, formatNumber } from '../core/format';
 import { categoryForParty, defaultSaleSource, partyNames } from '../core/money';
-import { stockLevels } from '../core/oil';
+import { stockLevels, trackedVintages } from '../core/oil';
 import type { TransactionKind } from '../core/types';
 import { formatLocale } from '../i18n';
 import DateField from '../ui/DateField.vue';
@@ -99,16 +99,44 @@ const sources = computed(() =>
     .filter((s) => s.kg > 0 || (s.vintage === editing?.vintage && s.locationId === editing?.locationId))
     .sort((a, b) => a.vintage - b.vintage),
 );
-const startSource =
-  editing?.vintage != null && editing.locationId
-    ? { vintage: editing.vintage, locationId: editing.locationId }
-    : defaultSaleSource(stock.value, mainLocation.value?.id);
-const source = ref(startSource ? `${startSource.vintage}|${startSource.locationId}` : '');
+/**
+ * Seasons whose oil is not in the app (no extractions recorded), e.g. oil from before the
+ * user started. Selling it counts as income but does not reduce stock until that season's
+ * extractions are entered.
+ */
+const tracked = computed(() => trackedVintages(farm.value.extractions, startMonth));
+const untrackedSeasons = computed(() => {
+  const latest = seasonOf(date.value, startMonth);
+  const list = Array.from({ length: 5 }, (_, i) => latest - i).filter((v) => !tracked.value.has(v));
+  if (editing?.vintage != null && !tracked.value.has(editing.vintage) && !list.includes(editing.vintage)) list.push(editing.vintage);
+  return list;
+});
+const UNTRACKED = 'untracked';
+
+function startValue(): string {
+  if (editing?.vintage != null && editing.locationId) {
+    return tracked.value.has(editing.vintage) ? `${editing.vintage}|${editing.locationId}` : `${editing.vintage}|${UNTRACKED}`;
+  }
+  const d = defaultSaleSource(stock.value, mainLocation.value?.id);
+  if (d) return `${d.vintage}|${d.locationId}`;
+  const u = untrackedSeasons.value[0];
+  return u != null ? `${u}|${UNTRACKED}` : '';
+}
+const source = ref(startValue());
+// A different date can change which seasons are offered: keep the choice valid.
+watch(untrackedSeasons, (list) => {
+  const [v, loc] = source.value.split('|');
+  if (loc === UNTRACKED && !list.includes(Number(v))) source.value = list.length ? `${list[0]}|${UNTRACKED}` : startValue();
+});
 const chosen = computed(() => {
   const [v, loc] = source.value.split('|');
-  return v ? { vintage: Number(v), locationId: loc } : undefined;
+  if (!v) return undefined;
+  const untracked = loc === UNTRACKED;
+  return { vintage: Number(v), locationId: untracked ? (mainLocation.value?.id ?? '') : loc, untracked };
 });
-const available = computed(() => (chosen.value ? (stock.value[chosen.value.vintage]?.[chosen.value.locationId] ?? 0) : 0));
+const available = computed(() =>
+  chosen.value && !chosen.value.untracked ? (stock.value[chosen.value.vintage]?.[chosen.value.locationId] ?? 0) : 0,
+);
 const kg = ref<number | null>(editing?.kg ?? null);
 const price = ref<number | null>(editing?.pricePerKg ?? null);
 const total = computed(() => Math.round((kg.value ?? 0) * (price.value ?? 0) * 100) / 100);
@@ -125,7 +153,7 @@ async function save() {
       error.value = sources.value.length ? t('tx.saleNothingToSave') : t('tx.noStock');
       return;
     }
-    if (kg.value > available.value + 0.0001) {
+    if (!chosen.value.untracked && kg.value > available.value + 0.0001) {
       error.value = t('tx.tooMuch', { kg: fmt(available.value) });
       return;
     }
@@ -202,17 +230,21 @@ async function remove() {
     </section>
 
     <section v-if="kind === 'sale'" class="card">
-      <p v-if="!sources.length" class="muted">{{ t('tx.noStock') }}</p>
+      <p v-if="!sources.length && !untrackedSeasons.length" class="muted">{{ t('tx.noStock') }}</p>
       <template v-else>
         <label class="label" for="tx-source">{{ t('tx.soldFrom') }}</label>
         <select id="tx-source" v-model="source" class="input select">
           <option v-for="s in sources" :key="`${s.vintage}|${s.locationId}`" :value="`${s.vintage}|${s.locationId}`">
             {{ sourceLabel(s) }}
           </option>
+          <option v-for="v in untrackedSeasons" :key="`u${v}`" :value="`${v}|${UNTRACKED}`">
+            {{ t('tx.untrackedOption', { season: seasonLabel(v, startMonth) }) }}
+          </option>
         </select>
+        <p v-if="chosen?.untracked" class="notice">{{ t('tx.untrackedHelp', { season: seasonLabel(chosen.vintage, startMonth) }) }}</p>
         <label class="label" for="tx-kg">{{ t('tx.kg') }}</label>
-        <Stepper id="tx-kg" v-model="kg" :label="t('tx.kg')" :max="available" />
-        <p class="hint">{{ t('tx.available', { kg: fmt(available) }) }}</p>
+        <Stepper id="tx-kg" v-model="kg" :label="t('tx.kg')" :max="chosen?.untracked ? undefined : available" />
+        <p v-if="!chosen?.untracked" class="hint">{{ t('tx.available', { kg: fmt(available) }) }}</p>
         <label class="label" for="tx-price">{{ t('tx.pricePerKg') }}</label>
         <Stepper id="tx-price" v-model="price" :label="t('tx.pricePerKg')" :step="0.1" />
         <p class="result">{{ t('tx.total') }}: <strong>{{ formatMoney(total, formatLocale) }}</strong></p>
