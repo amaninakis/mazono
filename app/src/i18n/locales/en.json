@@ -51,7 +51,10 @@
     "loading": "Loading…",
     "kg": "kg",
     "date": "Date",
-    "notes": "Notes"
+    "notes": "Notes",
+    "dateInvalid": "Type a date like {{example}}",
+    "dateTooLate": "The date can’t be after {{max}}",
+    "openCalendar": "Open calendar"
   },
   "setup": {
     "welcome": "Welcome to HarvestLog",

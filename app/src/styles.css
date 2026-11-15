@@ -319,14 +319,28 @@ button, input, select, textarea { font: inherit; color: inherit; }
 .learned { flex-basis: 100%; }
 
 /* Date field: app-formatted date with the native picker invisibly on top */
+.date-wrap { display: inline-flex; flex-direction: column; align-items: flex-end; gap: 4px; }
 .date-field {
-  position: relative; display: inline-flex; align-items: center; gap: 8px;
-  min-height: 40px; padding: 6px 12px; border: 1px solid var(--line); border-radius: 10px;
-  background: var(--bg); cursor: pointer; font-variant-numeric: tabular-nums;
+  display: inline-flex; align-items: center;
+  min-height: 40px; border: 1px solid var(--line); border-radius: 10px;
+  background: var(--bg); font-variant-numeric: tabular-nums;
 }
-.date-native { position: absolute; inset: 0; width: 100%; height: 100%; opacity: 0; cursor: pointer; border: 0; padding: 0; }
-.date-native::-webkit-calendar-picker-indicator { position: absolute; inset: 0; width: 100%; height: 100%; cursor: pointer; }
-.modal .date-field { display: flex; width: 100%; }
+.date-field:focus-within { border-color: var(--olive); }
+.date-field.invalid { border-color: var(--danger); }
+.date-text {
+  width: 7.5em; min-width: 0; padding: 6px 4px 6px 12px; border: 0; background: transparent;
+  font: inherit; color: inherit; font-variant-numeric: tabular-nums;
+}
+.date-text:focus { outline: none; }
+.date-button {
+  position: relative; display: inline-flex; align-items: center; justify-content: center;
+  min-width: 44px; min-height: 40px; padding: 0 10px; border: 0; border-left: 1px solid var(--line);
+  border-radius: 0 10px 10px 0; background: transparent; font-size: 1.1em; cursor: pointer;
+}
+.date-button:hover, .date-button:focus-visible { background: var(--olive-soft); }
+.date-native { position: absolute; inset: 0; width: 100%; height: 100%; opacity: 0; border: 0; padding: 0; pointer-events: none; }
+.modal .date-wrap, .modal .date-field { display: flex; width: 100%; }
+.modal .date-text { flex: 1; }
 
 /* Field picker: two rows that scroll sideways when there are more than four fields */
 .field-picker { position: relative; }
