@@ -289,7 +289,6 @@
     "otherIncome": "Other income"
   },
   "money": {
-    "season": "Season",
     "year": "Year",
     "income": "Income",
     "sales": "Oil sales",
@@ -309,7 +308,8 @@
     "noTransactions": "Nothing recorded in this period.",
     "byCategory": "Expenses by category",
     "incomeByCategory": "Other income by category",
-    "uncategorised": "No category"
+    "uncategorised": "No category",
+    "yearHint": "Calendar year"
   },
   "tx": {
     "newExpense": "New expense",
@@ -337,7 +337,6 @@
     "deleted": "Deleted",
     "newCategory": "New category…",
     "newCategoryName": "Name of the category",
-    "inSeason": "In season {{period}}",
     "inYear": "In {{period}}"
   }
 }

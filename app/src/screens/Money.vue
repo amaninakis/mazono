@@ -2,7 +2,7 @@
 import { useTranslation } from 'i18next-vue';
 import { computed, ref } from 'vue';
 import { useRouter } from 'vue-router';
-import { parseISODate, seasonLabel, seasonOf, todayISO } from '../core/dates';
+import { parseISODate, todayISO } from '../core/dates';
 import { formatMoney, formatNumber } from '../core/format';
 import { inPeriod, lastSalePrice, moneyTotals, taxEstimate, type Period } from '../core/money';
 import { stockLevels } from '../core/oil';
@@ -21,19 +21,13 @@ const kgFmt = (n: number) => formatNumber(n, formatLocale.value, 1);
 const day = (d: string) =>
   new Intl.DateTimeFormat(formatLocale.value, { day: 'numeric', month: 'short' }).format(parseISODate(d));
 
-/* ---------- period: season (farm economics) or calendar year (tax) ---------- */
+/* ---------- period: calendar year ---------- */
 const today = todayISO();
-const periodKind = computed(() => moneyPeriod.kind);
-const yearOf = (d: string) => (periodKind.value === 'season' ? seasonOf(d, startMonth.value) : Number(d.slice(0, 4)));
+const yearOf = (d: string) => Number(d.slice(0, 4));
 const years = computed(() =>
   [...new Set([yearOf(today), ...farm.value.transactions.map((x) => yearOf(x.date))])].sort((a, b) => b - a),
 );
-const period = computed<Period>(() => ({ kind: periodKind.value, year: moneyPeriod.year ?? yearOf(today) }));
-function setKind(k: Period['kind']) {
-  moneyPeriod.kind = k;
-  moneyPeriod.year = null;
-}
-const periodLabel = (y: number) => (periodKind.value === 'season' ? seasonLabel(y, startMonth.value) : String(y));
+const period = computed<Period>(() => ({ kind: 'year', year: moneyPeriod.year ?? yearOf(today) }));
 
 /* ---------- totals ---------- */
 const totals = computed(() => moneyTotals(farm.value.transactions, period.value, startMonth.value));
@@ -76,21 +70,14 @@ const icon = (k: TransactionKind) => (k === 'sale' ? '💧' : k === 'income' ? '
     </header>
 
     <div class="row-between period-bar">
-      <div class="chips tight">
-        <button type="button" :class="['chip', { selected: periodKind === 'season' }]" @click="setKind('season')">
-          {{ t('money.season') }}
-        </button>
-        <button type="button" :class="['chip', { selected: periodKind === 'year' }]" @click="setKind('year')">
-          {{ t('money.year') }}
-        </button>
-      </div>
+      <span class="muted">{{ t('money.yearHint') }}</span>
       <select
         class="input select season-select"
-        :aria-label="periodKind === 'season' ? t('money.season') : t('money.year')"
+        :aria-label="t('money.year')"
         :value="period.year"
         @change="(e) => (moneyPeriod.year = Number((e.target as HTMLSelectElement).value))"
       >
-        <option v-for="y in years" :key="y" :value="y">{{ periodLabel(y) }}</option>
+        <option v-for="y in years" :key="y" :value="y">{{ y }}</option>
       </select>
     </div>
 
@@ -101,7 +88,7 @@ const icon = (k: TransactionKind) => (k === 'sale' ? '💧' : k === 'income' ? '
     </div>
 
     <section class="card">
-      <h2>{{ periodLabel(period.year) }}</h2>
+      <h2>{{ period.year }}</h2>
       <table class="kv">
         <tbody>
           <tr>

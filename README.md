@@ -17,7 +17,7 @@ Available in **English** and **Ελληνικά**. Works offline on your phone a
 - **Oil sales**: buyer, kg and € per kg → total. The oil is taken out of stock, by default from the oldest
   season at the mill, and you cannot sell more than you have.
 - **Other income** such as subsidies (ΟΠΕΚΕΠΕ) or VAT refunds.
-- **Totals** by harvest season or calendar year: oil sales (kg and average price), other income, expenses,
+- **Totals** by calendar year: oil sales (kg and average price), other income, expenses,
   net result, an optional tax estimate, and the value of the oil still in stock at your last sale price.
 
 ### Mill and oil stock (v0.2)
@@ -109,7 +109,7 @@ A test checks that every language has the same keys as English.
 1. **v0.1 – Field log** ✅
 2. **v0.2 – Mill and stock** ✅: extractions, yield (1/x or %), oil charges (mill fee, bug spraying,
    VAT…), linking harvest days to extractions (with splits), oil stock by season and location
-3. **v0.3 – Money** ✅: expenses, oil sales, subsidies and other income, totals by season or calendar year
+3. **v0.3 – Money** ✅: expenses, oil sales, subsidies and other income, totals by calendar year
 4. **v0.4 – Reports**: field × season comparison, season totals, yield through the season, economics
 5. **v0.5 – Self-hosting**: sync server, login, multiple farms and users with roles, backups
 6. **v1.0+**: Android/iOS apps (Capacitor), daily reminders, location-aware default field,

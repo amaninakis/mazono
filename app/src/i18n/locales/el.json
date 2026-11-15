@@ -289,7 +289,6 @@
     "otherIncome": "Λοιπά έσοδα"
   },
   "money": {
-    "season": "Σεζόν",
     "year": "Έτος",
     "income": "Έσοδα",
     "sales": "Πωλήσεις λαδιού",
@@ -309,7 +308,8 @@
     "noTransactions": "Δεν υπάρχουν εγγραφές σε αυτή την περίοδο.",
     "byCategory": "Έξοδα ανά κατηγορία",
     "incomeByCategory": "Λοιπά έσοδα ανά κατηγορία",
-    "uncategorised": "Χωρίς κατηγορία"
+    "uncategorised": "Χωρίς κατηγορία",
+    "yearHint": "Ημερολογιακό έτος"
   },
   "tx": {
     "newExpense": "Νέο έξοδο",
@@ -337,7 +337,6 @@
     "deleted": "Διαγράφηκε",
     "newCategory": "Νέα κατηγορία…",
     "newCategoryName": "Όνομα κατηγορίας",
-    "inSeason": "Στη σεζόν {{period}}",
     "inYear": "Στο έτος {{period}}"
   }
 }

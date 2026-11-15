@@ -2,7 +2,7 @@
 import { useTranslation } from 'i18next-vue';
 import { computed, ref } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
-import { seasonLabel, seasonOf, todayISO } from '../core/dates';
+import { seasonLabel, todayISO } from '../core/dates';
 import { formatMoney, formatNumber } from '../core/format';
 import { categoryForParty, defaultSaleSource, partyNames } from '../core/money';
 import { stockLevels } from '../core/oil';
@@ -152,12 +152,11 @@ async function save() {
   void router.push('/money');
 }
 
-/** Open the Money page on the season or year of this entry, and say so. */
+/** Open the Money page on the calendar year of this entry, and say so. */
 function showPeriodOf(d: string, title: string) {
-  const year = moneyPeriod.kind === 'season' ? seasonOf(d, startMonth) : Number(d.slice(0, 4));
+  const year = Number(d.slice(0, 4));
   moneyPeriod.year = year;
-  const label = moneyPeriod.kind === 'season' ? seasonLabel(year, startMonth) : String(year);
-  showToast({ title, lines: [t(moneyPeriod.kind === 'season' ? 'tx.inSeason' : 'tx.inYear', { period: label })] });
+  showToast({ title, lines: [t('tx.inYear', { period: String(year) })] });
 }
 
 async function remove() {
