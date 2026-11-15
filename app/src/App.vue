@@ -21,7 +21,21 @@ const data = useLiveQuery(
   async () => {
     const id = farmId.value;
     if (!id) return null;
-    const [farm, settings, fields, units, taskTypes, entries, mills, chargeTypes, locations, extractions, stockMovements] =
+    const [
+      farm,
+      settings,
+      fields,
+      units,
+      taskTypes,
+      entries,
+      mills,
+      chargeTypes,
+      locations,
+      extractions,
+      stockMovements,
+      categories,
+      transactions,
+    ] =
       await Promise.all([
         db.farms.get(id),
         db.settings.get(id),
@@ -34,6 +48,8 @@ const data = useLiveQuery(
         db.locations.where('farmId').equals(id).toArray(),
         db.extractions.where('farmId').equals(id).toArray(),
         db.stockMovements.where('farmId').equals(id).toArray(),
+        db.categories.where('farmId').equals(id).toArray(),
+        db.transactions.where('farmId').equals(id).toArray(),
       ]);
     if (!farm || !settings) return null;
     return {
@@ -48,6 +64,8 @@ const data = useLiveQuery(
       locations: notDeleted(locations),
       extractions: notDeleted(extractions),
       stockMovements: notDeleted(stockMovements),
+      categories: notDeleted(categories),
+      transactions: notDeleted(transactions),
     };
   },
   () => farmId.value,

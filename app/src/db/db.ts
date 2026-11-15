@@ -1,8 +1,9 @@
 import Dexie, { type EntityTable } from 'dexie';
-import { BUILTIN_CHARGES, BUILTIN_LOCATIONS } from '../core/defaults';
+import { BUILTIN_CATEGORIES, BUILTIN_CHARGES, BUILTIN_LOCATIONS } from '../core/defaults';
 import { presetPlural } from '../core/units';
 import { uuid } from '../core/uuid';
 import type {
+  Category,
   ChargeType,
   Extraction,
   Farm,
@@ -13,8 +14,19 @@ import type {
   StorageLocation,
   TaskEntry,
   TaskType,
+  Transaction,
   Unit,
 } from '../core/types';
+
+/** Default expense and income categories for a farm (names come from translations). */
+export function moneyDefaults(farmId: string, id: () => string): Category[] {
+  const now = Date.now();
+  return (['expense', 'income'] as const).flatMap((kind) =>
+    BUILTIN_CATEGORIES[kind].map(
+      (builtin, order): Category => ({ id: id(), farmId, kind, builtin, name: builtin, archived: false, order, updatedAt: now }),
+    ),
+  );
+}
 
 /** Default charge types and storage locations for a farm (names come from translations). */
 export function oilDefaults(farmId: string, id: () => string) {
@@ -48,6 +60,8 @@ export class HarvestDB extends Dexie {
   locations!: EntityTable<StorageLocation, 'id'>;
   extractions!: EntityTable<Extraction, 'id'>;
   stockMovements!: EntityTable<StockMovement, 'id'>;
+  categories!: EntityTable<Category, 'id'>;
+  transactions!: EntityTable<Transaction, 'id'>;
 
   constructor(name = 'harvestlog') {
     super(name);
@@ -90,6 +104,16 @@ export class HarvestDB extends Dexie {
           await tx.table('chargeTypes').bulkPut(d.chargeTypes);
           await tx.table('locations').bulkPut(d.locations);
         }
+      });
+    // v4: money. Existing farms get the default expense and income categories.
+    this.version(4)
+      .stores({
+        categories: 'id, farmId',
+        transactions: 'id, farmId, [farmId+date]',
+      })
+      .upgrade(async (tx) => {
+        const farms = await tx.table<Farm>('farms').toArray();
+        for (const f of farms) await tx.table('categories').bulkPut(moneyDefaults(f.id, uuid));
       });
   }
 }

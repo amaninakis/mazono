@@ -22,3 +22,16 @@ export function formatYield(
   }
   return `1/${formatNumber(oliveKg / oilKg, locale, 1)}`;
 }
+
+/**
+ * Euros in the user's number style: "1.234,50 €" where a comma is the decimal separator
+ * (Greek style), "€1,234.50" otherwise. Built from the plain number format because some
+ * locales mix styles for currency (en-DE gives "1.234,5" but "€1,234.50").
+ */
+export function formatMoney(n: number, locale: string): string {
+  const nf = new Intl.NumberFormat(locale, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  const commaDecimal = nf.formatToParts(1.5).find((p) => p.type === 'decimal')?.value === ',';
+  const abs = nf.format(Math.abs(n));
+  const sign = n < 0 ? '−' : '';
+  return commaDecimal ? `${sign}${abs} €` : `${sign}€${abs}`;
+}

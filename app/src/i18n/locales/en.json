@@ -187,11 +187,15 @@
     "format_auto": "Automatic",
     "format_GR": "Greek",
     "format_GB": "British",
-    "format_US": "American"
+    "format_US": "American",
+    "finance": "Money",
+    "taxPercent": "Tax estimate (% of a profit, optional)",
+    "expenseCategories": "Expense categories",
+    "incomeCategories": "Income categories",
+    "addCategory": "Add category"
   },
   "soon": {
     "title": "Coming soon",
-    "money": "Costs, sales and other income arrive in version 0.3.",
     "reports": "Field and season comparisons arrive in version 0.4."
   },
   "chargeType": {
@@ -223,7 +227,8 @@
     "ownUse": "Own use / gift",
     "movements": "Movements",
     "fieldsEstimate": "Oil per field (≈)",
-    "perTree": "≈ {{kg}} kg per tree"
+    "perTree": "≈ {{kg}} kg per tree",
+    "saleLine": "{{kg}} kg sold to {{party}}"
   },
   "extraction": {
     "title": "Mill extraction",
@@ -271,5 +276,68 @@
     "saved": "Saved",
     "transferLine": "{{kg}} kg {{from}} → {{to}}",
     "ownUseLine": "{{kg}} kg used from {{from}}"
+  },
+  "category": {
+    "fuel": "Fuel",
+    "supplies": "Fertilizer & sprays",
+    "equipment": "Equipment & repairs",
+    "labour": "Labour",
+    "transport": "Transport",
+    "otherExpense": "Other expense",
+    "subsidy": "Subsidy",
+    "vatRefund": "VAT refund",
+    "otherIncome": "Other income"
+  },
+  "money": {
+    "season": "Season",
+    "year": "Year",
+    "income": "Income",
+    "sales": "Oil sales",
+    "otherIncome": "Other income",
+    "expenses": "Expenses",
+    "net": "Net result",
+    "tax": "Estimated tax ({{percent}}%)",
+    "afterTax": "After tax",
+    "stockValue": "Oil in stock",
+    "stockValueLine": "{{kg}} kg × {{price}}/kg (last sale)",
+    "averagePrice": "Average price {{price}}/kg",
+    "soldKg": "{{kg}} kg sold",
+    "addExpense": "Expense",
+    "addSale": "Oil sale",
+    "addIncome": "Income",
+    "all": "All",
+    "noTransactions": "Nothing recorded in this period.",
+    "byCategory": "Expenses by category",
+    "incomeByCategory": "Other income by category",
+    "uncategorised": "No category"
+  },
+  "tx": {
+    "newExpense": "New expense",
+    "newSale": "Oil sale",
+    "newIncome": "Other income",
+    "editExpense": "Edit expense",
+    "editSale": "Edit oil sale",
+    "editIncome": "Edit income",
+    "business": "Business",
+    "buyer": "Buyer",
+    "source": "Source",
+    "category": "Category",
+    "amount": "Amount (€)",
+    "invoiceNo": "Invoice no. (optional)",
+    "field": "Field (optional)",
+    "noField": "–",
+    "kg": "Oil sold (kg)",
+    "pricePerKg": "Price (€ per kg)",
+    "total": "Total",
+    "soldFrom": "Oil taken from",
+    "noStock": "There is no oil in stock to sell.",
+    "tooMuch": "Only {{kg}} kg of this oil in stock.",
+    "available": "{{kg}} kg in stock",
+    "nothingToSave": "Enter the amount first.",
+    "saleNothingToSave": "Enter the kg and the price first.",
+    "saved": "Saved",
+    "deleted": "Deleted",
+    "newCategory": "New category…",
+    "newCategoryName": "Name of the category"
   }
 }

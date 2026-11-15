@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { addDays, monthGrid, seasonLabel, seasonOf, seasonRange } from './dates';
-import { formatYield } from './format';
+import { formatMoney, formatYield } from './format';
 import {
   defaultFieldId,
   defaultTaskTypeId,
@@ -161,5 +161,15 @@ describe('yield format', () => {
     expect(formatYield(792.45, 181, 'ratio', 'el')).toBe('1/4,4');
     expect(formatYield(1000, 232, 'percent', 'en')).toBe('23.2%');
     expect(formatYield(0, 10, 'ratio', 'en')).toBe('–');
+  });
+});
+
+describe('money format', () => {
+  it('follows the number style of the format locale', () => {
+    expect(formatMoney(1234.5, 'el-GR')).toBe('1.234,50 €');
+    expect(formatMoney(1234.5, 'en-DE')).toBe('1.234,50 €'); // English text, Greek-style numbers
+    expect(formatMoney(1234.5, 'en-GB')).toBe('€1,234.50');
+    expect(formatMoney(-60.5, 'en-US')).toBe('−€60.50');
+    expect(formatMoney(-60.5, 'el-GR')).toBe('−60,50 €');
   });
 });

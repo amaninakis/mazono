@@ -205,6 +205,15 @@ Here n is the number of units of type u in entry i, and w is that unit's weight.
 
 Totals: income, expenses, net result, and the value of remaining stock at the last sale price. A toggle switches between calendar year (for tax) and season (for farm economics). An optional tax estimate % shows an after-tax figure.
 
+**How v0.3 implements it**
+
+- One `Transaction` record per expense, oil sale or other income, and `Category` records for expense and income categories (built-in ones are translated; users can rename, add and archive).
+- An oil sale stores its kg, € per kg, season (vintage) and place; `stockLevels()` subtracts it, so stock and money cannot disagree. The kg cannot exceed what that season's oil has in that place.
+- The category last used with a business is filled in when the business is typed again (`categoryForParty()`).
+- Tax estimate = net result × tax % when the result is positive. Remaining stock is valued at the price of the most recent sale.
+- Money amounts use the date and number format setting: "1.234,50 €" in Greek style, "€1,234.50" otherwise.
+- Receipt photos are left for later (v1.0+).
+
 ## Reports — v0.4
 
 1. **Field × season comparison**: oil kg, oil per tree or units per tree, by field and season. Shows alternate bearing at a glance.
@@ -293,7 +302,7 @@ These are planned but not yet scheduled in detail. Open an issue before starting
 
 1. **v0.1 — Field log** ✅: setup wizard, fields, units, Today screen (four tasks + custom), journal and calendar, offline storage, EN/EL, multi-farm data model.
 2. **v0.2 — Mill and stock** ✅: extraction form with charges, harvest linking with splits and allocation, season overview, stock by vintage and location.
-3. **v0.3 — Money**: expenses, sales (deducting stock), other income, totals by season and calendar year.
+3. **v0.3 — Money** ✅: expenses, sales (deducting stock), other income, totals by season and calendar year.
 4. **v0.4 — Reports**: the four reports above, CSV export.
 5. **v0.5 — Self-hosting**: sync server, login, farms and roles, backups, translator guide.
 6. **v1.0+**: Android/iOS builds (Capacitor), weather integration, daily reminders, location-aware default field, equipment log, tasks per tree (tree numbers and NFC tags), Labour reports, spreadsheet import, receipt photos, more languages.
