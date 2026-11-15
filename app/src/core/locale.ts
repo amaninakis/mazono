@@ -1,4 +1,4 @@
-import type { DateFormat, Language } from './types';
+import type { DateFormat, Language } from './types'
 
 /** Locales that give each date and number style, per app language. */
 const FORMATS: Record<Exclude<DateFormat, 'auto'>, Record<Language, string>> = {
@@ -8,9 +8,9 @@ const FORMATS: Record<Exclude<DateFormat, 'auto'>, Record<Language, string>> = {
   GB: { en: 'en-GB', el: 'el-GR' },
   // 11/15/2026 · 1,234.5
   US: { en: 'en-US', el: 'el-GR' },
-};
+}
 
-const GREEK_TIME_ZONES = ['Europe/Athens', 'Asia/Nicosia', 'Asia/Famagusta'];
+const GREEK_TIME_ZONES = ['Europe/Athens', 'Asia/Nicosia', 'Asia/Famagusta']
 
 /**
  * Guess the date and number style. Browsers do not pass on the operating system's region
@@ -22,13 +22,22 @@ export function detectDateFormat(
   browserLanguages: readonly string[],
   timeZone?: string,
 ): Exclude<DateFormat, 'auto'> {
-  if (lang === 'el') return 'GR';
-  const tags = browserLanguages.map((l) => l.toLowerCase());
-  if (tags.some((t) => t.startsWith('el') || t.endsWith('-gr') || t.endsWith('-cy'))) return 'GR';
-  if (timeZone && GREEK_TIME_ZONES.includes(timeZone)) return 'GR';
-  const region = tags[0]?.split('-')[1];
-  if (region === 'us') return 'US';
-  return 'GB';
+  if (lang === 'el') {
+    return 'GR'
+  }
+  const tags = browserLanguages.map((language) => language.toLowerCase())
+  if (tags.some((tag) => tag.startsWith('el') || tag.endsWith('-gr') || tag.endsWith('-cy'))) {
+    return 'GR'
+  }
+  if (timeZone && GREEK_TIME_ZONES.includes(timeZone)) {
+    return 'GR'
+  }
+  const region = tags[0]?.split('-')[1]
+  if (region === 'us') {
+    return 'US'
+  }
+
+  return 'GB'
 }
 
 /** The locale used to format dates and numbers (text still follows the app language). */
@@ -38,7 +47,8 @@ export function formatLocaleFor(
   browserLanguages: readonly string[],
   timeZone?: string,
 ): string {
-  const f: Exclude<DateFormat, 'auto'> =
-    !pref || pref === 'auto' ? detectDateFormat(lang, browserLanguages, timeZone) : pref;
-  return FORMATS[f][lang];
+  const format: Exclude<DateFormat, 'auto'> =
+    !pref || pref === 'auto' ? detectDateFormat(lang, browserLanguages, timeZone) : pref
+
+  return FORMATS[format][lang]
 }

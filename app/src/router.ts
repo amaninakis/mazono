@@ -1,30 +1,35 @@
-import { createRouter, createWebHistory } from 'vue-router';
-import Extraction from './screens/Extraction.vue';
-import Journal from './screens/Journal.vue';
-import Money from './screens/Money.vue';
-import Oil from './screens/Oil.vue';
-import More from './screens/More.vue';
-import Settings from './screens/Settings.vue';
-import Soon from './screens/Soon.vue';
-import Today from './screens/Today.vue';
-import Transaction from './screens/Transaction.vue';
+import { createRouter, createWebHistory } from 'vue-router'
+import ComingSoon from './screens/ComingSoon.vue'
+import ExtractionPage from './screens/ExtractionPage.vue'
+import JournalPage from './screens/JournalPage.vue'
+import MoneyPage from './screens/MoneyPage.vue'
+import MorePage from './screens/MorePage.vue'
+import OilPage from './screens/OilPage.vue'
+import SettingsPage from './screens/SettingsPage.vue'
+import TodayPage from './screens/TodayPage.vue'
+import TransactionPage from './screens/TransactionPage.vue'
 
 export const router = createRouter({
   history: createWebHistory(),
   routes: [
-    { path: '/', name: 'today', component: Today },
-    { path: '/entry/:id', name: 'entry', component: Today },
-    { path: '/journal', name: 'journal', component: Journal },
-    { path: '/oil', name: 'oil', component: Oil },
-    { path: '/oil/new', name: 'extraction-new', component: Extraction },
-    { path: '/oil/:id', name: 'extraction', component: Extraction },
-    { path: '/money', name: 'money', component: Money },
-    { path: '/money/new/:kind', name: 'transaction-new', component: Transaction },
-    { path: '/money/:id', name: 'transaction', component: Transaction },
-    { path: '/reports', name: 'reports', component: Soon, props: { textKey: 'soon.reports' } },
-    { path: '/more', name: 'more', component: More },
-    { path: '/settings', name: 'settings', component: Settings },
+    { path: '/', name: 'today', component: TodayPage },
+    { path: '/entry/:id', name: 'entry', component: TodayPage },
+    { path: '/journal', name: 'journal', component: JournalPage },
+    { path: '/oil', name: 'oil', component: OilPage },
+    { path: '/oil/new', name: 'extraction-new', component: ExtractionPage },
+    { path: '/oil/:id', name: 'extraction', component: ExtractionPage },
+    { path: '/money', name: 'money', component: MoneyPage },
+    { path: '/money/new/:kind', name: 'transaction-new', component: TransactionPage },
+    { path: '/money/:id', name: 'transaction', component: TransactionPage },
+    {
+      path: '/reports',
+      name: 'reports',
+      component: ComingSoon,
+      props: { textKey: 'soon.reports' },
+    },
+    { path: '/more', name: 'more', component: MorePage },
+    { path: '/settings', name: 'settings', component: SettingsPage },
     { path: '/:rest(.*)', redirect: '/' },
   ],
   scrollBehavior: (to) => (to.hash ? { el: to.hash } : { top: 0 }),
-});
+})

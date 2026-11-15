@@ -75,7 +75,6 @@ button, input, select, textarea { font: inherit; color: inherit; }
 .input.date { width: auto; min-height: 40px; padding: 6px 10px; }
 .select { appearance: auto; }
 .select.narrow { width: 90px; flex: none; }
-textarea.input { resize: vertical; }
 
 /* Buttons */
 .btn {
@@ -110,7 +109,8 @@ textarea.input { resize: vertical; }
 .chip.selected { background: var(--olive); border-color: var(--olive); color: #fff; }
 @media (prefers-color-scheme: dark) { .chip.selected { color: #15170f; } }
 
-.task-chips { display: flex; gap: 8px; overflow-x: auto; padding: 2px 0 12px; scrollbar-width: none; }
+.task-chips { display: flex; gap: 8px; overflow-x: auto; padding: 2px 0 12px; }
+.task-chips::-webkit-scrollbar { display: none; }
 .task-chip {
   flex: none; min-height: var(--tap); padding: 0 16px; border-radius: 999px;
   border: 2px solid var(--c, var(--line)); background: var(--card); font-weight: 600; cursor: pointer;
@@ -161,7 +161,10 @@ textarea.input { resize: vertical; }
 .toggle input:focus-visible + .toggle-track { outline: 2px solid var(--olive-2); outline-offset: 2px; }
 
 .check, .radio { display: inline-flex; align-items: center; gap: 8px; min-height: 40px; cursor: pointer; }
-.check input, .radio input { width: 20px; height: 20px; accent-color: var(--olive); }
+.check input, .radio input { width: 20px; height: 20px; }
+@supports (accent-color: red) {
+  .check input, .radio input { accent-color: var(--olive); }
+}
 .radio-list { display: flex; flex-direction: column; }
 
 /* Save bar */
@@ -334,10 +337,12 @@ textarea.input { resize: vertical; }
   grid-auto-columns: calc((100% - 16px) / 2.3); /* a third column peeks in */
   overflow-x: auto;
   scroll-snap-type: x proximity;
-  scrollbar-width: none;
   padding-bottom: 2px;
 }
 .field-picker.scrolling .field-chips::-webkit-scrollbar { display: none; }
+@supports (scrollbar-width: none) {
+  .task-chips, .field-picker.scrolling .field-chips { scrollbar-width: none; }
+}
 .field-picker.scrolling .field-chip { scroll-snap-align: start; }
 .field-picker .edge { position: absolute; top: 0; bottom: 28px; width: 36px; pointer-events: none; }
 .field-picker .edge.right { right: 0; background: linear-gradient(to right, transparent, var(--card)); }

@@ -1,9 +1,9 @@
 <script setup lang="ts">
-import { closeToast, currentToast } from './toast';
+import { closeToast, currentToast } from './toast'
 
 function act() {
-  currentToast.value?.action?.run();
-  closeToast();
+  currentToast.value?.action?.run()
+  closeToast()
 }
 </script>
 

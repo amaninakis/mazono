@@ -1,6 +1,6 @@
 <script setup lang="ts">
-defineProps<{ title: string }>();
-const emit = defineEmits<{ close: [] }>();
+defineProps<{ title: string }>()
+const emit = defineEmits<{ close: [] }>()
 </script>
 
 <template>

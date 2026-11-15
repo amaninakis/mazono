@@ -1,7 +1,3 @@
-import Dexie, { type EntityTable } from 'dexie';
-import { BUILTIN_CATEGORIES, BUILTIN_CHARGES, BUILTIN_LOCATIONS } from '../core/defaults';
-import { presetPlural } from '../core/units';
-import { uuid } from '../core/uuid';
 import type {
   Category,
   ChargeType,
@@ -16,55 +12,80 @@ import type {
   TaskType,
   Transaction,
   Unit,
-} from '../core/types';
+} from '../core/types'
+import Dexie, { type EntityTable } from 'dexie'
+import { BUILTIN_CATEGORIES, BUILTIN_CHARGES, BUILTIN_LOCATIONS } from '../core/defaults'
+import { presetPlural } from '../core/units'
+import { uuid } from '../core/uuid'
 
 /** Default expense and income categories for a farm (names come from translations). */
 export function moneyDefaults(farmId: string, id: () => string): Category[] {
-  const now = Date.now();
+  const now = Date.now()
+
   return (['expense', 'income'] as const).flatMap((kind) =>
-    BUILTIN_CATEGORIES[kind].map(
-      (builtin, order): Category => ({ id: id(), farmId, kind, builtin, name: builtin, archived: false, order, updatedAt: now }),
-    ),
-  );
+    BUILTIN_CATEGORIES[kind].map((builtin, order): Category => ({
+      id: id(),
+      farmId,
+      kind,
+      builtin,
+      name: builtin,
+      archived: false,
+      order,
+      updatedAt: now,
+    })),
+  )
 }
 
 /** Default charge types and storage locations for a farm (names come from translations). */
 export function oilDefaults(farmId: string, id: () => string) {
-  const now = Date.now();
+  const now = Date.now()
+
   return {
-    chargeTypes: BUILTIN_CHARGES.map(
-      (builtin, order): ChargeType => ({ id: id(), farmId, builtin, name: builtin, archived: false, order, updatedAt: now }),
-    ),
-    locations: BUILTIN_LOCATIONS.map(
-      (builtin, order): StorageLocation => ({ id: id(), farmId, builtin, name: builtin, archived: false, order, updatedAt: now }),
-    ),
-  };
+    chargeTypes: BUILTIN_CHARGES.map((builtin, order): ChargeType => ({
+      id: id(),
+      farmId,
+      builtin,
+      name: builtin,
+      archived: false,
+      order,
+      updatedAt: now,
+    })),
+    locations: BUILTIN_LOCATIONS.map((builtin, order): StorageLocation => ({
+      id: id(),
+      farmId,
+      builtin,
+      name: builtin,
+      archived: false,
+      order,
+      updatedAt: now,
+    })),
+  }
 }
 
 interface Meta {
-  key: string;
-  value: string;
+  key: string
+  value: string
 }
 
 /** Local, offline-first database (IndexedDB). A sync server comes in a later version. */
 export class HarvestDB extends Dexie {
-  meta!: EntityTable<Meta, 'key'>;
-  farms!: EntityTable<Farm, 'id'>;
-  settings!: EntityTable<FarmSettings, 'farmId'>;
-  fields!: EntityTable<Field, 'id'>;
-  units!: EntityTable<Unit, 'id'>;
-  taskTypes!: EntityTable<TaskType, 'id'>;
-  entries!: EntityTable<TaskEntry, 'id'>;
-  mills!: EntityTable<Mill, 'id'>;
-  chargeTypes!: EntityTable<ChargeType, 'id'>;
-  locations!: EntityTable<StorageLocation, 'id'>;
-  extractions!: EntityTable<Extraction, 'id'>;
-  stockMovements!: EntityTable<StockMovement, 'id'>;
-  categories!: EntityTable<Category, 'id'>;
-  transactions!: EntityTable<Transaction, 'id'>;
+  public meta!: EntityTable<Meta, 'key'>
+  public farms!: EntityTable<Farm, 'id'>
+  public settings!: EntityTable<FarmSettings, 'farmId'>
+  public fields!: EntityTable<Field, 'id'>
+  public units!: EntityTable<Unit, 'id'>
+  public taskTypes!: EntityTable<TaskType, 'id'>
+  public entries!: EntityTable<TaskEntry, 'id'>
+  public mills!: EntityTable<Mill, 'id'>
+  public chargeTypes!: EntityTable<ChargeType, 'id'>
+  public locations!: EntityTable<StorageLocation, 'id'>
+  public extractions!: EntityTable<Extraction, 'id'>
+  public stockMovements!: EntityTable<StockMovement, 'id'>
+  public categories!: EntityTable<Category, 'id'>
+  public transactions!: EntityTable<Transaction, 'id'>
 
-  constructor(name = 'harvestlog') {
-    super(name);
+  public constructor(name = 'harvestlog') {
+    super(name)
     this.version(1).stores({
       meta: 'key',
       farms: 'id',
@@ -73,21 +94,24 @@ export class HarvestDB extends Dexie {
       units: 'id, farmId',
       taskTypes: 'id, farmId',
       entries: 'id, farmId, [farmId+date], fieldId, taskTypeId',
-    });
+    })
     // v2: units get a plural name. Fill it in for units created from the presets.
     this.version(2)
       .stores({})
-      .upgrade((tx) =>
-      tx
-        .table<Unit>('units')
-        .toCollection()
-        .modify((u) => {
-          if (!u.pluralName) {
-            const plural = presetPlural(u.name);
-            if (plural) u.pluralName = plural;
-          }
-        }),
-    );
+      .upgrade(
+        async (tx) =>
+          await tx
+            .table<Unit>('units')
+            .toCollection()
+            .modify((unit) => {
+              if (!unit.pluralName) {
+                const plural = presetPlural(unit.name)
+                if (plural) {
+                  unit.pluralName = plural
+                }
+              }
+            }),
+      )
     // v3: mill, oil and stock. Existing farms get the default charges and locations.
     this.version(3)
       .stores({
@@ -98,13 +122,13 @@ export class HarvestDB extends Dexie {
         stockMovements: 'id, farmId',
       })
       .upgrade(async (tx) => {
-        const farms = await tx.table<Farm>('farms').toArray();
-        for (const f of farms) {
-          const d = oilDefaults(f.id, uuid);
-          await tx.table('chargeTypes').bulkPut(d.chargeTypes);
-          await tx.table('locations').bulkPut(d.locations);
+        const farms = await tx.table<Farm>('farms').toArray()
+        for (const farm of farms) {
+          const defaults = oilDefaults(farm.id, uuid)
+          await tx.table('chargeTypes').bulkPut(defaults.chargeTypes)
+          await tx.table('locations').bulkPut(defaults.locations)
         }
-      });
+      })
     // v4: money. Existing farms get the default expense and income categories.
     this.version(4)
       .stores({
@@ -112,10 +136,12 @@ export class HarvestDB extends Dexie {
         transactions: 'id, farmId, [farmId+date]',
       })
       .upgrade(async (tx) => {
-        const farms = await tx.table<Farm>('farms').toArray();
-        for (const f of farms) await tx.table('categories').bulkPut(moneyDefaults(f.id, uuid));
-      });
+        const farms = await tx.table<Farm>('farms').toArray()
+        for (const farm of farms) {
+          await tx.table('categories').bulkPut(moneyDefaults(farm.id, uuid))
+        }
+      })
   }
 }
 
-export const db = new HarvestDB();
+export const db = new HarvestDB()

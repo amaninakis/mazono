@@ -64,7 +64,7 @@ The app is a TypeScript PWA with a local database on the device. A small sync se
 
 | Layer | Choice | Why |
 | --- | --- | --- |
-| UI | Vue 3 (Composition API, `<script setup>`) + TypeScript + Vite, mobile-first | Approachable for new contributors; single-file components keep markup, logic and style together; the same code runs in the browser and in Capacitor. |
+| UI | Vue 3 (Composition API, `<script setup>`) + TypeScript + Vite, mobile-first. Nuxt (SPA mode) + Nuxt UI was considered: it would mean restyling every screen for little gain at this size, so it is not used for now; the lint setup works with either. | Approachable for new contributors; single-file components keep markup, logic and style together; the same code runs in the browser and in Capacitor. |
 | Local storage | IndexedDB via Dexie | Works with no signal in the field; instant saves. |
 | Sync (v0.5) | REST sync with per-record timestamps and UUIDs | UUIDs let records be created offline without ID clashes. |
 | Server (v0.5) | Node + Fastify, SQLite by default | One small container; easy to back up. |
@@ -81,6 +81,7 @@ The app is a TypeScript PWA with a local database on the device. A small sync se
 - Store quantities in base units (kg, trees, units) and format them only for display.
 - Every user-facing string goes through i18n, in both `en.json` and `el.json`.
 - Write for non-technical users: plain words, no jargon on the main screens, a default for every choice.
+- Code follows `@maninak/eslint-config`: `npm run lint` must report 0 problems (enforced in CI and by a pre-commit hook).
 - Every record has a UUID `id`, a `farmId`, `updatedAt`, and is soft-deleted (`deletedAt`) so it can sync.
 - Data can always be exported (JSON now, CSV later), so users are never locked in.
 
