@@ -63,7 +63,9 @@
     "addField": "Add field",
     "noFields": "No fields yet. You can add them later in Settings.",
     "finish": "Start logging",
-    "restore": "Restore from a backup file"
+    "restore": "Restore from a backup file",
+    "saveFailed": "Something went wrong while saving. Please try again.",
+    "notSecure": "This address doesn't start with https, so the app can't work offline or be added to the home screen. Everything else works. Ask the person who set it up to give you the https address."
   },
   "today": {
     "title": "What did you do today?",

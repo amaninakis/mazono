@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { HarvestDB } from './db';
-import { createFarm, currentFarmId, importFarm } from './repo';
+import { createFarm, currentFarmId, importFarm, uuid } from './repo';
 
 describe('farm repo', () => {
   it('creates a farm with built-in task types and keeps data per farm', async () => {
@@ -38,5 +38,19 @@ describe('farm repo', () => {
     expect(id).toBe(r.farmId);
     expect(await db2.entries.count()).toBe(1);
     await expect(importFarm({ nope: 1 }, db2)).rejects.toThrow();
+  });
+});
+
+describe('uuid', () => {
+  it('works where crypto.randomUUID is missing (plain http pages)', () => {
+    const original = crypto.randomUUID;
+    Object.defineProperty(crypto, 'randomUUID', { value: undefined, configurable: true });
+    try {
+      const ids = new Set(Array.from({ length: 200 }, () => uuid()));
+      expect(ids.size).toBe(200);
+      for (const id of ids) expect(id).toMatch(/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/);
+    } finally {
+      Object.defineProperty(crypto, 'randomUUID', { value: original, configurable: true });
+    }
   });
 });

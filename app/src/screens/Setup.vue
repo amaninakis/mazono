@@ -30,6 +30,8 @@ const customUnit = ref('');
 const fields = ref<FieldDraft[]>([{ name: '', trees: '' }]);
 const error = ref('');
 const busy = ref(false);
+/** Offline mode and installing need https (or localhost). */
+const insecure = typeof window !== 'undefined' && !window.isSecureContext;
 
 const unitLabel = (u: UnitDraft) => u.name || t(`unitPreset.${u.key}`);
 const selected = computed(() => units.value.filter((u) => u.selected));
@@ -62,6 +64,18 @@ function nextFromUnits() {
 
 async function finish() {
   busy.value = true;
+  error.value = '';
+  try {
+    await saveSetup();
+  } catch (e) {
+    console.error(e);
+    error.value = t('setup.saveFailed');
+  } finally {
+    busy.value = false;
+  }
+}
+
+async function saveSetup() {
   const repo = await createFarm(farmName.value.trim() || t('setup.farmNamePlaceholder'), lang.value);
   const def = selected.value.some((u) => u.key === defaultKey.value) ? defaultKey.value : selected.value[0].key;
   for (const u of selected.value) {
@@ -128,6 +142,7 @@ async function restore(e: Event) {
         <button type="button" class="btn primary" @click="step = 1">{{ t('common.next') }}</button>
       </div>
       <p v-if="error" class="error">{{ error }}</p>
+      <p v-if="insecure" class="notice">{{ t('setup.notSecure') }}</p>
     </section>
 
     <section v-else-if="step === 1">
@@ -185,6 +200,7 @@ async function restore(e: Event) {
         <button type="button" class="btn ghost" @click="step = 1">{{ t('common.back') }}</button>
         <button type="button" class="btn primary" :disabled="busy" @click="finish">{{ t('setup.finish') }}</button>
       </div>
+      <p v-if="error" class="error">{{ error }}</p>
     </section>
   </main>
 </template>
