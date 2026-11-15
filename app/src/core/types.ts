@@ -41,6 +41,8 @@ export interface Field extends BaseRecord {
 
 export interface Unit extends BaseRecord {
   name: string;
+  /** Plural form, used for amounts above one ("8,5 τσουβάλια"). Optional. */
+  pluralName?: string;
   /** Optional user estimate in kg. The app will refine it from extractions (v0.2). */
   approxKg?: number;
   isDefault: boolean;

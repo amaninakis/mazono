@@ -263,3 +263,17 @@ textarea.input { resize: vertical; }
 .tagline { font-size: 1.1rem; font-weight: 600; color: var(--olive); margin: 0 0 0.75rem; }
 
 .notice { margin-top: 16px; padding: 10px 12px; border-radius: 10px; background: var(--olive-soft); color: var(--ink); font-size: 0.9rem; }
+
+/* "+½" button next to a stepper */
+.half-btn {
+  margin-left: 8px; min-width: 52px; min-height: 56px; border-radius: 12px;
+  border: 1px dashed var(--olive-2); background: var(--card); color: var(--olive);
+  font-size: 1.1rem; font-weight: 700; cursor: pointer;
+}
+.half-btn:active { background: var(--olive-soft); }
+/* Harvest units: unit picker on its own line, counter below */
+.unit-qty { flex-direction: column; align-items: stretch; gap: 6px; padding-bottom: 10px; border-bottom: 1px solid var(--line); margin-bottom: 10px; }
+.unit-qty .qty-top { display: flex; gap: 8px; align-items: center; }
+.unit-qty .qty-top .select { flex: 1; min-width: 0; }
+.unit-qty .stepper { max-width: none; }
+.stepper .step-input + .step-btn { border-radius: 0 12px 12px 0; }

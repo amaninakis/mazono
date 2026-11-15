@@ -27,6 +27,13 @@
     "palletBin": "Pallet bin",
     "bigBag": "Big bag"
   },
+  "unitPresetPlural": {
+    "sack": "Sacks",
+    "halfSack": "Half sacks",
+    "crate": "Crates",
+    "palletBin": "Pallet bins",
+    "bigBag": "Big bags"
+  },
   "common": {
     "next": "Next",
     "back": "Back",
@@ -65,7 +72,8 @@
     "finish": "Start logging",
     "restore": "Restore from a backup file",
     "saveFailed": "Something went wrong while saving. Please try again.",
-    "notSecure": "This address doesn't start with https, so the app can't work offline or be added to the home screen. Everything else works. Ask the person who set it up to give you the https address."
+    "notSecure": "This address doesn't start with https, so the app can't work offline or be added to the home screen. Everything else works. Ask the person who set it up to give you the https address.",
+    "pluralName": "Plural (optional)"
   },
   "today": {
     "title": "What did you do today?",
@@ -106,7 +114,8 @@
     "create": "Create",
     "todayTreeYield": "Today: {{value}} per tree",
     "seasonTreeYield": "{{field}} this season: {{value}} per harvested tree",
-    "seasonFieldYield": "{{field}} this season: {{value}} per tree in the field"
+    "seasonFieldYield": "{{field}} this season: {{value}} per tree in the field",
+    "addHalf": "Add half"
   },
   "inputKind": {
     "harvest": "Trees and collected units",
