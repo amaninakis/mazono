@@ -199,7 +199,7 @@ Here n is the number of units of type u in entry i, and w is that unit's weight.
 
 | Entry | Fields | Behaviour |
 | --- | --- | --- |
-| Expense | date, business name (autocomplete), € amount, category, invoice no.?, receipt photo?, field? | Category is remembered per business. |
+| Expense | date, business name (autocomplete), € amount, category, invoice no.?, receipt photo? | Category is remembered per business. Expenses are not linked to fields. |
 | Oil sale | date, buyer, kg, €/kg → total, vintage + location sold from | Deducts from that stock; warns if stock would go negative. Default = oldest vintage at the mill. |
 | Other income | date, source, € amount, category (subsidy, VAT refund, other) | Autocomplete like expenses. |
 
@@ -213,6 +213,7 @@ Totals: income, expenses, net result, and the value of remaining stock at the la
 - Tax estimate = net result × tax % when the result is positive. Remaining stock is valued at the price of the most recent sale.
 - Money amounts use the date and number format setting: "1.234,50 €" in Greek style, "€1,234.50" otherwise.
 - Receipt photos are left for later (v1.0+).
+- After saving an entry, the Money page (and the Oil page, for extractions) opens on the season or year that contains its date, and the save message names it, so past entries never seem to disappear.
 
 ## Reports — v0.4
 

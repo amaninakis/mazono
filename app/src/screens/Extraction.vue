@@ -19,6 +19,7 @@ import DateField from '../ui/DateField.vue';
 import Modal from '../ui/Modal.vue';
 import Stepper from '../ui/Stepper.vue';
 import { chargeName, locationName, useFarm } from '../ui/farm';
+import { oilPeriod } from '../ui/periods';
 import { showToast } from '../ui/toast';
 
 const { t } = useTranslation();
@@ -238,6 +239,7 @@ async function save() {
   if (perUnit.value) lines.push(perUnit.value);
   const trees = batchTrees(saved, farm.value.entries);
   if (trees > 0) lines.push(t('extraction.summaryTree', { kg: fmt(saved.oilKg / trees, 2) }));
+  oilPeriod.season = seasonOf(date.value, farm.value.settings.seasonStartMonth);
   showToast({ title: editing ? t('extraction.updated') : t('extraction.saved'), lines });
   void router.push('/oil');
 }

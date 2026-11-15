@@ -9,6 +9,7 @@ import { stockLevels } from '../core/oil';
 import type { Transaction, TransactionKind } from '../core/types';
 import { formatLocale } from '../i18n';
 import { categoryName, useFarm } from '../ui/farm';
+import { moneyPeriod } from '../ui/periods';
 
 const { t } = useTranslation();
 const farm = useFarm();
@@ -22,16 +23,15 @@ const day = (d: string) =>
 
 /* ---------- period: season (farm economics) or calendar year (tax) ---------- */
 const today = todayISO();
-const periodKind = ref<Period['kind']>('season');
+const periodKind = computed(() => moneyPeriod.kind);
 const yearOf = (d: string) => (periodKind.value === 'season' ? seasonOf(d, startMonth.value) : Number(d.slice(0, 4)));
 const years = computed(() =>
   [...new Set([yearOf(today), ...farm.value.transactions.map((x) => yearOf(x.date))])].sort((a, b) => b - a),
 );
-const chosenYear = ref<number | null>(null);
-const period = computed<Period>(() => ({ kind: periodKind.value, year: chosenYear.value ?? yearOf(today) }));
+const period = computed<Period>(() => ({ kind: periodKind.value, year: moneyPeriod.year ?? yearOf(today) }));
 function setKind(k: Period['kind']) {
-  periodKind.value = k;
-  chosenYear.value = null;
+  moneyPeriod.kind = k;
+  moneyPeriod.year = null;
 }
 const periodLabel = (y: number) => (periodKind.value === 'season' ? seasonLabel(y, startMonth.value) : String(y));
 
@@ -88,7 +88,7 @@ const icon = (k: TransactionKind) => (k === 'sale' ? '💧' : k === 'income' ? '
         class="input select season-select"
         :aria-label="periodKind === 'season' ? t('money.season') : t('money.year')"
         :value="period.year"
-        @change="(e) => (chosenYear = Number((e.target as HTMLSelectElement).value))"
+        @change="(e) => (moneyPeriod.year = Number((e.target as HTMLSelectElement).value))"
       >
         <option v-for="y in years" :key="y" :value="y">{{ periodLabel(y) }}</option>
       </select>

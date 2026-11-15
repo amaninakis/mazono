@@ -324,8 +324,6 @@
     "category": "Category",
     "amount": "Amount (€)",
     "invoiceNo": "Invoice no. (optional)",
-    "field": "Field (optional)",
-    "noField": "–",
     "kg": "Oil sold (kg)",
     "pricePerKg": "Price (€ per kg)",
     "total": "Total",
@@ -338,6 +336,8 @@
     "saved": "Saved",
     "deleted": "Deleted",
     "newCategory": "New category…",
-    "newCategoryName": "Name of the category"
+    "newCategoryName": "Name of the category",
+    "inSeason": "In season {{period}}",
+    "inYear": "In {{period}}"
   }
 }
