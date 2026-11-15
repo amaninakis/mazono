@@ -372,3 +372,7 @@ textarea.input { resize: vertical; }
 .tx-row.expense .tx-amount { color: #a4471f; }
 .tx-row:not(.expense) .tx-amount { color: var(--olive); }
 .kv td { white-space: nowrap; padding-left: 8px; }
+
+/* Sale fee */
+.fee-row .chips { flex: none; }
+.sale-sum { margin-top: 12px; }

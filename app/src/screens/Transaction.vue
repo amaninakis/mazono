@@ -4,7 +4,7 @@ import { computed, ref, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { seasonLabel, seasonOf, todayISO } from '../core/dates';
 import { formatMoney, formatNumber } from '../core/format';
-import { categoryForParty, defaultSaleSource, partyNames } from '../core/money';
+import { categoryForParty, defaultSaleSource, feeForBuyer, partyNames, saleAmounts } from '../core/money';
 import { stockLevels, trackedVintages } from '../core/oil';
 import type { TransactionKind } from '../core/types';
 import { formatLocale } from '../i18n';
@@ -56,7 +56,16 @@ if (!categoryId.value && categories.value.length) categoryId.value = categories.
 
 /** Fill in the category last used with this business. */
 function onPartyChange() {
-  if (categoryChosen || kind === 'sale') return;
+  if (kind === 'sale') {
+    // Fill in the fee used last time with this buyer.
+    const f = !feeChosen ? feeForBuyer(farm.value.transactions, party.value) : undefined;
+    if (f) {
+      feeKind.value = f.kind;
+      feeValue.value = f.value;
+    }
+    return;
+  }
+  if (categoryChosen) return;
   const c = categoryForParty(farm.value.transactions, party.value, kind);
   if (c) categoryId.value = c;
 }
@@ -139,7 +148,21 @@ const available = computed(() =>
 );
 const kg = ref<number | null>(editing?.kg ?? null);
 const price = ref<number | null>(editing?.pricePerKg ?? null);
-const total = computed(() => Math.round((kg.value ?? 0) * (price.value ?? 0) * 100) / 100);
+/** Optional fee kept from the sale (e.g. the mill's 1%), as % of kg × price or in euros. */
+const feeKind = ref<'percent' | 'euro'>(editing?.fee && editing.feePercent == null ? 'euro' : 'percent');
+const feeValue = ref<number | null>(editing?.fee ? (editing.feePercent ?? editing.fee) : null);
+let feeChosen = !!editing?.fee;
+const amounts = computed(() =>
+  saleAmounts(kg.value ?? 0, price.value ?? 0, feeValue.value ? { kind: feeKind.value, value: feeValue.value } : undefined),
+);
+function setFeeKind(k: 'percent' | 'euro') {
+  feeKind.value = k;
+  feeChosen = true;
+}
+function setFee(v: number | null) {
+  feeValue.value = v;
+  feeChosen = true;
+}
 const sourceLabel = (s: { vintage: number; locationId: string; kg: number }) => {
   const l = farm.value.locations.find((x) => x.id === s.locationId);
   return `${seasonLabel(s.vintage, startMonth)} · ${l ? locationName(t, l) : '?'} (${fmt(s.kg)})`;
@@ -167,7 +190,9 @@ async function save() {
     kind,
     party: party.value.trim(),
     categoryId: kind === 'sale' ? undefined : categoryId.value || undefined,
-    amount: kind === 'sale' ? total.value : amount.value!,
+    amount: kind === 'sale' ? amounts.value.received : amount.value!,
+    fee: kind === 'sale' && amounts.value.fee ? amounts.value.fee : undefined,
+    feePercent: kind === 'sale' && amounts.value.fee && feeKind.value === 'percent' ? feeValue.value! : undefined,
     kg: kind === 'sale' ? kg.value! : undefined,
     pricePerKg: kind === 'sale' ? price.value! : undefined,
     vintage: kind === 'sale' ? chosen.value!.vintage : undefined,
@@ -247,7 +272,29 @@ async function remove() {
         <p v-if="!chosen?.untracked" class="hint">{{ t('tx.available', { kg: fmt(available) }) }}</p>
         <label class="label" for="tx-price">{{ t('tx.pricePerKg') }}</label>
         <Stepper id="tx-price" v-model="price" :label="t('tx.pricePerKg')" :step="0.1" />
-        <p class="result">{{ t('tx.total') }}: <strong>{{ formatMoney(total, formatLocale) }}</strong></p>
+        <label class="label" for="tx-fee">{{ t('tx.fee') }}</label>
+        <div class="qty-row fee-row">
+          <Stepper
+            id="tx-fee"
+            :model-value="feeValue"
+            :label="t('tx.fee')"
+            :step="feeKind === 'percent' ? 0.5 : 1"
+            @update:model-value="setFee"
+          />
+          <div class="chips tight" role="radiogroup" :aria-label="t('tx.fee')">
+            <button type="button" role="radio" :aria-checked="feeKind === 'percent'" :class="['chip', { selected: feeKind === 'percent' }]" @click="setFeeKind('percent')">%</button>
+            <button type="button" role="radio" :aria-checked="feeKind === 'euro'" :class="['chip', { selected: feeKind === 'euro' }]" @click="setFeeKind('euro')">€</button>
+          </div>
+        </div>
+        <table class="kv sale-sum">
+          <tbody>
+            <tr><th>{{ t('tx.total') }}</th><td>{{ formatMoney(amounts.gross, formatLocale) }}</td></tr>
+            <template v-if="amounts.fee">
+              <tr class="sub"><th>{{ t('tx.feeShort') }}</th><td>− {{ formatMoney(amounts.fee, formatLocale) }}</td></tr>
+              <tr class="strong"><th>{{ t('tx.received') }}</th><td>{{ formatMoney(amounts.received, formatLocale) }}</td></tr>
+            </template>
+          </tbody>
+        </table>
       </template>
     </section>
 

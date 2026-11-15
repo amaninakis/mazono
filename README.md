@@ -14,7 +14,7 @@ Available in **English** and **Ελληνικά**. Works offline on your phone a
 ### Money (v0.3)
 
 - **Expenses** with business name (remembered, with its category), amount, category and invoice no.
-- **Oil sales**: buyer, kg and € per kg → total. The oil is taken out of stock, by default from the oldest
+- **Oil sales**: buyer, kg and € per kg → total, with an optional fee (% or €, remembered per buyer). The oil is taken out of stock, by default from the oldest
   season at the mill, and you cannot sell more than you have.
 - **Other income** such as subsidies (ΟΠΕΚΕΠΕ) or VAT refunds.
 - **Totals** by calendar year: oil sales (kg and average price), other income, expenses,

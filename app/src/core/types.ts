@@ -195,11 +195,15 @@ export interface Transaction extends BaseRecord {
   /** Business, buyer or source, e.g. "Kalogridis fuel", "Agrocoop", "ΟΠΕΚΕΠΕ". */
   party: string;
   categoryId?: string;
-  /** Total in euros. For a sale: kg × price per kg. */
+  /** Euros. For a sale: the money received, i.e. kg × price per kg minus any fee. */
   amount: number;
   // sales
   kg?: number;
   pricePerKg?: number;
+  /** Fee kept from a sale (e.g. the mill's 1% transaction fee), in euros. */
+  fee?: number;
+  /** Set when the fee was entered as a percentage of kg × price. */
+  feePercent?: number;
   vintage?: number;
   locationId?: string;
   // expenses
