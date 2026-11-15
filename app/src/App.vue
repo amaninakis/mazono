@@ -21,14 +21,20 @@ const data = useLiveQuery(
   async () => {
     const id = farmId.value;
     if (!id) return null;
-    const [farm, settings, fields, units, taskTypes, entries] = await Promise.all([
-      db.farms.get(id),
-      db.settings.get(id),
-      db.fields.where('farmId').equals(id).toArray(),
-      db.units.where('farmId').equals(id).toArray(),
-      db.taskTypes.where('farmId').equals(id).toArray(),
-      db.entries.where('farmId').equals(id).toArray(),
-    ]);
+    const [farm, settings, fields, units, taskTypes, entries, mills, chargeTypes, locations, extractions, stockMovements] =
+      await Promise.all([
+        db.farms.get(id),
+        db.settings.get(id),
+        db.fields.where('farmId').equals(id).toArray(),
+        db.units.where('farmId').equals(id).toArray(),
+        db.taskTypes.where('farmId').equals(id).toArray(),
+        db.entries.where('farmId').equals(id).toArray(),
+        db.mills.where('farmId').equals(id).toArray(),
+        db.chargeTypes.where('farmId').equals(id).toArray(),
+        db.locations.where('farmId').equals(id).toArray(),
+        db.extractions.where('farmId').equals(id).toArray(),
+        db.stockMovements.where('farmId').equals(id).toArray(),
+      ]);
     if (!farm || !settings) return null;
     return {
       farmName: farm.name,
@@ -37,6 +43,11 @@ const data = useLiveQuery(
       units: notDeleted(units),
       taskTypes: notDeleted(taskTypes),
       entries: notDeleted(entries),
+      mills: notDeleted(mills),
+      chargeTypes: notDeleted(chargeTypes),
+      locations: notDeleted(locations),
+      extractions: notDeleted(extractions),
+      stockMovements: notDeleted(stockMovements),
     };
   },
   () => farmId.value,

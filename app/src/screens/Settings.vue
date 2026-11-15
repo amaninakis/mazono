@@ -2,13 +2,15 @@
 import { useTranslation } from 'i18next-vue';
 import { computed, ref } from 'vue';
 import { TASK_COLORS, TASK_ICONS } from '../core/defaults';
+import { unitWeights } from '../core/oil';
 import { parseDecimal } from '../core/progress';
 import type { InputKind, Language, TaskType } from '../core/types';
 import { db } from '../db/db';
 import { importFarm } from '../db/repo';
+import { formatNumber } from '../core/format';
 import { LANGUAGES, locale, setLanguage } from '../i18n';
 import Toggle from '../ui/Toggle.vue';
-import { taskName, useFarm } from '../ui/farm';
+import { chargeName, locationName, taskName, useFarm } from '../ui/farm';
 import { showToast } from '../ui/toast';
 
 const { t } = useTranslation();
@@ -33,6 +35,33 @@ const visible = <T extends { archived: boolean }>(rows: T[]) => rows.filter((r) 
 const fieldList = computed(() => visible(farm.value.fields).sort((a, b) => a.order - b.order));
 const unitList = computed(() => visible(farm.value.units));
 const typeList = computed(() => visible(farm.value.taskTypes).sort((a, b) => a.order - b.order));
+const millList = computed(() => visible(farm.value.mills));
+const chargeList = computed(() => visible(farm.value.chargeTypes).sort((a, b) => a.order - b.order));
+const locationList = computed(() => visible(farm.value.locations).sort((a, b) => a.order - b.order));
+const weights = computed(() => unitWeights(farm.value.units, farm.value.extractions));
+const newMill = ref('');
+const newChargeName = ref('');
+const newLocation = ref('');
+
+async function addMill() {
+  if (!newMill.value.trim()) return;
+  await repo.value.put('mills', { name: newMill.value.trim(), archived: false });
+  newMill.value = '';
+}
+async function addChargeType() {
+  if (!newChargeName.value.trim()) return;
+  await repo.value.put('chargeTypes', { name: newChargeName.value.trim(), archived: false, order: farm.value.chargeTypes.length });
+  newChargeName.value = '';
+}
+async function addLocation() {
+  if (!newLocation.value.trim()) return;
+  await repo.value.put('locations', { name: newLocation.value.trim(), archived: false, order: farm.value.locations.length });
+  newLocation.value = '';
+}
+function renameBuiltin(table: 'chargeTypes' | 'locations', id: string, current: string, e: Event) {
+  const v = val(e).trim();
+  if (v && v !== current) void repo.value.update(table, id, { name: v });
+}
 
 const val = (e: Event) => (e.target as HTMLInputElement).value;
 
@@ -238,6 +267,9 @@ async function importData(e: Event) {
             :value="u.approxKg ?? ''"
             @blur="(e) => repo.update('units', u.id, { approxKg: parseDecimal(val(e)) ?? undefined })"
           />
+          <small v-if="weights[u.id]?.source === 'learned'" class="muted learned">
+            {{ t('settings.learnedWeight', { kg: formatNumber(weights[u.id].kg, locale, 1), count: weights[u.id].batches }) }}
+          </small>
           <label class="radio">
             <input type="radio" name="s-default-unit" :checked="u.isDefault" @change="repo.setDefaultUnit(u.id)" />
             <span>{{ t('setup.default') }}</span>
@@ -255,6 +287,78 @@ async function importData(e: Event) {
       <div class="inline-add">
         <input v-model="newUnit" class="input" :placeholder="t('setup.unitName')" @keydown.enter="addUnit" />
         <button type="button" class="btn small" @click="addUnit">{{ t('common.add') }}</button>
+      </div>
+    </section>
+
+    <section id="oil" class="card">
+      <h2>{{ t('settings.oilSection') }}</h2>
+
+      <span class="label">{{ t('settings.mills') }}</span>
+      <ul class="list">
+        <li v-for="m in millList" :key="m.id" :class="['field-row', { off: m.archived }]">
+          <input
+            class="input"
+            :aria-label="t('common.name')"
+            :value="m.name"
+            @blur="(e) => val(e).trim() && repo.update('mills', m.id, { name: val(e).trim() })"
+          />
+          <button type="button" class="btn ghost small" @click="repo.update('mills', m.id, { archived: !m.archived })">
+            {{ m.archived ? t('common.unarchive') : t('common.archive') }}
+          </button>
+        </li>
+      </ul>
+      <div class="inline-add">
+        <input v-model="newMill" class="input" :placeholder="t('extraction.newMillName')" @keydown.enter="addMill" />
+        <button type="button" class="btn small" @click="addMill">{{ t('common.add') }}</button>
+      </div>
+
+      <span class="label">{{ t('settings.chargeTypes') }}</span>
+      <ul class="list">
+        <li v-for="c in chargeList" :key="c.id" :class="['field-row', { off: c.archived }]">
+          <input
+            :key="`${c.id}-${locale}`"
+            class="input"
+            :aria-label="t('common.name')"
+            :value="chargeName(t, c)"
+            @blur="(e) => renameBuiltin('chargeTypes', c.id, chargeName(t, c), e)"
+          />
+          <input
+            class="input small"
+            inputmode="decimal"
+            :aria-label="t('settings.defaultPercent')"
+            :placeholder="t('settings.defaultPercent')"
+            :value="c.defaultPercent ?? ''"
+            @blur="(e) => repo.update('chargeTypes', c.id, { defaultPercent: parseDecimal(val(e)) ?? undefined })"
+          />
+          <span class="muted">%</span>
+          <button type="button" class="btn ghost small" @click="repo.update('chargeTypes', c.id, { archived: !c.archived })">
+            {{ c.archived ? t('common.unarchive') : t('common.archive') }}
+          </button>
+        </li>
+      </ul>
+      <div class="inline-add">
+        <input v-model="newChargeName" class="input" :placeholder="t('extraction.newChargeName')" @keydown.enter="addChargeType" />
+        <button type="button" class="btn small" @click="addChargeType">{{ t('common.add') }}</button>
+      </div>
+
+      <span class="label">{{ t('settings.locations') }}</span>
+      <ul class="list">
+        <li v-for="l in locationList" :key="l.id" :class="['field-row', { off: l.archived }]">
+          <input
+            :key="`${l.id}-${locale}`"
+            class="input"
+            :aria-label="t('common.name')"
+            :value="locationName(t, l)"
+            @blur="(e) => renameBuiltin('locations', l.id, locationName(t, l), e)"
+          />
+          <button type="button" class="btn ghost small" @click="repo.update('locations', l.id, { archived: !l.archived })">
+            {{ l.archived ? t('common.unarchive') : t('common.archive') }}
+          </button>
+        </li>
+      </ul>
+      <div class="inline-add">
+        <input v-model="newLocation" class="input" :placeholder="t('settings.addLocation')" @keydown.enter="addLocation" />
+        <button type="button" class="btn small" @click="addLocation">{{ t('common.add') }}</button>
       </div>
     </section>
 

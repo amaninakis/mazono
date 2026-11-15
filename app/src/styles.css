@@ -277,3 +277,40 @@ textarea.input { resize: vertical; }
 .unit-qty .qty-top .select { flex: 1; min-width: 0; }
 .unit-qty .stepper { max-width: none; }
 .stepper .step-input + .step-btn { border-radius: 0 12px 12px 0; }
+
+/* Extraction form */
+.result { margin: 12px 0 0; font-size: 1.05rem; }
+.pct { min-width: 64px; text-align: right; color: var(--muted); font-variant-numeric: tabular-nums; }
+.charge-row .label { margin-top: 0.5rem; }
+.harvest-rows { gap: 6px; }
+.harvest-row { border: 1px solid var(--line); border-radius: 12px; padding: 6px 10px; background: var(--bg); }
+.harvest-row.on { border-color: var(--olive); background: var(--olive-soft); }
+.hr-main { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.hr-main .check span { display: flex; flex-direction: column; }
+.hr-part { padding: 4px 0 6px 28px; }
+.btn.danger { color: var(--danger); margin-top: 10px; }
+
+/* Oil page */
+.season-select { width: auto; min-height: 40px; }
+.btn.block { display: flex; width: 100%; margin-bottom: 12px; }
+.kv { width: 100%; border-collapse: collapse; }
+.kv th { text-align: left; font-weight: 500; color: var(--muted); padding: 6px 8px 6px 0; vertical-align: top; }
+.kv td { text-align: right; padding: 6px 0; font-variant-numeric: tabular-nums; }
+.kv tr + tr th, .kv tr + tr td { border-top: 1px solid var(--line); }
+.kv tr.sub th { padding-left: 12px; font-size: 0.92rem; }
+.kv tr.sub td { font-size: 0.92rem; color: var(--muted); }
+.kv tr.strong th, .kv tr.strong td { font-weight: 700; color: var(--ink); }
+.x-card {
+  width: 100%; display: flex; flex-direction: column; gap: 2px; text-align: left; padding: 10px 12px;
+  border: 1px solid var(--line); border-radius: 12px; background: var(--bg); cursor: pointer;
+}
+.table-wrap { overflow-x: auto; }
+.grid { width: 100%; border-collapse: collapse; font-variant-numeric: tabular-nums; }
+.grid th, .grid td { padding: 8px 6px; text-align: right; border-bottom: 1px solid var(--line); white-space: nowrap; }
+.grid th:first-child { text-align: left; }
+.grid thead th { font-size: 0.8rem; color: var(--muted); font-weight: 600; white-space: normal; }
+.grid tfoot th, .grid tfoot td { border-bottom: none; font-weight: 600; }
+.moves li { border-bottom: 1px solid var(--line); padding-bottom: 4px; }
+.oil-mark { font-style: normal; font-size: 0.55rem; line-height: 1; }
+.oil-entry { --c: #c9a227; }
+.learned { flex-basis: 100%; }

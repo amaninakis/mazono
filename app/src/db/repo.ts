@@ -1,30 +1,67 @@
 import { BUILTIN_TASKS } from '../core/defaults';
 import type {
   BaseRecord,
+  ChargeType,
+  Extraction,
   FarmSettings,
   Field,
   Language,
+  Mill,
+  StockMovement,
+  StorageLocation,
   TaskEntry,
   TaskType,
   Unit,
 } from '../core/types';
-import { db as defaultDb, type HarvestDB } from './db';
+import { uuid } from '../core/uuid';
+import { db as defaultDb, oilDefaults, type HarvestDB } from './db';
 
-/**
- * Random UUID (v4). `crypto.randomUUID` only exists on secure pages (https or localhost),
- * so fall back to `crypto.getRandomValues`, which works on plain http too.
- */
-export function uuid(): string {
-  if (typeof crypto.randomUUID === 'function') return crypto.randomUUID();
-  const b = crypto.getRandomValues(new Uint8Array(16));
-  b[6] = (b[6] & 0x0f) | 0x40;
-  b[8] = (b[8] & 0x3f) | 0x80;
-  const h = [...b].map((x) => x.toString(16).padStart(2, '0')).join('');
-  return `${h.slice(0, 8)}-${h.slice(8, 12)}-${h.slice(12, 16)}-${h.slice(16, 20)}-${h.slice(20)}`;
-}
+export { uuid };
 const now = () => Date.now();
 
-type New<T extends BaseRecord> = Omit<T, 'id' | 'farmId' | 'updatedAt'> & { id?: string };
+export type New<T extends BaseRecord> = Omit<T, 'id' | 'farmId' | 'updatedAt'> & { id?: string };
+
+/** Tables holding farm records (each row has id, farmId, updatedAt, deletedAt?). */
+export type FarmTable =
+  | 'fields'
+  | 'units'
+  | 'taskTypes'
+  | 'entries'
+  | 'mills'
+  | 'chargeTypes'
+  | 'locations'
+  | 'extractions'
+  | 'stockMovements';
+
+const FARM_TABLES: FarmTable[] = [
+  'fields',
+  'units',
+  'taskTypes',
+  'entries',
+  'mills',
+  'chargeTypes',
+  'locations',
+  'extractions',
+  'stockMovements',
+];
+
+interface TableRow {
+  fields: Field;
+  units: Unit;
+  taskTypes: TaskType;
+  entries: TaskEntry;
+  mills: Mill;
+  chargeTypes: ChargeType;
+  locations: StorageLocation;
+  extractions: Extraction;
+  stockMovements: StockMovement;
+}
+
+type AnyTable = {
+  put: (row: object) => Promise<unknown>;
+  update: (id: string, p: object) => Promise<number>;
+  where: (k: string) => { equals: (v: string) => { toArray: () => Promise<object[]> } };
+};
 
 /** Data access for one farm. All writes stamp `updatedAt` for future sync. */
 export class FarmRepo {
@@ -33,8 +70,26 @@ export class FarmRepo {
     private db: HarvestDB = defaultDb,
   ) {}
 
-  private stamp<T extends BaseRecord>(row: New<T>): T {
-    return { ...row, id: row.id ?? uuid(), farmId: this.farmId, updatedAt: now() } as T;
+  private table(name: FarmTable) {
+    return this.db[name] as unknown as AnyTable;
+  }
+
+  /** Create or replace a record (keeps its id when given). */
+  async put<K extends FarmTable>(table: K, row: New<TableRow[K]>): Promise<TableRow[K]> {
+    const full = { ...row, id: row.id ?? uuid(), farmId: this.farmId, updatedAt: now() } as TableRow[K];
+    await this.table(table).put(full);
+    return full;
+  }
+
+  update(table: FarmTable, id: string, patch: Record<string, unknown>) {
+    return this.table(table).update(id, { ...patch, updatedAt: now() });
+  }
+
+  softDelete(table: FarmTable, id: string) {
+    return this.update(table, id, { deletedAt: now() });
+  }
+  restore(table: FarmTable, id: string) {
+    return this.update(table, id, { deletedAt: undefined });
   }
 
   settings() {
@@ -44,37 +99,21 @@ export class FarmRepo {
     return this.db.settings.update(this.farmId, patch);
   }
 
-  async addField(f: New<Field>) {
-    const row = this.stamp<Field>(f);
-    await this.db.fields.put(row);
-    return row;
+  addField(f: New<Field>) {
+    return this.put('fields', f);
   }
   async addUnit(u: New<Unit>) {
-    const row = this.stamp<Unit>(u);
-    if (row.isDefault) await this.clearDefaultUnit();
-    await this.db.units.put(row);
-    return row;
+    if (u.isDefault) await this.clearDefaultUnit();
+    return this.put('units', u);
   }
-  async addTaskType(t: New<TaskType>) {
-    const row = this.stamp<TaskType>(t);
-    await this.db.taskTypes.put(row);
-    return row;
+  addTaskType(t: New<TaskType>) {
+    return this.put('taskTypes', t);
   }
-  async saveEntry(e: New<TaskEntry>) {
-    const row = this.stamp<TaskEntry>(e);
-    await this.db.entries.put(row);
-    return row;
+  saveEntry(e: New<TaskEntry>) {
+    return this.put('entries', e);
   }
-
-  update<K extends 'fields' | 'units' | 'taskTypes' | 'entries'>(
-    table: K,
-    id: string,
-    patch: Record<string, unknown>,
-  ) {
-    return (this.db[table] as unknown as { update: (id: string, p: object) => Promise<number> }).update(id, {
-      ...patch,
-      updatedAt: now(),
-    });
+  saveExtraction(x: New<Extraction>) {
+    return this.put('extractions', x);
   }
 
   async setDefaultUnit(id: string) {
@@ -90,40 +129,27 @@ export class FarmRepo {
     );
   }
 
-  softDelete(table: 'fields' | 'units' | 'taskTypes' | 'entries', id: string) {
-    return this.update(table, id, { deletedAt: now() });
-  }
-  restore(table: 'fields' | 'units' | 'taskTypes' | 'entries', id: string) {
-    return this.update(table, id, { deletedAt: undefined });
-  }
-
   async exportAll() {
-    const by = <T>(t: { where: (k: string) => { equals: (v: string) => { toArray: () => Promise<T[]> } } }) =>
-      t.where('farmId').equals(this.farmId).toArray();
+    const tables: Record<string, object[]> = {};
+    for (const t of FARM_TABLES) tables[t] = await this.table(t).where('farmId').equals(this.farmId).toArray();
     return {
       format: 'harvestlog-export',
-      version: 1,
+      version: 2,
       exportedAt: new Date().toISOString(),
       farm: await this.db.farms.get(this.farmId),
       settings: await this.settings(),
-      fields: await by<Field>(this.db.fields),
-      units: await by<Unit>(this.db.units),
-      taskTypes: await by<TaskType>(this.db.taskTypes),
-      entries: await by<TaskEntry>(this.db.entries),
+      ...tables,
     };
   }
 }
 
-/** Create a farm with settings and the four built-in task types. */
-export async function createFarm(
-  name: string,
-  language: Language,
-  database: HarvestDB = defaultDb,
-): Promise<FarmRepo> {
+/** Create a farm with settings, the built-in task types, charges and storage locations. */
+export async function createFarm(name: string, language: Language, database: HarvestDB = defaultDb): Promise<FarmRepo> {
   const farmId = uuid();
+  const oil = oilDefaults(farmId, uuid);
   await database.transaction(
     'rw',
-    [database.farms, database.settings, database.taskTypes, database.meta],
+    [database.farms, database.settings, database.taskTypes, database.chargeTypes, database.locations, database.meta],
     async () => {
       await database.farms.put({ id: farmId, name, createdAt: now() });
       await database.settings.put({
@@ -145,6 +171,8 @@ export async function createFarm(
           updatedAt: now(),
         })),
       );
+      await database.chargeTypes.bulkPut(oil.chargeTypes);
+      await database.locations.bulkPut(oil.locations);
       await database.meta.put({ key: 'currentFarmId', value: farmId });
     },
   );
@@ -155,23 +183,26 @@ export async function currentFarmId(database: HarvestDB = defaultDb): Promise<st
   return (await database.meta.get('currentFarmId'))?.value;
 }
 
-/** Import a JSON export into a new farm, keeping record ids. */
+/** Import a JSON export into this device, keeping record ids, and switch to that farm. */
 export async function importFarm(data: unknown, database: HarvestDB = defaultDb): Promise<string> {
-  const d = data as Awaited<ReturnType<FarmRepo['exportAll']>>;
+  const d = data as Awaited<ReturnType<FarmRepo['exportAll']>> & Partial<Record<FarmTable, object[]>>;
   if (d?.format !== 'harvestlog-export' || !d.farm) throw new Error('Not a HarvestLog export file');
   const farmId = d.farm.id;
-  await database.transaction(
-    'rw',
-    [database.farms, database.settings, database.fields, database.units, database.taskTypes, database.entries, database.meta],
-    async () => {
-      await database.farms.put(d.farm!);
-      if (d.settings) await database.settings.put(d.settings);
-      await database.fields.bulkPut(d.fields ?? []);
-      await database.units.bulkPut(d.units ?? []);
-      await database.taskTypes.bulkPut(d.taskTypes ?? []);
-      await database.entries.bulkPut(d.entries ?? []);
-      await database.meta.put({ key: 'currentFarmId', value: farmId });
-    },
-  );
+  const tables = FARM_TABLES.map((t) => database[t]);
+  await database.transaction('rw', [database.farms, database.settings, database.meta, ...tables], async () => {
+    await database.farms.put(d.farm!);
+    if (d.settings) await database.settings.put(d.settings);
+    for (const t of FARM_TABLES) {
+      const rows = d[t];
+      if (rows?.length) await (database[t] as unknown as { bulkPut: (r: object[]) => Promise<unknown> }).bulkPut(rows);
+    }
+    // Backups from v0.1 have no charges or storage locations: add the defaults.
+    if (!d.chargeTypes?.length) {
+      const oil = oilDefaults(farmId, uuid);
+      await database.chargeTypes.bulkPut(oil.chargeTypes);
+      await database.locations.bulkPut(oil.locations);
+    }
+    await database.meta.put({ key: 'currentFarmId', value: farmId });
+  });
   return farmId;
 }

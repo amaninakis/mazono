@@ -178,7 +178,16 @@ oil_i = oil_batch × Σ_u (n_iu × w_u) / Σ_j Σ_u (n_ju × w_u)
 
 Here n is the number of units of type u in entry i, and w is that unit's weight. With a single unit type the weights cancel out, so it is a plain split by sacks. Per-field oil figures are estimates and are shown with "≈".
 
-**Unit weights** are optional. The app works them out from extractions (olives kg ÷ units): first from batches with a single unit type, then for mixed batches as data grows. A user-entered weight is used until there is enough data.
+**Unit weights** are optional. The app works them out from extractions (olives kg ÷ units): first from batches with a single unit type, then for mixed batches as data grows. A user-entered weight is used until there is enough data. *(v0.2 learns from single-unit batches; in a mixed batch a unit with no known weight counts as the average of the known ones.)*
+
+**How v0.2 implements it**
+
+- Charges are always visible, one row per charge type, each with its % of the oil. A charge with a usual % in Settings is filled in from the oil kg until the user types a value.
+- The first storage place (by default "At the mill") gets the rest of the net oil; the others are typed in.
+- Harvest days are pre-ticked when they are from the same season, on or before the extraction date and on or after the previous extraction, plus leftovers of days already partly milled. "Part" sets how many units of a day went into this batch.
+- An extraction is one record holding its charges, storage and allocations (`Extraction` in `app/src/core/types.ts`). Stock is never stored as a number: it is calculated from extractions (oil in) and stock movements (transfers, own use; sales in v0.3) in `stockLevels()`.
+- After saving: yield, net oil, kg of olives per unit (single unit type) and kg of oil per tree.
+- The Oil page shows season totals, the extractions, an estimate of oil per field (≈, with kg per tree in the field) and the stock table.
 
 ## Season overview and oil stock — v0.2
 
@@ -282,7 +291,7 @@ These are planned but not yet scheduled in detail. Open an issue before starting
 ## Roadmap
 
 1. **v0.1 — Field log** ✅: setup wizard, fields, units, Today screen (four tasks + custom), journal and calendar, offline storage, EN/EL, multi-farm data model.
-2. **v0.2 — Mill and stock**: extraction form with charges, harvest linking with splits and allocation, season overview, stock by vintage and location.
+2. **v0.2 — Mill and stock** ✅: extraction form with charges, harvest linking with splits and allocation, season overview, stock by vintage and location.
 3. **v0.3 — Money**: expenses, sales (deducting stock), other income, totals by season and calendar year.
 4. **v0.4 — Reports**: the four reports above, CSV export.
 5. **v0.5 — Self-hosting**: sync server, login, farms and roles, backups, translator guide.
