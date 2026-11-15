@@ -1,5 +1,5 @@
 import i18n from 'i18next';
-import { initReactI18next } from 'react-i18next';
+import { ref } from 'vue';
 import type { Language } from '../core/types';
 import el from './locales/el.json';
 import en from './locales/en.json';
@@ -18,12 +18,16 @@ export function deviceLanguage(): Language {
   return nav.toLowerCase().startsWith('el') ? 'el' : 'en';
 }
 
-i18n.use(initReactI18next).init({
+void i18n.init({
   resources: { en: { translation: en }, el: { translation: el } },
   lng: deviceLanguage(),
   fallbackLng: 'en',
   interpolation: { escapeValue: false },
 });
+
+/** Current language as a Vue ref, for number and date formatting. */
+export const locale = ref<string>(i18n.language);
+i18n.on('languageChanged', (lng) => (locale.value = lng));
 
 export function setLanguage(lng: Language) {
   void i18n.changeLanguage(lng);
