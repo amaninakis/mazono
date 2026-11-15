@@ -261,3 +261,5 @@ textarea.input { resize: vertical; }
 .setup .unit-row .input.small { width: 76px; }
 
 .tagline { font-size: 1.1rem; font-weight: 600; color: var(--olive); margin: 0 0 0.75rem; }
+
+.notice { margin-top: 16px; padding: 10px 12px; border-radius: 10px; background: var(--olive-soft); color: var(--ink); font-size: 0.9rem; }
