@@ -200,7 +200,7 @@ Here n is the number of units of type u in entry i, and w is that unit's weight.
 | Entry | Fields | Behaviour |
 | --- | --- | --- |
 | Expense | date, business name (autocomplete), € amount, category, invoice no.?, receipt photo? | Category is remembered per business. Expenses are not linked to fields. |
-| Oil sale | date, buyer, kg, €/kg → total, vintage + location sold from | Deducts from that stock; warns if stock would go negative. Default = oldest vintage at the mill. |
+| Oil sale | date, buyer, kg, €/kg → total, optional fee (% or €), vintage + location sold from | Deducts from that stock; warns if stock would go negative. Default = oldest vintage at the mill. The fee is remembered per buyer. |
 | Other income | date, source, € amount, category (subsidy, VAT refund, other) | Autocomplete like expenses. |
 
 Totals per **calendar year**: income, expenses, net result, and the value of remaining stock at the last sale price. Seasons are used only for field work and mill extractions. An optional tax estimate % shows an after-tax figure.
@@ -211,6 +211,7 @@ Totals per **calendar year**: income, expenses, net result, and the value of rem
 - An oil sale stores its kg, € per kg, season (vintage) and place; `stockLevels()` subtracts it, so stock and money cannot disagree. The kg cannot exceed what that season's oil has in that place.
 - **Oil not recorded in the app** (e.g. sold before the user started): a sale can come from a season with no extractions in the app. It counts as income but does not reduce stock, and is marked "not from recorded stock". As soon as that season's extractions are entered, the sale is deducted from that season's stock automatically (`isUntrackedSale()` / `trackedVintages()`), so entering past data later never double-counts.
 - The category last used with a business is filled in when the business is typed again (`categoryForParty()`).
+- **Sale fee** (optional, e.g. a mill's 1% transaction fee): entered as % of kg × price or as euros. The sale's `amount` is the money received (after the fee); the fee is kept in `fee` (and `feePercent` when given as %). Totals count the money received and show the fees; the average price per kg is before fees. The last fee used with a buyer is filled in again (`feeForBuyer()`).
 - Tax estimate = net result × tax % when the result is positive. Remaining stock is valued at the price of the most recent sale.
 - Money amounts use the date and number format setting: "1.234,50 €" in Greek style, "€1,234.50" otherwise.
 - Receipt photos are left for later (v1.0+).

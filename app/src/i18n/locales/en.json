@@ -309,7 +309,8 @@
     "byCategory": "Expenses by category",
     "incomeByCategory": "Other income by category",
     "uncategorised": "No category",
-    "yearHint": "Calendar year"
+    "yearHint": "Calendar year",
+    "feeLine": "fees {{fee}}"
   },
   "tx": {
     "newExpense": "New expense",
@@ -340,6 +341,9 @@
     "inYear": "In {{period}}",
     "untrackedOption": "{{season}} · not recorded in the app",
     "untrackedHelp": "The app has no extractions for season {{season}}, so this sale counts as income but does not reduce the oil in stock. If you enter that season’s extractions later, the sale will be taken from its stock automatically.",
-    "notFromStock": "not from recorded stock"
+    "notFromStock": "not from recorded stock",
+    "fee": "Fee (optional)",
+    "received": "You receive",
+    "feeShort": "Fee"
   }
 }

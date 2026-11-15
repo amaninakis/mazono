@@ -1,5 +1,15 @@
 import { describe, expect, it } from 'vitest';
-import { categoryForParty, defaultSaleSource, inPeriod, lastSalePrice, moneyTotals, partyNames, taxEstimate } from './money';
+import {
+  categoryForParty,
+  defaultSaleSource,
+  feeForBuyer,
+  inPeriod,
+  lastSalePrice,
+  moneyTotals,
+  partyNames,
+  saleAmounts,
+  taxEstimate,
+} from './money';
 import { isUntrackedSale, stockLevels, trackedVintages } from './oil';
 import type { Extraction, Transaction } from './types';
 
@@ -81,5 +91,28 @@ describe('sales of oil not recorded in the app', () => {
     const x2024: Extraction = { ...x2025, id: 'y', date: '2024-12-01', storage: [{ locationId: 'mill', kg: 250 }] };
     expect(isUntrackedSale(oldSale, trackedVintages([x2025, x2024]))).toBe(false);
     expect(stockLevels([x2025, x2024], [], 10, [oldSale])[2024]).toEqual({ mill: 50 });
+  });
+});
+
+describe('sale fees', () => {
+  it('as a percentage or in euros', () => {
+    expect(saleAmounts(100, 8.5, { kind: 'percent', value: 1 })).toEqual({ gross: 850, fee: 8.5, received: 841.5 });
+    expect(saleAmounts(100, 8.5, { kind: 'euro', value: 12 })).toEqual({ gross: 850, fee: 12, received: 838 });
+    expect(saleAmounts(100, 8.5)).toEqual({ gross: 850, fee: 0, received: 850 });
+  });
+  it('totals count the money received; the average price is before fees', () => {
+    const t = moneyTotals(
+      [
+        tx({ kind: 'sale', kg: 100, pricePerKg: 8.5, amount: 841.5, fee: 8.5, feePercent: 1, date: '2026-01-10' }),
+        tx({ kind: 'sale', kg: 100, pricePerKg: 9.5, amount: 950, date: '2026-02-10' }),
+      ],
+      { kind: 'year', year: 2026 },
+    );
+    expect(t).toMatchObject({ sales: 1791.5, salesFees: 8.5, salesKg: 200, averagePrice: 9 });
+  });
+  it('remembers the fee per buyer', () => {
+    const list = [tx({ kind: 'sale', party: 'Mill coop', fee: 8.5, feePercent: 1, amount: 841.5 })];
+    expect(feeForBuyer(list, 'mill coop')).toEqual({ kind: 'percent', value: 1 });
+    expect(feeForBuyer(list, 'Other')).toBeUndefined();
   });
 });

@@ -58,7 +58,8 @@ const list = computed(() =>
 const tracked = computed(() => trackedVintages(farm.value.extractions, farm.value.settings.seasonStartMonth));
 function detail(x: Transaction) {
   if (x.kind === 'sale') {
-    const base = `${kgFmt(x.kg ?? 0)} ${t('common.kg')} × ${eur(x.pricePerKg ?? 0)}`;
+    let base = `${kgFmt(x.kg ?? 0)} ${t('common.kg')} × ${eur(x.pricePerKg ?? 0)}`;
+    if (x.fee) base += ` · ${t('money.feeLine', { fee: eur(x.fee) })}`;
     return isUntrackedSale(x, tracked.value) ? `${base} · ${t('tx.notFromStock')}` : base;
   }
   const c = farm.value.categories.find((y) => y.id === x.categoryId);
@@ -101,6 +102,7 @@ const icon = (k: TransactionKind) => (k === 'sale' ? '💧' : k === 'income' ? '
               <small v-if="totals.salesKg" class="muted block-line">
                 {{ t('money.soldKg', { kg: kgFmt(totals.salesKg) }) }} ·
                 {{ t('money.averagePrice', { price: eur(totals.averagePrice ?? 0) }) }}
+                <template v-if="totals.salesFees"> · {{ t('money.feeLine', { fee: eur(totals.salesFees) }) }}</template>
               </small>
             </th>
             <td>{{ eur(totals.sales) }}</td>

@@ -15,7 +15,10 @@ export function inPeriod(date: ISODate, p: Period, seasonStartMonth = 10): boole
 }
 
 export interface MoneyTotals {
+  /** Money received from oil sales (after fees). */
   sales: number;
+  /** Fees kept from oil sales. */
+  salesFees: number;
   salesKg: number;
   otherIncome: number;
   income: number;
@@ -23,16 +26,19 @@ export interface MoneyTotals {
   net: number;
   /** € per category id (expenses and other income). */
   byCategory: Record<string, number>;
-  /** Average € per kg of the oil sold. */
+  /** Average € per kg of the oil sold (price before fees). */
   averagePrice?: number;
 }
 
 export function moneyTotals(transactions: Transaction[], p: Period, seasonStartMonth = 10): MoneyTotals {
-  const t: MoneyTotals = { sales: 0, salesKg: 0, otherIncome: 0, income: 0, expenses: 0, net: 0, byCategory: {} };
+  let salesGross = 0;
+  const t: MoneyTotals = { sales: 0, salesFees: 0, salesKg: 0, otherIncome: 0, income: 0, expenses: 0, net: 0, byCategory: {} };
   for (const tx of live(transactions)) {
     if (!inPeriod(tx.date, p, seasonStartMonth)) continue;
     if (tx.kind === 'sale') {
       t.sales += tx.amount;
+      t.salesFees += tx.fee ?? 0;
+      salesGross += tx.amount + (tx.fee ?? 0);
       t.salesKg += tx.kg ?? 0;
     } else {
       if (tx.kind === 'income') t.otherIncome += tx.amount;
@@ -42,11 +48,12 @@ export function moneyTotals(transactions: Transaction[], p: Period, seasonStartM
     }
   }
   t.sales = round2(t.sales);
+  t.salesFees = round2(t.salesFees);
   t.otherIncome = round2(t.otherIncome);
   t.expenses = round2(t.expenses);
   t.income = round2(t.sales + t.otherIncome);
   t.net = round2(t.income - t.expenses);
-  if (t.salesKg > 0) t.averagePrice = round2(t.sales / t.salesKg);
+  if (t.salesKg > 0) t.averagePrice = round2(salesGross / t.salesKg);
   return t;
 }
 
@@ -93,4 +100,28 @@ export function defaultSaleSource(
     if (loc) return { vintage: v, locationId: loc[0] };
   }
   return undefined;
+}
+
+export interface SaleFee {
+  /** Euros, or a percentage of kg × price. */
+  value: number;
+  kind: 'percent' | 'euro';
+}
+
+/** kg × price, the fee in euros, and the money received. */
+export function saleAmounts(kg: number, pricePerKg: number, fee?: SaleFee) {
+  const gross = round2(kg * pricePerKg);
+  const feeEur = !fee?.value ? 0 : fee.kind === 'percent' ? round2((gross * fee.value) / 100) : round2(fee.value);
+  return { gross, fee: feeEur, received: round2(gross - feeEur) };
+}
+
+/** The fee used in the last sale to this buyer, to fill in next time. */
+export function feeForBuyer(transactions: Transaction[], party: string): SaleFee | undefined {
+  const key = party.trim().toLowerCase();
+  if (!key) return undefined;
+  const last = live(transactions)
+    .filter((tx) => tx.kind === 'sale' && tx.party.trim().toLowerCase() === key)
+    .sort((a, b) => (a.date < b.date ? 1 : -1))[0];
+  if (!last?.fee) return undefined;
+  return last.feePercent != null ? { kind: 'percent', value: last.feePercent } : { kind: 'euro', value: last.fee };
 }
