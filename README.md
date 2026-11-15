@@ -65,11 +65,12 @@ npm run build    # production build in app/dist
 ## Project layout
 
 ```
-app/                 the web app (React + TypeScript + Vite)
+app/                 the web app (Vue 3 + TypeScript + Vite)
   src/core/          business logic, no UI (seasons, field progress, defaults) + tests
   src/db/            local database (Dexie / IndexedDB), multi-farm from the start
   src/i18n/locales/  translation files (en.json, el.json)
-  src/screens/       Setup, Today, Journal, Settings
+  src/screens/       Setup, Today, Journal, Settings (Vue single-file components)
+  src/ui/            shared components (Stepper, Toggle, Modal, Toast) and farm state
 deploy/Caddyfile     web server config used by the Docker image
 ```
 

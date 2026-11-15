@@ -64,13 +64,13 @@ The app is a TypeScript PWA with a local database on the device. A small sync se
 
 | Layer | Choice | Why |
 | --- | --- | --- |
-| UI | React + TypeScript + Vite, mobile-first | Large ecosystem; the same code runs in the browser and in Capacitor. |
+| UI | Vue 3 (Composition API, `<script setup>`) + TypeScript + Vite, mobile-first | Approachable for new contributors; single-file components keep markup, logic and style together; the same code runs in the browser and in Capacitor. |
 | Local storage | IndexedDB via Dexie | Works with no signal in the field; instant saves. |
 | Sync (v0.5) | REST sync with per-record timestamps and UUIDs | UUIDs let records be created offline without ID clashes. |
 | Server (v0.5) | Node + Fastify, SQLite by default | One small container; easy to back up. |
 | Packaging | One Docker image (Caddy) + docker-compose | Home server, Raspberry Pi, NAS or VPS. |
 | Mobile (later) | Capacitor wrapper of the same web app | No rewrite; adds native camera and notifications. |
-| i18n | i18next, one JSON file per language, ICU plurals | Translators only edit JSON; Greek plural forms handled. |
+| i18n | i18next with i18next-vue, one JSON file per language | Translators only edit JSON; Greek plural forms handled. |
 | Licence | MIT | May move to AGPL-3.0 later; that would apply to new versions only. |
 
 **Design rules (keep these in every PR)**
