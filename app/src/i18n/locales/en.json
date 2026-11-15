@@ -197,10 +197,6 @@
     "incomeCategories": "Income categories",
     "addCategory": "Add category"
   },
-  "soon": {
-    "title": "Coming soon",
-    "reports": "Field and season comparisons arrive in version 0.4."
-  },
   "chargeType": {
     "millFee": "Mill fee",
     "bugSpraying": "Bug spraying",
@@ -348,5 +344,59 @@
     "fee": "Fee (optional)",
     "received": "You receive",
     "feeShort": "Fee"
+  },
+  "reports": {
+    "tab": {
+      "fields": "Fields",
+      "seasons": "Seasons",
+      "yield": "Yield",
+      "money": "Costs"
+    },
+    "title": {
+      "fields": "Fields by season",
+      "seasons": "Seasons over the years",
+      "yield": "Yield through the season",
+      "money": "Cost of your oil"
+    },
+    "about": {
+      "fields": "How much each field gave each season. Darker cells mean more, so good and poor years stand out.",
+      "seasons": "Net oil you kept each season, after the mill’s charges.",
+      "yield": "Oil from each mill visit as a share of the olives, by date. Use it to see when the olives give the most oil.",
+      "money": "Money per calendar year, set against the oil of the season that starts that year."
+    },
+    "empty": {
+      "fields": "Log harvests (and mill extractions) to compare your fields.",
+      "seasons": "Add a mill extraction to see season totals.",
+      "yield": "Add mill extractions with olive and oil kg to see the yield.",
+      "money": "Add expenses or sales, or a mill extraction, to see the cost of your oil."
+    },
+    "metric": {
+      "oil": "Oil (kg)",
+      "oilPerTree": "Oil per tree",
+      "unitsPerTree": "Harvest per tree"
+    },
+    "field": "Field",
+    "fieldsNote": "Oil per field is an estimate: each mill visit is split between the fields that went into it by the weight of their olives. “Per tree” uses the trees you entered as harvested, or all the field’s trees if you didn’t enter any. Tap a cell for details.",
+    "fieldCellDetail": "{{field}} · {{season}}: {{oil}} kg oil from {{units}}, {{trees}} trees",
+    "seasonBarDetail": "{{net}} kg net ({{oil}} kg oil from {{olives}} kg olives, yield {{yield}})",
+    "kgNote": "All amounts in kg. Tap a bar for details.",
+    "yieldNote": "Up to three recent seasons. Tap a point for its date, yield and acidity.",
+    "oilOf": "oil of {{season}}",
+    "costPerKg": "Cost per kg of oil",
+    "breakEven": "Break-even price",
+    "netOilOfSeason": "Net oil (kg)",
+    "averagePrice": "Average sale price",
+    "moneyNote": "Cost per kg = expenses ÷ net oil. Break-even price = the price per kg at which selling all the oil covers the expenses left after other income (subsidies etc.).",
+    "csv": "Download as spreadsheet (CSV)",
+    "oilKg": "Oil (kg)",
+    "netKg": "Net oil (kg)",
+    "olivesKg": "Olives (kg)",
+    "chargesKg": "Charges (kg)",
+    "treesCounted": "Trees",
+    "oilPerTree": "Oil per tree (kg)",
+    "perKg": "{{price}}/kg",
+    "unitHint": "{{unit}} per tree.",
+    "kgOil": "Kg of oil",
+    "units": "Units"
   }
 }

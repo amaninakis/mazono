@@ -223,7 +223,13 @@ Totals per **calendar year**: income, expenses, net result, and the value of rem
 1. **Field × season comparison**: oil kg, oil per tree or units per tree, by field and season. Shows alternate bearing at a glance.
 2. **Season totals over the years**: olives, oil, net oil and yield per season.
 3. **Yield through the season**: yield of each extraction by date, to help decide when to harvest.
-4. **Economics per season**: income, expenses, net; cost per kg of net oil; break-even price.
+4. **Cost of your oil (per calendar year)**: income, expenses, net; cost per kg of net oil; break-even price. Money stays per calendar year, so each year is set against the oil of the season that *starts* in it (with an October start, the 2025 costs of pruning, spraying and harvest produce the 2025–26 oil). Cost per kg = expenses ÷ net oil; break-even price = (expenses − other income) ÷ net oil.
+
+How they work:
+- All four are on one Reports page (More → Reports), one tab each, with a short plain-words explanation and an empty-state hint.
+- Field oil is the field's share of each extraction by olive weight (the same estimate as the Oil page). "Per tree" uses the trees entered as harvested, or the field's tree count when none were entered. Cells are shaded darker for bigger values; tapping a cell shows its details.
+- Charts are plain SVG (no chart library): bars for season totals, lines for yield (up to three seasons, each season keeping its colour). Every mark can be tapped for its numbers; tables carry the same data.
+- CSV export of each report: `;` columns and decimal commas in Greek number style, `,` and decimal points otherwise, UTF-8 with BOM so Excel shows Greek text.
 
 Ideas for later: harvest progress compared with last season; kg per unit over time; charges as % of oil per season; acidity by field and date; rain vs yield (see Weather integration); labour days per field; CSV/PDF export of any report.
 
@@ -307,6 +313,6 @@ These are planned but not yet scheduled in detail. Open an issue before starting
 1. **v0.1 — Field log** ✅: setup wizard, fields, units, Today screen (four tasks + custom), journal and calendar, offline storage, EN/EL, multi-farm data model.
 2. **v0.2 — Mill and stock** ✅: extraction form with charges, harvest linking with splits and allocation, season overview, stock by vintage and location.
 3. **v0.3 — Money** ✅: expenses, sales (deducting stock), other income, totals by calendar year.
-4. **v0.4 — Reports**: the four reports above, CSV export.
+4. **v0.4 — Reports** ✅: the four reports above, CSV export.
 5. **v0.5 — Self-hosting**: sync server, login, farms and roles, backups, translator guide.
 6. **v1.0+**: Android/iOS builds (Capacitor), weather integration, daily reminders, location-aware default field, equipment log, tasks per tree (tree numbers and NFC tags), Labour reports, spreadsheet import, receipt photos, more languages.
