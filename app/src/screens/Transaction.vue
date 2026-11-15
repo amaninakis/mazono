@@ -12,6 +12,7 @@ import DateField from '../ui/DateField.vue';
 import Modal from '../ui/Modal.vue';
 import Stepper from '../ui/Stepper.vue';
 import { categoryName, locationName, useFarm } from '../ui/farm';
+import { moneyPeriod } from '../ui/periods';
 import { showToast } from '../ui/toast';
 
 const { t } = useTranslation();
@@ -38,7 +39,6 @@ const categoryId = ref(editing?.categoryId ?? '');
 let categoryChosen = !!editing?.categoryId;
 const amount = ref<number | null>(editing && kind !== 'sale' ? editing.amount : null);
 const invoiceNo = ref(editing?.invoiceNo ?? '');
-const fieldId = ref(editing?.fieldId ?? '');
 const notes = ref(editing?.notes ?? '');
 const error = ref('');
 const newCategory = ref(false);
@@ -53,7 +53,6 @@ const categories = computed(() =>
         .sort((a, b) => a.order - b.order),
 );
 if (!categoryId.value && categories.value.length) categoryId.value = categories.value[0].id;
-const fields = computed(() => farm.value.fields.filter((f) => !f.archived || f.id === editing?.fieldId));
 
 /** Fill in the category last used with this business. */
 function onPartyChange() {
@@ -146,11 +145,18 @@ async function save() {
     vintage: kind === 'sale' ? chosen.value!.vintage : undefined,
     locationId: kind === 'sale' ? chosen.value!.locationId : undefined,
     invoiceNo: kind === 'expense' ? invoiceNo.value.trim() || undefined : undefined,
-    fieldId: kind === 'expense' ? fieldId.value || undefined : undefined,
+    fieldId: editing?.fieldId, // no longer asked; kept on older entries
     notes: notes.value.trim() || undefined,
   });
-  showToast({ title: t('tx.saved') });
+  showPeriodOf(date.value, t('tx.saved'));
   void router.push('/money');
+}
+
+/** Open the Money page on the calendar year of this entry, and say so. */
+function showPeriodOf(d: string, title: string) {
+  const year = Number(d.slice(0, 4));
+  moneyPeriod.year = year;
+  showToast({ title, lines: [t('tx.inYear', { period: String(year) })] });
 }
 
 async function remove() {
@@ -192,11 +198,6 @@ async function remove() {
       <template v-if="kind === 'expense'">
         <label class="label" for="tx-invoice">{{ t('tx.invoiceNo') }}</label>
         <input id="tx-invoice" v-model="invoiceNo" class="input" />
-        <label class="label" for="tx-field">{{ t('tx.field') }}</label>
-        <select id="tx-field" v-model="fieldId" class="input select">
-          <option value="">{{ t('tx.noField') }}</option>
-          <option v-for="f in fields" :key="f.id" :value="f.id">{{ f.name }}</option>
-        </select>
       </template>
     </section>
 

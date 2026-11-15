@@ -289,7 +289,6 @@
     "otherIncome": "Other income"
   },
   "money": {
-    "season": "Season",
     "year": "Year",
     "income": "Income",
     "sales": "Oil sales",
@@ -309,7 +308,8 @@
     "noTransactions": "Nothing recorded in this period.",
     "byCategory": "Expenses by category",
     "incomeByCategory": "Other income by category",
-    "uncategorised": "No category"
+    "uncategorised": "No category",
+    "yearHint": "Calendar year"
   },
   "tx": {
     "newExpense": "New expense",
@@ -324,8 +324,6 @@
     "category": "Category",
     "amount": "Amount (€)",
     "invoiceNo": "Invoice no. (optional)",
-    "field": "Field (optional)",
-    "noField": "–",
     "kg": "Oil sold (kg)",
     "pricePerKg": "Price (€ per kg)",
     "total": "Total",
@@ -338,6 +336,7 @@
     "saved": "Saved",
     "deleted": "Deleted",
     "newCategory": "New category…",
-    "newCategoryName": "Name of the category"
+    "newCategoryName": "Name of the category",
+    "inYear": "In {{period}}"
   }
 }

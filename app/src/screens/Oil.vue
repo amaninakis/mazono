@@ -9,6 +9,7 @@ import type { StockMovement, Transaction } from '../core/types';
 import { formatLocale } from '../i18n';
 import StockMoveModal from '../ui/StockMoveModal.vue';
 import { chargeName, locationName, useFarm } from '../ui/farm';
+import { oilPeriod } from '../ui/periods';
 import { showToast } from '../ui/toast';
 
 const { t } = useTranslation();
@@ -29,7 +30,10 @@ const seasons = computed(() => {
   const set = new Set([currentSeason, ...farm.value.extractions.map((x) => seasonOf(x.date, startMonth.value))]);
   return [...set].sort((a, b) => b - a);
 });
-const season = ref(currentSeason);
+const season = computed({
+  get: () => oilPeriod.season ?? currentSeason,
+  set: (v: number) => (oilPeriod.season = v),
+});
 
 const extractions = computed(() =>
   farm.value.extractions

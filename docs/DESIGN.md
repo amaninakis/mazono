@@ -95,7 +95,7 @@ Both need HTTPS, because browsers only allow offline mode and "install app" over
 
 ## Core concepts
 
-The **season** is the backbone. A harvest season runs across two calendar years: with the default start month of October, season 2025 runs from 1 Oct 2025 to 30 Sep 2026 and is labelled "2025–26". Field work and extractions belong to a season. Money is reported per season and per calendar (tax) year.
+The **season** is the backbone. A harvest season runs across two calendar years: with the default start month of October, season 2025 runs from 1 Oct 2025 to 30 Sep 2026 and is labelled "2025–26". Field work and extractions belong to a season. Money is reported per calendar year only.
 
 | Entity | Key fields | Status |
 | --- | --- | --- |
@@ -199,11 +199,11 @@ Here n is the number of units of type u in entry i, and w is that unit's weight.
 
 | Entry | Fields | Behaviour |
 | --- | --- | --- |
-| Expense | date, business name (autocomplete), € amount, category, invoice no.?, receipt photo?, field? | Category is remembered per business. |
+| Expense | date, business name (autocomplete), € amount, category, invoice no.?, receipt photo? | Category is remembered per business. Expenses are not linked to fields. |
 | Oil sale | date, buyer, kg, €/kg → total, vintage + location sold from | Deducts from that stock; warns if stock would go negative. Default = oldest vintage at the mill. |
 | Other income | date, source, € amount, category (subsidy, VAT refund, other) | Autocomplete like expenses. |
 
-Totals: income, expenses, net result, and the value of remaining stock at the last sale price. A toggle switches between calendar year (for tax) and season (for farm economics). An optional tax estimate % shows an after-tax figure.
+Totals per **calendar year**: income, expenses, net result, and the value of remaining stock at the last sale price. Seasons are used only for field work and mill extractions. An optional tax estimate % shows an after-tax figure.
 
 **How v0.3 implements it**
 
@@ -213,6 +213,7 @@ Totals: income, expenses, net result, and the value of remaining stock at the la
 - Tax estimate = net result × tax % when the result is positive. Remaining stock is valued at the price of the most recent sale.
 - Money amounts use the date and number format setting: "1.234,50 €" in Greek style, "€1,234.50" otherwise.
 - Receipt photos are left for later (v1.0+).
+- After saving an entry, the Money page opens on the calendar year of its date (the Oil page on the season of an extraction), and the save message names it, so past entries never seem to disappear.
 
 ## Reports — v0.4
 
@@ -296,13 +297,13 @@ These are planned but not yet scheduled in detail. Open an issue before starting
 | Trees are not all harvested every year | "Field finished" closes a field for the season regardless of the count. |
 | Harvest and pruning seasons overlap | Default by active months, then by the most recently logged task. |
 | Data only on one phone can be lost | Offline-first with server sync (v0.5), scheduled backups and one-tap export. |
-| Harvest season ≠ tax year | Totals can switch between season and calendar year. |
+| Harvest season ≠ tax year | Field work and oil use seasons; money uses calendar years. |
 
 ## Roadmap
 
 1. **v0.1 — Field log** ✅: setup wizard, fields, units, Today screen (four tasks + custom), journal and calendar, offline storage, EN/EL, multi-farm data model.
 2. **v0.2 — Mill and stock** ✅: extraction form with charges, harvest linking with splits and allocation, season overview, stock by vintage and location.
-3. **v0.3 — Money** ✅: expenses, sales (deducting stock), other income, totals by season and calendar year.
+3. **v0.3 — Money** ✅: expenses, sales (deducting stock), other income, totals by calendar year.
 4. **v0.4 — Reports**: the four reports above, CSV export.
 5. **v0.5 — Self-hosting**: sync server, login, farms and roles, backups, translator guide.
 6. **v1.0+**: Android/iOS builds (Capacitor), weather integration, daily reminders, location-aware default field, equipment log, tasks per tree (tree numbers and NFC tags), Labour reports, spreadsheet import, receipt photos, more languages.
