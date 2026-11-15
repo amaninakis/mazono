@@ -21,11 +21,14 @@ export interface Farm {
 
 export type YieldFormat = 'ratio' | 'percent';
 export type Language = 'en' | 'el';
+/** Date and number style: Greek (15/11/2026, 1.234,5), British, American, or detected. */
+export type DateFormat = 'auto' | 'GR' | 'GB' | 'US';
 
 export interface FarmSettings {
   farmId: string;
   language: Language;
   yieldFormat: YieldFormat;
+  dateFormat?: DateFormat;
   seasonStartMonth: number; // 1-12, default 10 (October)
   labourEnabled: boolean;
   setupDone: boolean;

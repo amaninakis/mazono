@@ -178,7 +178,12 @@
     "addCharge": "Προσθήκη κράτησης",
     "locations": "Πού φυλάγεται το λάδι",
     "addLocation": "Προσθήκη θέσης",
-    "learnedWeight": "≈ {{kg}} κιλά, από {{count}} αλέσεις"
+    "learnedWeight": "≈ {{kg}} κιλά, από {{count}} αλέσεις",
+    "dateFormat": "Μορφή ημερομηνίας και αριθμών",
+    "format_auto": "Αυτόματη",
+    "format_GR": "Ελληνική",
+    "format_GB": "Βρετανική",
+    "format_US": "Αμερικανική"
   },
   "soon": {
     "title": "Έρχεται σύντομα",

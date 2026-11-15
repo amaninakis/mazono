@@ -14,7 +14,8 @@ import {
 } from '../core/oil';
 import type { TaskEntry, UnitAmount } from '../core/types';
 import { unitLabel } from '../core/units';
-import { locale } from '../i18n';
+import { formatLocale } from '../i18n';
+import DateField from '../ui/DateField.vue';
 import Modal from '../ui/Modal.vue';
 import Stepper from '../ui/Stepper.vue';
 import { chargeName, locationName, useFarm } from '../ui/farm';
@@ -29,7 +30,7 @@ const today = todayISO();
 const editId = route.params.id as string | undefined;
 const editing = editId ? farm.value.extractions.find((x) => x.id === editId) : undefined;
 
-const fmt = (n: number, d = 1) => formatNumber(n, locale.value, d);
+const fmt = (n: number, d = 1) => formatNumber(n, formatLocale.value, d);
 const r3 = (n: number) => Math.round(n * 1000) / 1000;
 
 /* ---------- reference data ---------- */
@@ -95,7 +96,7 @@ const storedElsewhere = computed(() => otherLocations.value.reduce((s, l) => s +
 const storedMain = computed(() => r3(net.value - storedElsewhere.value));
 
 const yieldText = computed(() =>
-  formatYield(oliveKg.value ?? 0, oilKg.value ?? 0, farm.value.settings.yieldFormat, locale.value),
+  formatYield(oliveKg.value ?? 0, oilKg.value ?? 0, farm.value.settings.yieldFormat, formatLocale.value),
 );
 
 /* ---------- harvest days ---------- */
@@ -149,7 +150,7 @@ const unitsText = (qs: UnitAmount[]) =>
     .join(' + ');
 
 const rowDate = (d: string) =>
-  new Intl.DateTimeFormat(locale.value, { day: 'numeric', month: 'short' }).format(parseISODate(d));
+  new Intl.DateTimeFormat(formatLocale.value, { day: 'numeric', month: 'short' }).format(parseISODate(d));
 
 function togglePart(r: Row) {
   r.partial = !r.partial;
@@ -260,7 +261,7 @@ async function remove() {
     <section class="card">
       <div class="row-between">
         <label class="label" for="x-date">{{ t('common.date') }}</label>
-        <input id="x-date" v-model="date" type="date" class="input date" :max="today" />
+        <DateField id="x-date" v-model="date" :max="today" :label="t('common.date')" />
       </div>
       <label class="label" for="x-mill">{{ t('extraction.mill') }}</label>
       <select id="x-mill" class="input select" :value="millId" @change="onMillChange">
@@ -291,7 +292,7 @@ async function remove() {
             :label="chargeName(t, c)"
             @update:model-value="(v) => setCharge(c.id, v)"
           />
-          <span class="pct">{{ oilKg && charges[c.id] ? formatNumber(chargeShare(charges[c.id]!, oilKg) * 100, locale, 1) + '%' : '' }}</span>
+          <span class="pct">{{ oilKg && charges[c.id] ? formatNumber(chargeShare(charges[c.id]!, oilKg) * 100, formatLocale, 1) + '%' : '' }}</span>
         </div>
       </div>
       <button type="button" class="btn ghost small" @click="newCharge = true">+ {{ t('extraction.addCharge') }}</button>

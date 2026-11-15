@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ref, watch } from 'vue';
 import { parseDecimal } from '../core/progress';
-import { locale } from '../i18n';
+import { formatLocale } from '../i18n';
 
 /**
  * − value + control with a typeable number in the middle. Accepts comma decimals.
@@ -14,12 +14,12 @@ const props = withDefaults(
 const model = defineModel<number | null>({ required: true });
 
 const fmt = (n: number | null) =>
-  n == null ? '' : new Intl.NumberFormat(locale.value, { maximumFractionDigits: 3, useGrouping: false }).format(n);
+  n == null ? '' : new Intl.NumberFormat(formatLocale.value, { maximumFractionDigits: 3, useGrouping: false }).format(n);
 const round = (n: number) => Math.round(n * 1000) / 1000;
 
 const text = ref(fmt(model.value));
 let focused = false;
-watch([model, locale, () => props.max], () => {
+watch([model, formatLocale, () => props.max], () => {
   if (props.max != null && model.value != null && model.value > props.max) model.value = props.max;
   if (!focused) text.value = fmt(model.value);
 });

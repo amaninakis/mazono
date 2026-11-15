@@ -3,7 +3,8 @@ import { useTranslation } from 'i18next-vue';
 import { computed, ref, watch } from 'vue';
 import { seasonLabel, todayISO } from '../core/dates';
 import { formatNumber } from '../core/format';
-import { locale } from '../i18n';
+import { formatLocale } from '../i18n';
+import DateField from './DateField.vue';
 import Modal from './Modal.vue';
 import Stepper from './Stepper.vue';
 import { locationName, useFarm } from './farm';
@@ -40,7 +41,7 @@ watch(from, () => {
 });
 
 const max = computed(() => Math.max(available(from.value ?? ''), 0));
-const fmt = (n: number) => formatNumber(n, locale.value, 1);
+const fmt = (n: number) => formatNumber(n, formatLocale.value, 1);
 
 async function save() {
   if (!kg.value || !from.value || vintage.value == null) return;
@@ -66,7 +67,7 @@ async function save() {
 <template>
   <Modal :title="kind === 'transfer' ? t('move.transferTitle') : t('move.ownUseTitle')" @close="emit('close')">
     <label class="label" for="mv-date">{{ t('common.date') }}</label>
-    <input id="mv-date" v-model="date" type="date" class="input" />
+    <DateField id="mv-date" v-model="date" :label="t('common.date')" />
     <label class="label" for="mv-vintage">{{ t('move.vintage') }}</label>
     <select id="mv-vintage" v-model="vintage" class="input select">
       <option v-for="v in vintages" :key="v" :value="v">{{ seasonLabel(v, farm.settings.seasonStartMonth) }}</option>

@@ -6,7 +6,7 @@ import { addDays, monthGrid, parseISODate, todayISO } from '../core/dates';
 import { formatNumber } from '../core/format';
 import type { TaskEntry, TaskType } from '../core/types';
 import { unitLabel } from '../core/units';
-import { locale } from '../i18n';
+import { formatLocale } from '../i18n';
 import { taskName, useFarm } from '../ui/farm';
 import { showToast } from '../ui/toast';
 
@@ -43,16 +43,16 @@ function shiftMonth(d: number) {
 }
 const weekdays = computed(() =>
   Array.from({ length: 7 }, (_, i) =>
-    new Intl.DateTimeFormat(locale.value, { weekday: 'narrow' }).format(new Date(2024, 0, 1 + i)),
+    new Intl.DateTimeFormat(formatLocale.value, { weekday: 'narrow' }).format(new Date(2024, 0, 1 + i)),
   ),
 );
 const monthTitle = computed(() =>
-  new Intl.DateTimeFormat(locale.value, { month: 'long', year: 'numeric' }).format(
+  new Intl.DateTimeFormat(formatLocale.value, { month: 'long', year: 'numeric' }).format(
     new Date(ym.value[0], ym.value[1] - 1, 1),
   ),
 );
 const dayTitle = computed(() =>
-  new Intl.DateTimeFormat(locale.value, { weekday: 'long', day: 'numeric', month: 'long' }).format(
+  new Intl.DateTimeFormat(formatLocale.value, { weekday: 'long', day: 'numeric', month: 'long' }).format(
     parseISODate(date.value),
   ),
 );
@@ -82,7 +82,7 @@ const unitById = (id: string) => farm.value.units.find((u) => u.id === id);
 const fieldName = (id: string) => farm.value.fields.find((f) => f.id === id)?.name ?? t('journal.unknownField');
 
 function details(e: TaskEntry) {
-  const loc = locale.value;
+  const loc = formatLocale.value;
   const parts: string[] = [];
   if (e.trees) parts.push(t('journal.trees', { count: e.trees }));
   for (const q of e.quantities ?? []) parts.push(`${formatNumber(q.amount, loc)} ${unitLabel(unitById(q.unitId), q.amount)}`);
@@ -139,7 +139,7 @@ function details(e: TaskEntry) {
           <span class="entry-icon" aria-hidden="true">💧</span>
           <span class="entry-text">
             <strong>{{ t('extraction.title') }}</strong>
-            <small>{{ t('journal.extractionLine', { olives: formatNumber(x.oliveKg, locale, 0), oil: formatNumber(x.oilKg, locale, 1) }) }}</small>
+            <small>{{ t('journal.extractionLine', { olives: formatNumber(x.oliveKg, formatLocale, 0), oil: formatNumber(x.oilKg, formatLocale, 1) }) }}</small>
           </span>
         </button>
       </li>
