@@ -17,6 +17,7 @@ import type { InputKind, TaskEntry, UnitAmount } from '../core/types';
 import { unitLabel } from '../core/units';
 import { formatLocale } from '../i18n';
 import DateField from '../ui/DateField.vue';
+import FieldPicker from '../ui/FieldPicker.vue';
 import NewTaskModal from '../ui/NewTaskModal.vue';
 import NewUnitModal from '../ui/NewUnitModal.vue';
 import Stepper from '../ui/Stepper.vue';
@@ -278,27 +279,7 @@ function summaryLines(e: TaskEntry): string[] {
       <p v-if="progress.length === 0" class="muted">
         {{ t('today.noFields') }} <RouterLink to="/settings#fields">{{ t('today.addFields') }}</RouterLink>
       </p>
-      <div v-else class="field-chips">
-        <button
-          v-for="p in sortForPicker(progress)"
-          :key="p.field.id"
-          type="button"
-          :class="['field-chip', { selected: p.field.id === fieldId, done: p.finished }]"
-          :aria-pressed="p.field.id === fieldId"
-          @click="fieldId = p.field.id"
-        >
-          <span class="fc-name">{{ p.field.name }}</span>
-          <span class="fc-meta">
-            {{
-              p.finished
-                ? t('today.finished')
-                : p.remaining != null
-                  ? t('today.treesLeft', { left: p.remaining, total: p.field.trees })
-                  : ' '
-            }}
-          </span>
-        </button>
-      </div>
+      <FieldPicker v-else v-model="fieldId" :fields="sortForPicker(progress)" />
     </section>
 
     <template v-if="fieldId">

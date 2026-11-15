@@ -118,7 +118,11 @@
     "todayTreeYield": "Σήμερα: {{value}} ανά δέντρο",
     "seasonTreeYield": "{{field}} φέτος: {{value}} ανά δέντρο που μαζέψατε",
     "seasonFieldYield": "{{field}} φέτος: {{value}} ανά δέντρο του χωραφιού",
-    "addHalf": "Προσθήκη μισού"
+    "addHalf": "Προσθήκη μισού",
+    "moreFields": "Περισσότερα χωράφια",
+    "prevFields": "Προηγούμενα χωράφια",
+    "swipeForMore": "{{count}} χωράφια · σύρετε για περισσότερα ›",
+    "allFieldsCount": "{{count}} χωράφια"
   },
   "inputKind": {
     "harvest": "Δέντρα και μονάδες που μαζέψατε",
