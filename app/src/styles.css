@@ -259,3 +259,5 @@ textarea.input { resize: vertical; }
 .setup .unit-row { display: grid; grid-template-columns: 1fr 76px auto; gap: 8px; }
 .setup .unit-row .check { min-width: 0; }
 .setup .unit-row .input.small { width: 76px; }
+
+.tagline { font-size: 1.1rem; font-weight: 600; color: var(--olive); margin: 0 0 0.75rem; }

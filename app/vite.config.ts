@@ -14,7 +14,7 @@ export default defineConfig({
       manifest: {
         name: 'HarvestLog',
         short_name: 'HarvestLog',
-        description: 'Olive grove work log and oil production tracker',
+        description: "Harvesting olives is hard work. Keeping track of it shouldn't be.",
         theme_color: '#4d5b2a',
         background_color: '#f7f5ee',
         display: 'standalone',

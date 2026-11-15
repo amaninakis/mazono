@@ -1,7 +1,18 @@
 {
-  "app": { "name": "HarvestLog" },
-  "nav": { "today": "Today", "journal": "Journal", "oil": "Oil", "money": "Money", "more": "More" },
-  "more": { "reports": "Reports", "settings": "Settings" },
+  "app": {
+    "name": "HarvestLog"
+  },
+  "nav": {
+    "today": "Today",
+    "journal": "Journal",
+    "oil": "Oil",
+    "money": "Money",
+    "more": "More"
+  },
+  "more": {
+    "reports": "Reports",
+    "settings": "Settings"
+  },
   "task": {
     "harvest": "Harvest",
     "pruning": "Pruning",
@@ -34,6 +45,7 @@
   },
   "setup": {
     "welcome": "Welcome to HarvestLog",
+    "tagline": "Harvesting olives is hard work. Keeping track of it shouldn't be.",
     "intro": "Log field work in seconds, then follow your olive oil production season by season. Everything is stored on this device and works without signal.",
     "language": "Language",
     "farmName": "Farm name",
@@ -84,13 +96,15 @@
     "saved": "Saved",
     "updated": "Entry updated",
     "perTree": "{{value}} {{unit}} / tree",
-    "seasonAvg": "Season average in {{field}}: {{value}}",
     "treesDoneLeft": "{{done}} trees · {{left}} left",
     "fieldClosed": "{{field}} is finished for this season",
     "newTaskTitle": "New task type",
     "newTaskName": "Task name",
     "newTaskKind": "What do you record?",
-    "create": "Create"
+    "create": "Create",
+    "todayTreeYield": "Today: {{value}} per tree",
+    "seasonTreeYield": "{{field}} this season: {{value}} per harvested tree",
+    "seasonFieldYield": "{{field}} this season: {{value}} per tree in the field"
   },
   "inputKind": {
     "harvest": "Trees and collected units",

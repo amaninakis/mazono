@@ -1,5 +1,7 @@
 # HarvestLog
 
+> **Harvesting olives is hard work. Keeping track of it shouldn't be.**
+
 Open-source, self-hosted app for olive growers: log field work in seconds, follow olive oil
 production season by season, and compare fields and years.
 
@@ -16,7 +18,8 @@ Available in **English** and **Ελληνικά**. Works offline on your phone a
   weed whacking, or your own task types). The field you worked last is preselected while it still
   has trees left. Steppers with ± buttons, or type the number (comma or dot decimals).
 - **Harvest**: trees harvested, trees left in the field, collected units (mix several units,
-  0.5 steps). After saving you see units per tree for the day and the season average for that field.
+  0.5 steps). After saving you see units per tree for the day, and the season's yield per harvested
+  tree and per tree in the field. Entering trees is optional; the field's tree count is used instead.
 - **Journal**: day by day, with a month calendar showing a coloured dot for each task type.
   Tap an entry to edit it; delete with undo.
 - **Settings**: fields, units, task types (colour, icon, suggested months), season start month,
@@ -86,7 +89,8 @@ A test checks that every language has the same keys as English.
 3. **v0.3 – Money**: expenses, oil sales, subsidies and other income, totals by season or calendar year
 4. **v0.4 – Reports**: field × season comparison, season totals, yield through the season, economics
 5. **v0.5 – Self-hosting**: sync server, login, multiple farms and users with roles, backups
-6. **v1.0+**: Android/iOS apps (Capacitor), labour reports, weather data, spreadsheet import
+6. **v1.0+**: Android/iOS apps (Capacitor), daily reminders, location-aware default field,
+   equipment log, tasks per tree (numbered or NFC-tagged trees), weather integration, labour reports, spreadsheet import
 
 ## Licence
 
