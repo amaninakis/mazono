@@ -1,11 +1,13 @@
 <script setup lang="ts">
 import { ref, watch } from 'vue'
+import { parsePastedNumber } from '../core/numbers'
 import { parseDecimal } from '../core/progress'
 import { formatLocale } from '../i18n'
 
 /**
  * − value + control with a typeable number in the middle. Accepts comma decimals.
  * `max` caps the value (also when typed); `half` adds a "+½" button.
+ * Pasted text like "255 €" or "1.234,50 €" is cleaned up to the number it means.
  */
 const props = withDefaults(
   defineProps<{
@@ -71,6 +73,30 @@ function onInput(event: Event) {
   }
 }
 
+/** Use the number found in pasted or leftover text (e.g. "255 €"); false if there is none. */
+function useNumberFrom(raw: string) {
+  const found = parsePastedNumber(raw, formatLocale.value)
+  if (found == null) {
+    return false
+  }
+
+  const next = clamp(found)
+  model.value = next
+  text.value = fmt(next)
+
+  return true
+}
+
+function onPaste(event: ClipboardEvent) {
+  const pasted = event.clipboardData?.getData('text') ?? ''
+  if (parseDecimal(pasted) != null) {
+    // A plain number: let the browser paste it as usual.
+    return
+  }
+  event.preventDefault()
+  useNumberFrom(pasted)
+}
+
 function onFocus(event: FocusEvent) {
   focused = true
   ;(event.target as HTMLInputElement).select()
@@ -78,6 +104,13 @@ function onFocus(event: FocusEvent) {
 
 function onBlur() {
   focused = false
+  if (
+    parseDecimal(text.value) == null &&
+    text.value.trim() !== '' &&
+    useNumberFrom(text.value)
+  ) {
+    return
+  }
   text.value = fmt(model.value)
 }
 </script>
@@ -94,6 +127,7 @@ function onBlur() {
       placeholder="0"
       :value="text"
       @input="onInput"
+      @paste="onPaste"
       @focus="onFocus"
       @blur="onBlur"
     />
