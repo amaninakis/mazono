@@ -48,7 +48,10 @@
     "name": "Name",
     "trees": "Trees",
     "optional": "optional",
-    "loading": "Loading…"
+    "loading": "Loading…",
+    "kg": "kg",
+    "date": "Date",
+    "notes": "Notes"
   },
   "setup": {
     "welcome": "Welcome to HarvestLog",
@@ -135,7 +138,8 @@
     "prevMonth": "Previous month",
     "nextMonth": "Next month",
     "goToday": "Today",
-    "unknownField": "Deleted field"
+    "unknownField": "Deleted field",
+    "extractionLine": "{{olives}} kg olives → {{oil}} kg oil"
   },
   "settings": {
     "title": "Settings",
@@ -165,12 +169,98 @@
     "importConfirm": "Restoring adds the farm from the file to this device and switches to it. Continue?",
     "about": "About",
     "version": "Version {{version}} · open source (MIT)",
-    "storageNote": "Your data is stored on this device. Export a backup regularly until server sync is available."
+    "storageNote": "Your data is stored on this device. Export a backup regularly until server sync is available.",
+    "oilSection": "Mill and oil",
+    "mills": "Mills",
+    "addMill": "Add mill",
+    "chargeTypes": "Charges kept in oil",
+    "defaultPercent": "usual %",
+    "addCharge": "Add charge",
+    "locations": "Where oil is kept",
+    "addLocation": "Add place",
+    "learnedWeight": "≈ {{kg}} kg, learned from {{count}} extractions"
   },
   "soon": {
     "title": "Coming soon",
-    "oil": "Mill extractions, oil charges and oil stock arrive in version 0.2.",
     "money": "Costs, sales and other income arrive in version 0.3.",
     "reports": "Field and season comparisons arrive in version 0.4."
+  },
+  "chargeType": {
+    "millFee": "Mill fee",
+    "bugSpraying": "Bug spraying",
+    "vat": "VAT"
+  },
+  "location": {
+    "mill": "At the mill",
+    "home": "At home"
+  },
+  "oil": {
+    "season": "Season",
+    "newExtraction": "New extraction",
+    "extractions": "Extractions",
+    "noExtractions": "No mill extractions this season yet.",
+    "olives": "Olives",
+    "oil": "Oil",
+    "yield": "Yield",
+    "charges": "Charges",
+    "net": "Net",
+    "acidity": "Acidity",
+    "stored": "Stored",
+    "total": "Total",
+    "stock": "Oil in stock",
+    "noStock": "No oil in stock yet.",
+    "oilSeason": "Oil of",
+    "transfer": "Move oil",
+    "ownUse": "Own use / gift",
+    "movements": "Movements",
+    "fieldsEstimate": "Oil per field (≈)",
+    "perTree": "≈ {{kg}} kg per tree"
+  },
+  "extraction": {
+    "title": "Mill extraction",
+    "editTitle": "Edit extraction",
+    "mill": "Mill",
+    "newMill": "New mill…",
+    "newMillName": "Name of the mill",
+    "receiptNo": "Receipt no. (optional)",
+    "oliveKg": "Olives (kg)",
+    "oilKg": "Oil extracted (kg)",
+    "yieldValue": "Yield {{value}}",
+    "acidity": "Acidity % (optional)",
+    "chargesTitle": "Charges kept in oil",
+    "chargesHelp": "What the mill kept in oil instead of money. Set a usual % in Settings to fill these in for you.",
+    "addCharge": "Add charge",
+    "newChargeName": "Name of the charge",
+    "percentOfOil": "{{value}} of the oil",
+    "netOil": "Net oil",
+    "whereTitle": "Where the oil went",
+    "rest": "the rest",
+    "storedTooMuch": "More oil stored than the net oil.",
+    "harvestTitle": "Harvest days in this batch",
+    "harvestHelp": "Tick the harvest days whose olives went to the mill this time. Use “Part” if only some of a day’s olives went.",
+    "noHarvest": "No harvest days are waiting for the mill.",
+    "part": "Part",
+    "of": "of {{total}}",
+    "selected": "Selected: {{units}}",
+    "perUnit": "≈ {{kg}} kg of olives per {{unit}}",
+    "nothingToSave": "Enter the kg of olives and oil first.",
+    "saved": "Extraction saved",
+    "updated": "Extraction updated",
+    "deleted": "Extraction deleted",
+    "summaryNet": "Yield {{yield}} · net oil {{net}} kg",
+    "summaryTree": "≈ {{kg}} kg of oil per tree"
+  },
+  "move": {
+    "transferTitle": "Move oil",
+    "ownUseTitle": "Own use or gift",
+    "vintage": "Oil of season",
+    "from": "From",
+    "to": "To",
+    "kg": "Kg",
+    "available": "{{kg}} kg available",
+    "tooMuch": "Only {{kg}} kg available here.",
+    "saved": "Saved",
+    "transferLine": "{{kg}} kg {{from}} → {{to}}",
+    "ownUseLine": "{{kg}} kg used from {{from}}"
   }
 }

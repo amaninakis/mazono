@@ -85,3 +85,76 @@ export interface TaskEntry extends BaseRecord {
   hours?: number; // labour module
   notes?: string;
 }
+
+/* ---------- v0.2: mill, oil and stock ---------- */
+
+export type BuiltinCharge = 'millFee' | 'bugSpraying' | 'vat';
+
+/** A charge the mill keeps in oil (mill fee, bug spraying, VAT…). */
+export interface ChargeType extends BaseRecord {
+  builtin?: BuiltinCharge;
+  name: string;
+  /** % of the oil extracted, used to pre-fill the kg. Optional. */
+  defaultPercent?: number;
+  archived: boolean;
+  order: number;
+}
+
+export type BuiltinLocation = 'mill' | 'home';
+
+/** Where oil is kept (at the mill, at home…). */
+export interface StorageLocation extends BaseRecord {
+  builtin?: BuiltinLocation;
+  name: string;
+  archived: boolean;
+  order: number;
+}
+
+export interface Mill extends BaseRecord {
+  name: string;
+  archived: boolean;
+}
+
+export interface ChargeAmount {
+  chargeTypeId: string;
+  kg: number;
+}
+
+export interface StoredAmount {
+  locationId: string;
+  kg: number;
+}
+
+/** Part (or all) of a harvest entry's units that went into an extraction. */
+export interface Allocation {
+  entryId: string;
+  quantities: UnitAmount[];
+}
+
+/** One mill visit. Its stored oil is the stock coming in, tagged with the season (vintage). */
+export interface Extraction extends BaseRecord {
+  date: ISODate;
+  millId?: string;
+  receiptNo?: string;
+  oliveKg: number;
+  oilKg: number;
+  acidity?: number;
+  charges: ChargeAmount[];
+  storage: StoredAmount[];
+  allocations: Allocation[];
+  notes?: string;
+}
+
+export type StockMovementKind = 'transfer' | 'ownUse' | 'sale';
+
+/** Oil leaving a location (own use, sale) or moving between locations. */
+export interface StockMovement extends BaseRecord {
+  date: ISODate;
+  /** Season start year of the oil (its vintage). */
+  vintage: number;
+  kind: StockMovementKind;
+  fromLocationId: string;
+  toLocationId?: string; // transfers only
+  kg: number;
+  notes?: string;
+}

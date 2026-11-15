@@ -54,3 +54,34 @@ describe('uuid', () => {
     }
   });
 });
+
+describe('v0.2 data', () => {
+  it('new farms get default charges and storage locations', async () => {
+    const db = new HarvestDB('test-' + Math.random());
+    const r = await createFarm('F', 'el', db);
+    expect((await db.chargeTypes.where('farmId').equals(r.farmId).toArray()).map((c) => c.builtin).sort()).toEqual(['bugSpraying', 'millFee', 'vat']);
+    expect((await db.locations.where('farmId').equals(r.farmId).toArray()).map((l) => l.builtin).sort()).toEqual(['home', 'mill']);
+  });
+
+  it('farms from before v0.2 get them when the database upgrades', async () => {
+    const name = 'upgrade3-' + Math.random();
+    const old = new (await import('dexie')).default(name);
+    old.version(2).stores({ meta: 'key', farms: 'id', settings: 'farmId', fields: 'id, farmId', units: 'id, farmId', taskTypes: 'id, farmId', entries: 'id, farmId, [farmId+date], fieldId, taskTypeId' });
+    await old.table('farms').put({ id: 'farm1', name: 'Old', createdAt: 0 });
+    old.close();
+    const db = new HarvestDB(name);
+    expect(await db.chargeTypes.where('farmId').equals('farm1').count()).toBe(3);
+    expect(await db.locations.where('farmId').equals('farm1').count()).toBe(2);
+  });
+
+  it('exports and restores extractions and stock', async () => {
+    const db = new HarvestDB('test-' + Math.random());
+    const r = await createFarm('F', 'en', db);
+    await r.saveExtraction({ date: '2025-11-25', oliveKg: 800, oilKg: 180, charges: [], storage: [], allocations: [] });
+    const data = JSON.parse(JSON.stringify(await r.exportAll()));
+    const db2 = new HarvestDB('test-' + Math.random());
+    await importFarm(data, db2);
+    expect(await db2.extractions.count()).toBe(1);
+    expect(await db2.chargeTypes.count()).toBe(3);
+  });
+});

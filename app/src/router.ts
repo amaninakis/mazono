@@ -1,5 +1,7 @@
 import { createRouter, createWebHistory } from 'vue-router';
+import Extraction from './screens/Extraction.vue';
 import Journal from './screens/Journal.vue';
+import Oil from './screens/Oil.vue';
 import More from './screens/More.vue';
 import Settings from './screens/Settings.vue';
 import Soon from './screens/Soon.vue';
@@ -11,7 +13,9 @@ export const router = createRouter({
     { path: '/', name: 'today', component: Today },
     { path: '/entry/:id', name: 'entry', component: Today },
     { path: '/journal', name: 'journal', component: Journal },
-    { path: '/oil', name: 'oil', component: Soon, props: { textKey: 'soon.oil' } },
+    { path: '/oil', name: 'oil', component: Oil },
+    { path: '/oil/new', name: 'extraction-new', component: Extraction },
+    { path: '/oil/:id', name: 'extraction', component: Extraction },
     { path: '/money', name: 'money', component: Soon, props: { textKey: 'soon.money' } },
     { path: '/reports', name: 'reports', component: Soon, props: { textKey: 'soon.reports' } },
     { path: '/more', name: 'more', component: More },

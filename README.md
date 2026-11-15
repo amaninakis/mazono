@@ -7,10 +7,23 @@ production season by season, and compare fields and years.
 
 Available in **English** and **Ελληνικά**. Works offline on your phone as an installable web app (PWA).
 
-> Status: **v0.1 – field log**. Mill extractions, oil stock, money and reports are coming
-> (see [Roadmap](#roadmap)).
+> Status: **v0.2 – mill and stock**. Money and reports are coming (see [Roadmap](#roadmap)).
 
-## What v0.1 does
+## What it does
+
+### Mill and oil stock (v0.2)
+
+- **Mill extraction form**: olives and oil kg with live yield (1/4.3 or %), acidity, receipt number and mill.
+- **Charges kept in oil** (mill fee, bug spraying, VAT, or your own), each shown as % of the oil and
+  filled in from your usual % if you set one. Net oil is calculated for you.
+- **Where the oil went**: split the net oil between the mill, home or your own places.
+- **Harvest days → extraction**: tick the harvest days that went to the mill (pre-ticked since the last
+  visit); send only part of a day when needed. Oil is shared between fields in proportion to the olives,
+  and kg per unit (e.g. per sack) is learned from your extractions.
+- **Oil page**: season totals, every extraction, oil per field (≈) and per tree, and **oil in stock**
+  by season and place, with transfers (mill → home) and own use / gifts.
+
+### Field log (v0.1)
 
 - **First-run setup**: language, packaging units (sack, half sack, crate, pallet bin… or your own,
   with an optional approximate weight) and your fields with tree counts.
@@ -84,8 +97,8 @@ A test checks that every language has the same keys as English.
 
 ## Roadmap
 
-1. **v0.1 – Field log** (this version)
-2. **v0.2 – Mill and stock**: extractions, yield (1/x or %), oil charges (mill fee, bug spraying,
+1. **v0.1 – Field log** ✅
+2. **v0.2 – Mill and stock** ✅: extractions, yield (1/x or %), oil charges (mill fee, bug spraying,
    VAT…), linking harvest days to extractions (with splits), oil stock by season and location
 3. **v0.3 – Money**: expenses, oil sales, subsidies and other income, totals by season or calendar year
 4. **v0.4 – Reports**: field × season comparison, season totals, yield through the season, economics

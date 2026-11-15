@@ -59,6 +59,9 @@ const dayTitle = computed(() =>
 
 const dayEntries = computed(() => [...(byDay.value.get(date.value) ?? [])].sort((a, b) => a.updatedAt - b.updatedAt));
 
+const extractionDays = computed(() => new Set(farm.value.extractions.map((x) => x.date)));
+const dayExtractions = computed(() => farm.value.extractions.filter((x) => x.date === date.value));
+
 /** Distinct task types logged on a day, for the calendar dots. */
 function dayTypes(d: string): TaskType[] {
   const seen = new Map<string, TaskType>();
@@ -113,6 +116,7 @@ function details(e: TaskEntry) {
             <span class="dots" aria-hidden="true">
               <i v-for="x in dayTypes(d).slice(0, 3)" :key="x.id" :style="{ background: x.color }" />
               <b v-if="dayTypes(d).length > 3">+</b>
+              <em v-if="extractionDays.has(d)" class="oil-mark">💧</em>
             </span>
           </button>
           <span v-else />
@@ -128,6 +132,18 @@ function details(e: TaskEntry) {
     <button v-if="date !== today" type="button" class="btn ghost small center" @click="setDate(today)">
       {{ t('journal.goToday') }}
     </button>
+
+    <ul v-if="dayExtractions.length" class="entries">
+      <li v-for="x in dayExtractions" :key="x.id" class="entry oil-entry">
+        <button type="button" class="entry-main" @click="router.push(`/oil/${x.id}`)">
+          <span class="entry-icon" aria-hidden="true">💧</span>
+          <span class="entry-text">
+            <strong>{{ t('extraction.title') }}</strong>
+            <small>{{ t('journal.extractionLine', { olives: formatNumber(x.oliveKg, locale, 0), oil: formatNumber(x.oilKg, locale, 1) }) }}</small>
+          </span>
+        </button>
+      </li>
+    </ul>
 
     <div v-if="dayEntries.length === 0" class="empty">
       <p class="muted">{{ t('journal.noEntries') }}</p>
