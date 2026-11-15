@@ -6,7 +6,7 @@ import { parseISODate, seasonLabel, seasonOf, todayISO } from '../core/dates';
 import { formatNumber, formatYield } from '../core/format';
 import { chargeShare, chargesKg, netOil, oilByEntry, seasonTotals, stockLevels, unitWeights } from '../core/oil';
 import type { StockMovement } from '../core/types';
-import { locale } from '../i18n';
+import { formatLocale } from '../i18n';
 import StockMoveModal from '../ui/StockMoveModal.vue';
 import { chargeName, locationName, useFarm } from '../ui/farm';
 import { showToast } from '../ui/toast';
@@ -16,12 +16,12 @@ const farm = useFarm();
 const router = useRouter();
 const startMonth = computed(() => farm.value.settings.seasonStartMonth);
 
-const fmt = (n: number, d = 1) => formatNumber(n, locale.value, d);
+const fmt = (n: number, d = 1) => formatNumber(n, formatLocale.value, d);
 const yieldOf = (olives: number, oil: number) =>
-  formatYield(olives, oil, farm.value.settings.yieldFormat, locale.value);
+  formatYield(olives, oil, farm.value.settings.yieldFormat, formatLocale.value);
 const pct = (part: number, whole: number) => fmt(chargeShare(part, whole) * 100) + '%';
 const day = (d: string) =>
-  new Intl.DateTimeFormat(locale.value, { day: 'numeric', month: 'short', year: 'numeric' }).format(parseISODate(d));
+  new Intl.DateTimeFormat(formatLocale.value, { day: 'numeric', month: 'short', year: 'numeric' }).format(parseISODate(d));
 
 /* ---------- season ---------- */
 const currentSeason = seasonOf(todayISO(), startMonth.value);

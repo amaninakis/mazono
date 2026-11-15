@@ -4,7 +4,7 @@ import { computed, watch } from 'vue';
 import { useRoute } from 'vue-router';
 import { db } from './db/db';
 import { FarmRepo } from './db/repo';
-import { setLanguage } from './i18n';
+import { dateFormatPref, setLanguage } from './i18n';
 import Setup from './screens/Setup.vue';
 import { provideFarm, type FarmData } from './ui/farm';
 import { useLiveQuery } from './ui/live';
@@ -61,6 +61,12 @@ provideFarm(farm);
 watch(
   () => data.value?.settings.language,
   (lng) => lng && setLanguage(lng),
+  { immediate: true },
+);
+
+watch(
+  () => data.value?.settings.dateFormat,
+  (f) => (dateFormatPref.value = f ?? 'auto'),
   { immediate: true },
 );
 

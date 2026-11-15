@@ -178,7 +178,12 @@
     "addCharge": "Add charge",
     "locations": "Where oil is kept",
     "addLocation": "Add place",
-    "learnedWeight": "≈ {{kg}} kg, learned from {{count}} extractions"
+    "learnedWeight": "≈ {{kg}} kg, learned from {{count}} extractions",
+    "dateFormat": "Date and number format",
+    "format_auto": "Automatic",
+    "format_GR": "Greek",
+    "format_GB": "British",
+    "format_US": "American"
   },
   "soon": {
     "title": "Coming soon",

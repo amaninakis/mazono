@@ -4,11 +4,12 @@ import { computed, ref } from 'vue';
 import { TASK_COLORS, TASK_ICONS } from '../core/defaults';
 import { unitWeights } from '../core/oil';
 import { parseDecimal } from '../core/progress';
-import type { InputKind, Language, TaskType } from '../core/types';
+import type { DateFormat, InputKind, Language, TaskType } from '../core/types';
 import { db } from '../db/db';
 import { importFarm } from '../db/repo';
 import { formatNumber } from '../core/format';
-import { LANGUAGES, locale, setLanguage } from '../i18n';
+import { formatLocaleFor } from '../core/locale';
+import { LANGUAGES, formatLocale, locale, setLanguage } from '../i18n';
 import Toggle from '../ui/Toggle.vue';
 import { chargeName, locationName, taskName, useFarm } from '../ui/farm';
 import { showToast } from '../ui/toast';
@@ -26,9 +27,26 @@ const version = __APP_VERSION__;
 const months = computed(() =>
   Array.from({ length: 12 }, (_, i) => ({
     n: i + 1,
-    short: new Intl.DateTimeFormat(locale.value, { month: 'short' }).format(new Date(2024, i, 1)),
-    long: new Intl.DateTimeFormat(locale.value, { month: 'long' }).format(new Date(2024, i, 1)),
+    short: new Intl.DateTimeFormat(formatLocale.value, { month: 'short' }).format(new Date(2024, i, 1)),
+    long: new Intl.DateTimeFormat(formatLocale.value, { month: 'long' }).format(new Date(2024, i, 1)),
   })),
+);
+
+/** Example "15/11/2026 · 1.234,5" for each date and number style. */
+const formatOptions = computed(() =>
+  (['auto', 'GR', 'GB', 'US'] as DateFormat[]).map((f) => {
+    const loc =
+      f === 'auto'
+        ? formatLocaleFor(
+            locale.value as Language,
+            'auto',
+            navigator.languages ?? [navigator.language],
+            Intl.DateTimeFormat().resolvedOptions().timeZone,
+          )
+        : formatLocaleFor(locale.value as Language, f, []);
+    const example = `${new Intl.DateTimeFormat(loc, { day: 'numeric', month: 'numeric', year: 'numeric' }).format(new Date(2026, 10, 15))} · ${new Intl.NumberFormat(loc).format(1234.5)}`;
+    return { f, example };
+  }),
 );
 
 const visible = <T extends { archived: boolean }>(rows: T[]) => rows.filter((r) => showArchived.value || !r.archived);
@@ -173,7 +191,18 @@ async function importData(e: Event) {
           {{ t(f === 'ratio' ? 'settings.yieldRatio' : 'settings.yieldPercent') }}
         </button>
       </div>
-      <label class="label" for="s-season">{{ t('settings.seasonStart') }}</label>
+      <label class="label" for="s-dateformat">{{ t('settings.dateFormat') }}</label>
+      <select
+        id="s-dateformat"
+        class="input select"
+        :value="settings.dateFormat ?? 'auto'"
+        @change="(e) => repo.updateSettings({ dateFormat: val(e) as DateFormat })"
+      >
+        <option v-for="o in formatOptions" :key="o.f" :value="o.f">
+          {{ t(`settings.format_${o.f}`) }} ({{ o.example }})
+        </option>
+      </select>
+            <label class="label" for="s-season">{{ t('settings.seasonStart') }}</label>
       <select
         id="s-season"
         class="input select"
@@ -268,7 +297,7 @@ async function importData(e: Event) {
             @blur="(e) => repo.update('units', u.id, { approxKg: parseDecimal(val(e)) ?? undefined })"
           />
           <small v-if="weights[u.id]?.source === 'learned'" class="muted learned">
-            {{ t('settings.learnedWeight', { kg: formatNumber(weights[u.id].kg, locale, 1), count: weights[u.id].batches }) }}
+            {{ t('settings.learnedWeight', { kg: formatNumber(weights[u.id].kg, formatLocale, 1), count: weights[u.id].batches }) }}
           </small>
           <label class="radio">
             <input type="radio" name="s-default-unit" :checked="u.isDefault" @change="repo.setDefaultUnit(u.id)" />

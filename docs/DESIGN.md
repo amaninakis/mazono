@@ -217,6 +217,7 @@ Ideas for later: harvest progress compared with last season; kg per unit over ti
 ## Settings
 
 - **General**: language, season start month, yield format (1/x or %), farm name. *(v0.1)*
+- **Date and number format**: Automatic, Greek (15/11/2026 · 1.234,5), British or American, separate from the language. Browsers do not pass on the operating system's region setting (e.g. macOS English with region Greece), so "Automatic" also looks at the time zone. Date fields show dates in this format rather than the browser's. *(v0.2)*
 - **Fields, units, task types**: add, edit, archive (never delete fields with history), colours, icons, active months. *(v0.1)*
 - **Optional modules**, off by default and set per farm: Labour (workers, hours; wages and costs later). *(v0.1)*
 - **Data**: JSON backup export/restore *(v0.1)*; CSV export, spreadsheet import, sync status, automatic backups *(later)*.

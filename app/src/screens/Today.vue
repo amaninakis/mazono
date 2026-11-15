@@ -15,7 +15,8 @@ import {
 } from '../core/progress';
 import type { InputKind, TaskEntry, UnitAmount } from '../core/types';
 import { unitLabel } from '../core/units';
-import { locale } from '../i18n';
+import { formatLocale } from '../i18n';
+import DateField from '../ui/DateField.vue';
 import NewTaskModal from '../ui/NewTaskModal.vue';
 import NewUnitModal from '../ui/NewUnitModal.vue';
 import Stepper from '../ui/Stepper.vue';
@@ -209,7 +210,7 @@ function summaryLines(e: TaskEntry): string[] {
   const lines: string[] = [];
   const f = fieldName(e.fieldId);
   const fld = farm.value.fields.find((x) => x.id === e.fieldId);
-  const loc = locale.value;
+  const loc = formatLocale.value;
   if (kind.value === 'harvest' && fld) {
     const fmtPer = (pt: Record<string, number>) =>
       Object.entries(pt)
@@ -267,14 +268,7 @@ function summaryLines(e: TaskEntry): string[] {
           >
             {{ t('today.yesterday') }}
           </button>
-          <input
-            id="date"
-            type="date"
-            class="input date"
-            :value="date"
-            :max="today"
-            @change="(e) => (e.target as HTMLInputElement).value && (date = (e.target as HTMLInputElement).value)"
-          />
+          <DateField id="date" v-model="date" :max="today" :label="t('today.date')" />
         </div>
       </div>
     </section>

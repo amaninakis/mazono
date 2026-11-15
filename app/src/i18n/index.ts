@@ -1,6 +1,7 @@
 import i18n from 'i18next';
-import { ref } from 'vue';
-import type { Language } from '../core/types';
+import { computed, ref } from 'vue';
+import { formatLocaleFor } from '../core/locale';
+import type { DateFormat, Language } from '../core/types';
 import el from './locales/el.json';
 import en from './locales/en.json';
 
@@ -28,6 +29,19 @@ void i18n.init({
 /** Current language as a Vue ref, for number and date formatting. */
 export const locale = ref<string>(i18n.language);
 i18n.on('languageChanged', (lng) => (locale.value = lng));
+
+/** The farm's date and number style setting ('auto' = detect). */
+export const dateFormatPref = ref<DateFormat>('auto');
+
+/** Locale for formatting dates and numbers. Text follows `locale`, formats follow this. */
+export const formatLocale = computed(() =>
+  formatLocaleFor(
+    locale.value as Language,
+    dateFormatPref.value,
+    typeof navigator !== 'undefined' ? navigator.languages ?? [navigator.language] : [],
+    Intl.DateTimeFormat().resolvedOptions().timeZone,
+  ),
+);
 
 export function setLanguage(lng: Language) {
   void i18n.changeLanguage(lng);
