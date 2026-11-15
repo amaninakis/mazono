@@ -12,11 +12,24 @@ Thanks for helping! Bug reports, translations and pull requests are all welcome.
 
 ```bash
 cd app
-npm install
+npm install        # also installs the pre-commit hook
+npm run lint       # must report 0 problems (warnings count too)
 npm run typecheck
 npm test
 npm run build
 ```
+
+## Code style
+
+The code follows [`@maninak/eslint-config`](https://github.com/maninak/eslint-config) (ESLint + Prettier,
+configured in `app/eslint.config.mjs`). In short: no semicolons, single quotes, 2-space indent, descriptive
+names (no one-letter names except `i`, `j`, `x`, `y`, `z`, `_`), function declarations instead of arrow
+constants, no nested ternaries, explicit `public`/`private` in classes, multi-word component names.
+
+- `npm run lint -- --fix` fixes most problems automatically.
+- A pre-commit hook (simple-git-hooks + lint-staged) lints and fixes the files you commit.
+- CI fails if `npm run lint` reports any problem.
+- In VS Code, install the recommended extensions; the workspace settings fix files on save.
 
 - Put business logic in `app/src/core/` with unit tests.
 - Add every new user-facing text to both `en.json` and `el.json` (a test checks they match).

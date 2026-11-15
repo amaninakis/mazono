@@ -1,26 +1,30 @@
 <script setup lang="ts">
-import { useTranslation } from 'i18next-vue';
-import { computed, watch } from 'vue';
-import { useRoute } from 'vue-router';
-import { db } from './db/db';
-import { FarmRepo } from './db/repo';
-import { dateFormatPref, setLanguage } from './i18n';
-import Setup from './screens/Setup.vue';
-import { provideFarm, type FarmData } from './ui/farm';
-import { useLiveQuery } from './ui/live';
-import Toast from './ui/Toast.vue';
+import { useTranslation } from 'i18next-vue'
+import { computed, watch } from 'vue'
+import { RouterLink, RouterView, useRoute } from 'vue-router'
+import { db } from './db/db'
+import { FarmRepo } from './db/repo'
+import { dateFormatPref, setLanguage } from './i18n'
+import SetupWizard from './screens/SetupWizard.vue'
+import AppToast from './ui/AppToast.vue'
+import { type FarmData, provideFarm } from './ui/farm'
+import { useLiveQuery } from './ui/live'
 
-const { t } = useTranslation();
-const route = useRoute();
+const { t: translate } = useTranslation()
+const route = useRoute()
 
-const notDeleted = <T extends { deletedAt?: number }>(rows: T[]) => rows.filter((r) => !r.deletedAt);
+function notDeleted<T extends { deletedAt?: number }>(rows: T[]) {
+  return rows.filter((row) => !row.deletedAt)
+}
 
-const farmId = useLiveQuery(async () => (await db.meta.get('currentFarmId'))?.value ?? '');
+const farmId = useLiveQuery(async () => (await db.meta.get('currentFarmId'))?.value ?? '')
 
 const data = useLiveQuery(
   async () => {
-    const id = farmId.value;
-    if (!id) return null;
+    const id = farmId.value
+    if (!id) {
+      return null
+    }
     const [
       farm,
       settings,
@@ -35,23 +39,25 @@ const data = useLiveQuery(
       stockMovements,
       categories,
       transactions,
-    ] =
-      await Promise.all([
-        db.farms.get(id),
-        db.settings.get(id),
-        db.fields.where('farmId').equals(id).toArray(),
-        db.units.where('farmId').equals(id).toArray(),
-        db.taskTypes.where('farmId').equals(id).toArray(),
-        db.entries.where('farmId').equals(id).toArray(),
-        db.mills.where('farmId').equals(id).toArray(),
-        db.chargeTypes.where('farmId').equals(id).toArray(),
-        db.locations.where('farmId').equals(id).toArray(),
-        db.extractions.where('farmId').equals(id).toArray(),
-        db.stockMovements.where('farmId').equals(id).toArray(),
-        db.categories.where('farmId').equals(id).toArray(),
-        db.transactions.where('farmId').equals(id).toArray(),
-      ]);
-    if (!farm || !settings) return null;
+    ] = await Promise.all([
+      db.farms.get(id),
+      db.settings.get(id),
+      db.fields.where('farmId').equals(id).toArray(),
+      db.units.where('farmId').equals(id).toArray(),
+      db.taskTypes.where('farmId').equals(id).toArray(),
+      db.entries.where('farmId').equals(id).toArray(),
+      db.mills.where('farmId').equals(id).toArray(),
+      db.chargeTypes.where('farmId').equals(id).toArray(),
+      db.locations.where('farmId').equals(id).toArray(),
+      db.extractions.where('farmId').equals(id).toArray(),
+      db.stockMovements.where('farmId').equals(id).toArray(),
+      db.categories.where('farmId').equals(id).toArray(),
+      db.transactions.where('farmId').equals(id).toArray(),
+    ])
+    if (!farm || !settings) {
+      return null
+    }
+
     return {
       farmName: farm.name,
       settings,
@@ -66,46 +72,51 @@ const data = useLiveQuery(
       stockMovements: notDeleted(stockMovements),
       categories: notDeleted(categories),
       transactions: notDeleted(transactions),
-    };
+    }
   },
   () => farmId.value,
-);
+)
 
-const repo = computed(() => (farmId.value ? new FarmRepo(farmId.value) : null));
+const repo = computed(() => (farmId.value ? new FarmRepo(farmId.value) : null))
 
-const farm = computed<FarmData>(() => ({ repo: repo.value!, ...data.value! }));
-provideFarm(farm);
+const farm = computed<FarmData>(() => ({ repo: repo.value!, ...data.value! }))
+provideFarm(farm)
 
 watch(
   () => data.value?.settings.language,
   (lng) => lng && setLanguage(lng),
   { immediate: true },
-);
+)
 
 watch(
   () => data.value?.settings.dateFormat,
-  (f) => (dateFormatPref.value = f ?? 'auto'),
+  (format) => (dateFormatPref.value = format ?? 'auto'),
   { immediate: true },
-);
+)
 
 const state = computed(() => {
-  if (farmId.value === undefined || (farmId.value && data.value === undefined)) return 'loading';
-  if (!farmId.value || !data.value || !repo.value || !data.value.settings.setupDone) return 'setup';
-  return 'ready';
-});
+  if (farmId.value === undefined || (farmId.value && data.value === undefined)) {
+    return 'loading'
+  }
+  if (!farmId.value || !data.value || !repo.value || !data.value.settings.setupDone) {
+    return 'setup'
+  }
+
+  return 'ready'
+})
 
 const nav = computed(() => [
-  { to: '/', icon: '✚', label: t('nav.today'), exact: true },
-  { to: '/journal', icon: '📅', label: t('nav.journal') },
-  { to: '/oil', icon: '💧', label: t('nav.oil') },
-  { to: '/money', icon: '€', label: t('nav.money') },
-  { to: '/more', icon: '☰', label: t('nav.more') },
-]);
+  { to: '/', icon: '✚', label: translate('nav.today'), exact: true },
+  { to: '/journal', icon: '📅', label: translate('nav.journal') },
+  { to: '/oil', icon: '💧', label: translate('nav.oil') },
+  { to: '/money', icon: '€', label: translate('nav.money') },
+  { to: '/more', icon: '☰', label: translate('nav.more') },
+])
 </script>
 
 <template>
-  <div v-if="state === 'loading'" class="splash">{{ t('common.loading') }}</div>
-  <Setup v-else-if="state === 'setup'" />
+  <div v-if="state === 'loading'" class="splash">{{ $t('common.loading') }}</div>
+  <SetupWizard v-else-if="state === 'setup'" />
   <div v-else class="shell">
     <RouterView :key="route.path" />
     <nav class="bottom-nav">
@@ -119,6 +130,6 @@ const nav = computed(() => [
         <span>{{ item.label }}</span>
       </RouterLink>
     </nav>
-    <Toast />
+    <AppToast />
   </div>
 </template>

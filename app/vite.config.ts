@@ -1,11 +1,11 @@
-import { defineConfig } from 'vite';
-import vue from '@vitejs/plugin-vue';
-import { VitePWA } from 'vite-plugin-pwa';
+import vue from '@vitejs/plugin-vue'
+import { VitePWA } from 'vite-plugin-pwa'
+import { defineConfig } from 'vitest/config'
 
-import pkg from './package.json' with { type: 'json' };
+import pkg from './package.json' with { type: 'json' }
 
 export default defineConfig({
-  define: { __APP_VERSION__: JSON.stringify(pkg.version) },
+  define: { APP_VERSION: JSON.stringify(pkg.version) },
   plugins: [
     vue(),
     VitePWA({
@@ -29,4 +29,4 @@ export default defineConfig({
     environment: 'node',
     setupFiles: ['./src/test-setup.ts'],
   },
-});
+})

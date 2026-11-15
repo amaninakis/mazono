@@ -8,7 +8,9 @@
     "build": "vue-tsc --noEmit && vite build",
     "preview": "vite preview",
     "test": "vitest run",
-    "typecheck": "vue-tsc --noEmit"
+    "typecheck": "vue-tsc --noEmit",
+    "lint": "eslint . --max-warnings 0 --no-warn-ignored --cache --cache-strategy content --cache-location node_modules/.cache/eslint --concurrency=auto",
+    "postinstall": "simple-git-hooks || true"
   },
   "dependencies": {
     "dexie": "^4.4.7",
@@ -18,12 +20,22 @@
     "vue-router": "^5.5.1"
   },
   "devDependencies": {
+    "@maninak/eslint-config": "^0.7.0",
     "@vitejs/plugin-vue": "^6.0.11",
+    "eslint": "^10.15.0",
     "fake-indexeddb": "^6.2.8",
+    "lint-staged": "^17.6.1",
+    "simple-git-hooks": "^2.14.0",
     "typescript": "~5.9",
     "vite": "^8.3.8",
     "vite-plugin-pwa": "^2.0.0",
     "vitest": "^5.1.0",
     "vue-tsc": "^3.3.14"
+  },
+  "simple-git-hooks": {
+    "pre-commit": "cd app && npx lint-staged"
+  },
+  "lint-staged": {
+    "*": "eslint --fix --max-warnings 0 --no-warn-ignored --cache --cache-strategy content --cache-location node_modules/.cache/eslint"
   }
 }

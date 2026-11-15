@@ -1,7 +1,7 @@
-import type { YieldFormat } from './types';
+import type { YieldFormat } from './types'
 
-export function formatNumber(n: number, locale: string, maxDecimals = 2): string {
-  return new Intl.NumberFormat(locale, { maximumFractionDigits: maxDecimals }).format(n);
+export function formatNumber(value: number, locale: string, maxDecimals = 2): string {
+  return new Intl.NumberFormat(locale, { maximumFractionDigits: maxDecimals }).format(value)
 }
 
 /**
@@ -14,13 +14,17 @@ export function formatYield(
   format: YieldFormat,
   locale: string,
 ): string {
-  if (!oliveKg || !oilKg) return '–';
-  if (format === 'percent') {
-    return new Intl.NumberFormat(locale, { style: 'percent', maximumFractionDigits: 1 }).format(
-      oilKg / oliveKg,
-    );
+  if (!oliveKg || !oilKg) {
+    return '–'
   }
-  return `1/${formatNumber(oliveKg / oilKg, locale, 1)}`;
+  if (format === 'percent') {
+    return new Intl.NumberFormat(locale, {
+      style: 'percent',
+      maximumFractionDigits: 1,
+    }).format(oilKg / oliveKg)
+  }
+
+  return `1/${formatNumber(oliveKg / oilKg, locale, 1)}`
 }
 
 /**
@@ -28,10 +32,15 @@ export function formatYield(
  * (Greek style), "€1,234.50" otherwise. Built from the plain number format because some
  * locales mix styles for currency (en-DE gives "1.234,5" but "€1,234.50").
  */
-export function formatMoney(n: number, locale: string): string {
-  const nf = new Intl.NumberFormat(locale, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-  const commaDecimal = nf.formatToParts(1.5).find((p) => p.type === 'decimal')?.value === ',';
-  const abs = nf.format(Math.abs(n));
-  const sign = n < 0 ? '−' : '';
-  return commaDecimal ? `${sign}${abs} €` : `${sign}€${abs}`;
+export function formatMoney(value: number, locale: string): string {
+  const nf = new Intl.NumberFormat(locale, {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  })
+  const commaDecimal =
+    nf.formatToParts(1.5).find((part) => part.type === 'decimal')?.value === ','
+  const abs = nf.format(Math.abs(value))
+  const sign = value < 0 ? '−' : ''
+
+  return commaDecimal ? `${sign}${abs} €` : `${sign}€${abs}`
 }

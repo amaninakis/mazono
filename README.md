@@ -74,6 +74,7 @@ Hardware needs are tiny: any Raspberry Pi 3/4/5, NAS or the smallest VPS is enou
 cd app
 npm install
 npm run dev      # http://localhost:5173
+npm run lint     # ESLint + Prettier (@maninak/eslint-config), must be clean
 npm test         # unit tests
 npm run build    # production build in app/dist
 ```
