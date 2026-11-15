@@ -1,5 +1,7 @@
 # HarvestLog — Design
 
+> **Harvesting olives is hard work. Keeping track of it shouldn't be.**
+
 This document explains what HarvestLog is meant to become and why it is built the way it is.
 Read it before opening a pull request for a new feature, so your change fits the plan.
 For setup and development commands, see the [README](../README.md).
@@ -33,6 +35,12 @@ HarvestLog is a self-hosted, open-source app that replaces the yearly olive spre
 - Every setting has a sensible default; nothing is required except what the task needs.
 - Self-hosting is done once by a helper (family member, cooperative, technician). The grower only opens a link and adds it to the home screen, with a short in-app guide for that step.
 - Mistakes are easy to undo; nothing is lost by tapping the wrong button.
+
+**Logging is never extra work.** The harvest is physically hard; the app must not add a chore on top of it. Recording a day takes a few taps with tired, dirty hands, and it should feel rewarding, almost like a game:
+
+- Visible progress: each field fills up as trees are harvested; the season total grows with every save.
+- Small rewards at the right moment: today's yield after saving, a short note when a field is finished, season milestones (first 1,000 kg of oil, best day so far).
+- No guilt: no nagging, no broken streaks, no red warnings for missed days. Reminders are gentle and stop when asked.
 
 ## Background: how growers track this today
 
@@ -232,6 +240,15 @@ These are planned but not yet scheduled in detail. Open an issue before starting
 - Reports: rain in chosen months (e.g. Sep–Nov) against oil yield and olives per tree, one point per season. With few seasons the app labels it as an indication, not proof.
 - Open question: meteo.gr has no official public API, so its terms need checking; a CSV import of station data is the fallback.
 
+**Tasks per tree (optional)**
+
+- Off by default; for growers who want to follow individual trees. Example: while harvesting, mark tree 12 for pruning later in the season.
+- **Tree number per field**: numbering restarts at 1 in every field ("Monastiri #12"), which is easier to remember than one farm-wide number. Only trees that need it get a number; the field's tree count stays the main figure.
+- **Marking the tree in the field**, whichever suits the grower: a number sprayed on the trunk, a numbered tag nailed to the bark, or an NFC tag. The NFC tag stores a link to that tree, so scanning it with any phone opens the tree in the app (iPhones read link tags natively; Android too). A printed weatherproof QR code is a cheaper alternative.
+- **Marks**: needs pruning, sick / pests, did not bear, replant, or a custom note, with an optional photo. Added in two taps from the harvest screen ("Mark a tree" → number → mark).
+- **Follow-up**: when pruning that field, Today lists the marked trees ("3 trees marked: #4, #12, #18") and ticking them off closes the marks. Each tree keeps its own history.
+- Data: Tree (farm, field, number unique per field, optional NFC tag id, location, notes) and Tree mark (tree, mark type or task type, note, photo, created, done).
+
 ## Decisions
 
 | Topic | Decision |
@@ -265,4 +282,4 @@ These are planned but not yet scheduled in detail. Open an issue before starting
 3. **v0.3 — Money**: expenses, sales (deducting stock), other income, totals by season and calendar year.
 4. **v0.4 — Reports**: the four reports above, CSV export.
 5. **v0.5 — Self-hosting**: sync server, login, farms and roles, backups, translator guide.
-6. **v1.0+**: Android/iOS builds (Capacitor), weather integration, daily reminders, location-aware default field, equipment log, Labour reports, spreadsheet import, receipt photos, more languages.
+6. **v1.0+**: Android/iOS builds (Capacitor), weather integration, daily reminders, location-aware default field, equipment log, tasks per tree (tree numbers and NFC tags), Labour reports, spreadsheet import, receipt photos, more languages.

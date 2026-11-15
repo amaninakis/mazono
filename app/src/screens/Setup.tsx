@@ -102,6 +102,7 @@ export default function Setup() {
       {step === 0 && (
         <section>
           <h1>{t('setup.welcome')}</h1>
+          <p className="tagline">{t('setup.tagline')}</p>
           <p className="muted">{t('setup.intro')}</p>
           <label className="label">{t('setup.language')}</label>
           <div className="chips">

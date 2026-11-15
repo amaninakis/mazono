@@ -45,6 +45,7 @@
   },
   "setup": {
     "welcome": "Welcome to HarvestLog",
+    "tagline": "Harvesting olives is hard work. Keeping track of it shouldn't be.",
     "intro": "Log field work in seconds, then follow your olive oil production season by season. Everything is stored on this device and works without signal.",
     "language": "Language",
     "farmName": "Farm name",
