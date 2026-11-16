@@ -13,8 +13,9 @@ import type {
   Transaction,
   Unit,
 } from '../core/types'
-import Dexie, { type EntityTable } from 'dexie'
+import Dexie, { type Transaction as DexieTransaction, type EntityTable } from 'dexie'
 import { BUILTIN_CATEGORIES, BUILTIN_CHARGES, BUILTIN_LOCATIONS } from '../core/defaults'
+import { SYNC_TABLES, type SyncTable } from '../core/syncFormat'
 import { presetPlural } from '../core/units'
 import { uuid } from '../core/uuid'
 
@@ -67,7 +68,69 @@ interface Meta {
   value: string
 }
 
-/** Local, offline-first database (IndexedDB). A sync server comes in a later version. */
+/*
+ * Change tracking for sync. Every row written on this device gets `_dirty: 1` ("not yet
+ * sent to the server"). Rows written by the sync itself, from the server, do not: those
+ * writes run in transactions marked with markRemote().
+ */
+const remoteTransactions = new WeakSet<object>()
+let localChangeListener: (() => void) | undefined
+
+/** Called after every local change, e.g. to schedule a sync. */
+export function onLocalChange(listener: (() => void) | undefined): void {
+  localChangeListener = listener
+}
+
+/** Mark the current transaction as writing data from the server. */
+export function markRemote(transaction: DexieTransaction | null): void {
+  if (transaction) {
+    remoteTransactions.add(transaction)
+  }
+}
+
+function isRemote(transaction: DexieTransaction): boolean {
+  let current: DexieTransaction | undefined = transaction
+  while (current) {
+    if (remoteTransactions.has(current)) {
+      return true
+    }
+    current = (current as DexieTransaction & { parent?: DexieTransaction }).parent
+  }
+
+  return false
+}
+
+/** Rows of `farms` and `settings` carry no updatedAt from the app code: stamp it here. */
+const STAMPED_HERE = new Set<SyncTable>(['farms', 'settings'])
+
+function trackChanges(database: Dexie): void {
+  for (const tableName of SYNC_TABLES) {
+    const table = database.table(tableName)
+    table.hook('creating', (_key, row: Record<string, unknown>, transaction) => {
+      if (isRemote(transaction)) {
+        return
+      }
+      row._dirty = 1
+      if (STAMPED_HERE.has(tableName)) {
+        row.updatedAt = Date.now()
+      }
+      queueMicrotask(() => localChangeListener?.())
+    })
+    table.hook('updating', (changes: object, _key, _row, transaction) => {
+      const changed = Object.keys(changes)
+      if (isRemote(transaction) || (changed.length === 1 && changed[0] === '_dirty')) {
+        return undefined
+      }
+      queueMicrotask(() => localChangeListener?.())
+
+      return STAMPED_HERE.has(tableName) ? { _dirty: 1, updatedAt: Date.now() } : { _dirty: 1 }
+    })
+  }
+}
+
+/**
+ * Local, offline-first database (IndexedDB), kept in step with the server when there is one.
+ */
 export class HarvestDB extends Dexie {
   public meta!: EntityTable<Meta, 'key'>
   public farms!: EntityTable<Farm, 'id'>
@@ -154,6 +217,7 @@ export class HarvestDB extends Dexie {
             }
           }),
     )
+    trackChanges(this)
   }
 }
 

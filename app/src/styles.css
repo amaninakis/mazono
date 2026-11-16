@@ -515,3 +515,12 @@ button, input, select, textarea { font: inherit; color: inherit; }
 .badge-bar > span { display: block; height: 100%; border-radius: 3px; background: var(--olive); }
 .badge-state { font-size: 0.85rem; color: var(--muted); font-variant-numeric: tabular-nums; }
 .badge.done .badge-state { color: var(--olive); font-weight: 700; }
+
+/* Sign-in screen */
+.account-screen .lang-chips { justify-content: flex-end; margin-bottom: 12px; }
+.account-screen form { display: flex; flex-direction: column; gap: 4px; }
+.account-screen form .btn { margin-top: 12px; }
+.account-card .actions { display: flex; flex-wrap: wrap; gap: 8px; }
+.sync-line { font-size: 0.9rem; color: var(--muted); }
+.sync-line.error, .sync-line.offline { color: var(--warn, #9a6b00); }
+.password-form { display: flex; flex-direction: column; gap: 4px; margin-top: 12px; }

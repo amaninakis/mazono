@@ -1,19 +1,24 @@
 {
   "name": "harvestlog-app",
   "private": true,
-  "version": "0.4.0",
+  "version": "0.5.0",
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "vue-tsc --noEmit && vite build",
+    "server": "PORT=8787 node --disable-warning=ExperimentalWarning --watch server/main.ts",
+    "start": "node --disable-warning=ExperimentalWarning server/main.ts",
+    "build": "vue-tsc --noEmit && tsc -p server && vite build",
     "preview": "vite preview",
     "test": "vitest run",
-    "typecheck": "vue-tsc --noEmit",
+    "typecheck": "vue-tsc --noEmit && tsc -p server",
     "lint": "eslint . --max-warnings 0 --no-warn-ignored --cache --cache-strategy content --cache-location node_modules/.cache/eslint --concurrency=auto",
     "postinstall": "simple-git-hooks || true"
   },
   "dependencies": {
+    "@fastify/cookie": "^11.1.5",
+    "@fastify/static": "^10.1.11",
     "dexie": "^4.4.7",
+    "fastify": "^5.12.8",
     "i18next": "^27.1.1",
     "i18next-vue": "^5.4.0",
     "vue": "^3.5.45",
@@ -21,6 +26,7 @@
   },
   "devDependencies": {
     "@maninak/eslint-config": "^0.7.0",
+    "@types/node": "^22.20.5",
     "@vitejs/plugin-vue": "^6.0.11",
     "eslint": "^10.15.0",
     "fake-indexeddb": "^6.2.8",

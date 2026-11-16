@@ -6,10 +6,16 @@ import pkg from './package.json' with { type: 'json' }
 
 export default defineConfig({
   define: { APP_VERSION: JSON.stringify(pkg.version) },
+  // `npm run dev` talks to a server started with `npm run server` (port 8787).
+  server: { proxy: { '/api': 'http://localhost:8787' } },
+  // `npm run preview` runs the app on its own, without a server.
+  preview: { proxy: {} },
   plugins: [
     vue(),
     VitePWA({
       registerType: 'autoUpdate',
+      // Server calls must always reach the server, never the offline copy of the app.
+      workbox: { navigateFallbackDenylist: [/^\/api\//] },
       includeAssets: ['icon.svg'],
       manifest: {
         name: 'HarvestLog',

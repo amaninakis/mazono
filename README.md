@@ -7,9 +7,21 @@ production season by season, and compare fields and years.
 
 Available in **English** and **Ελληνικά**. Works offline on your phone as an installable web app (PWA).
 
-> Status: **v0.4 – reports**. Self-hosting with sync is next (see [Roadmap](#roadmap)).
+> Status: **v0.5a – server and sync**. More users with their own permissions are next (see [Roadmap](#roadmap)).
 
 ## What it does
+
+### Server, sign-in and sync (v0.5a)
+
+- Run the server once (Docker) and every phone or computer signs in to the same data.
+- The **first account** is the administrator. The data already on that phone is uploaded.
+- Phones keep working **without signal**; changes are sent when they are back online, and
+  arrive on the other devices within a minute (or with "Sync now" in Settings).
+- If two phones change the same record, the newer change wins (phone clocks that are off are
+  corrected by the server).
+- Stay signed in for 90 days of not using the app; the phone's password manager can remember
+  the password. Wrong passwords are slowed down after 10 tries.
+- The server keeps **14 daily backups** of its database.
 
 Work is grouped by **farming year**: from the spring work (1 March) to the end of the harvest and
 the last mill visit (February), named by its year. Money is counted per calendar year.
@@ -75,13 +87,22 @@ cd olive-harvest
 docker compose up -d --build
 ```
 
-The app is now on port **8080**. Browsers only allow offline mode and "Install app" over HTTPS, so:
+The app is now on port **8080**. Open it and create the administrator account. Browsers only
+allow offline mode, "Install app" and secure sign-in over HTTPS, so:
 
 - **Home lab with Tailscale** (nothing opened to the internet):
   `tailscale serve --bg 8080` → open `https://<machine-name>.<tailnet>.ts.net` on your phone.
-- **Public server with a domain**: point the domain's DNS to the server, then in
-  `docker-compose.yml` set `SITE_ADDRESS: harvest.example.com` and use ports `80:80` and `443:443`.
-  Caddy gets an HTTPS certificate automatically.
+- **Public server with a domain**: point the domain's DNS to the server, then
+  `SITE_ADDRESS=harvest.example.com docker compose --profile https up -d --build`.
+  Caddy runs in front and gets an HTTPS certificate automatically.
+
+Data lives in the `harvestlog_data` Docker volume (`/data` in the container): the database
+`harvestlog.db` and the last 14 daily copies in `backups/`. To back up elsewhere, copy the newest
+file from `backups/`.
+
+**Upgrading from v0.4 or earlier** (app only, no server): run `docker compose up -d --build`
+again and open the app on the phone that has your data. It asks you to create the administrator
+account, then uploads everything that phone holds.
 
 Hardware needs are tiny: any Raspberry Pi 3/4/5, NAS or the smallest VPS is enough.
 
@@ -90,7 +111,8 @@ Hardware needs are tiny: any Raspberry Pi 3/4/5, NAS or the smallest VPS is enou
 ```bash
 cd app
 npm install
-npm run dev      # http://localhost:5173
+npm run server   # the sync server on port 8787 (data in app/data)
+npm run dev      # http://localhost:5173 (talks to the server above, or works on its own)
 npm run lint     # ESLint + Prettier (@maninak/eslint-config), must be clean
 npm test         # unit tests
 npm run build    # production build in app/dist
@@ -111,7 +133,9 @@ app/                 the web app (Vue 3 + TypeScript + Vite)
   src/i18n/locales/  translation files (en.json, el.json)
   src/screens/       Setup, Today, Journal, Settings (Vue single-file components)
   src/ui/            shared components (Stepper, Toggle, Modal, Toast) and farm state
-deploy/Caddyfile     web server config used by the Docker image
+  src/sync/          sign-in and sync with the server (api, sync engine, account state)
+app/server/          the server: Fastify + SQLite (Node's built-in), accounts, sync, backups
+deploy/Caddyfile     optional HTTPS front for a public server (docker compose --profile https)
 ```
 
 ## Translating
@@ -130,8 +154,11 @@ A test checks that every language has the same keys as English.
 3. **v0.3 – Money** ✅: expenses, oil sales, subsidies and other income, totals by calendar year
 4. **v0.4 – Reports** ✅: field × season comparison, season totals, yield through the season, cost of
    your oil per year, CSV export
-5. **v0.5 – Self-hosting**: sync server, login, multiple farms and users with roles, backups
-6. **v1.0+**: Android/iOS apps (Capacitor), daily reminders, location-aware default field,
+5. **v0.5a – Server and sync** ✅: server, administrator account, sign-in, offline sync between
+   devices, daily backups
+6. **v0.5b – Users**: more users with per-page access (see / edit), temporary first password,
+   more groves per installation
+7. **v1.0+**: Android/iOS apps (Capacitor), daily reminders, location-aware default field,
    equipment log, tasks per tree (numbered or NFC-tagged trees), weather integration, labour reports, spreadsheet import
 
 ## Licence

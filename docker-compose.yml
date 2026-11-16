@@ -1,23 +1,38 @@
+# HarvestLog: the app, sign-in and sync. Data (and 14 daily backups) live in the
+# harvestlog_data volume, at /data inside the container.
+#
 # Home lab / private use (reach it through Tailscale):
 #   docker compose up -d
 #   tailscale serve --bg 8080        # gives you https://<machine>.<tailnet>.ts.net
 #
-# Public server with your own domain and automatic HTTPS:
-#   set SITE_ADDRESS=harvest.example.com and use ports 80:80 and 443:443 below.
+# Public server with your own domain and automatic HTTPS (Caddy in front):
+#   SITE_ADDRESS=harvest.example.com docker compose --profile https up -d
 
 services:
   harvestlog:
     build: .
     image: harvestlog:latest
     restart: unless-stopped
-    environment:
-      SITE_ADDRESS: ${SITE_ADDRESS:-:80}
     ports:
-      - "8080:80"
-      # - "80:80"
-      # - "443:443"
+      - "8080:8080"
     volumes:
-      - caddy_data:/data # HTTPS certificates
+      - harvestlog_data:/data
+
+  caddy:
+    image: caddy:2-alpine
+    profiles: [https]
+    restart: unless-stopped
+    environment:
+      SITE_ADDRESS: ${SITE_ADDRESS:-localhost}
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./deploy/Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+    depends_on:
+      - harvestlog
 
 volumes:
+  harvestlog_data:
   caddy_data:

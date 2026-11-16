@@ -10,6 +10,8 @@ import { parseDecimal } from '../core/progress'
 import { db } from '../db/db'
 import { importFarm } from '../db/repo'
 import { formatLocale, LANGUAGES, locale, setLanguage } from '../i18n'
+import { account } from '../sync/account'
+import AccountCard from '../ui/AccountCard.vue'
 import AppModal from '../ui/AppModal.vue'
 import { categoryName, chargeName, locationName, taskName, useFarm } from '../ui/farm'
 import { showToast } from '../ui/toast'
@@ -244,6 +246,8 @@ async function confirmImport() {
     <header class="page-head">
       <h1>{{ $t('settings.title') }}</h1>
     </header>
+
+    <AccountCard v-if="account.mode === 'server' && account.user" />
 
     <section class="card">
       <h2>{{ $t('settings.general') }}</h2>

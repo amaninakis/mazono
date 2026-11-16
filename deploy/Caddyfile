@@ -1,23 +1,6 @@
-# SITE_ADDRESS=:80                   -> plain HTTP on port 80 (home lab behind Tailscale)
-# SITE_ADDRESS=harvest.example.com   -> automatic HTTPS certificate (public server)
+# Used with `docker compose --profile https up -d`:
+# SITE_ADDRESS=harvest.example.com gets an automatic HTTPS certificate.
 {$SITE_ADDRESS}
 
-root * /srv
 encode gzip zstd
-
-# The service worker and manifest must never be cached, so updates reach users.
-@nocache path /sw.js /registerSW.js /manifest.webmanifest /index.html
-header @nocache Cache-Control "no-cache"
-
-@assets path /assets/*
-header @assets Cache-Control "public, max-age=31536000, immutable"
-
-header {
-	X-Content-Type-Options nosniff
-	Referrer-Policy strict-origin-when-cross-origin
-	X-Frame-Options DENY
-}
-
-# Single-page app: unknown paths load the app.
-try_files {path} /index.html
-file_server
+reverse_proxy harvestlog:8080

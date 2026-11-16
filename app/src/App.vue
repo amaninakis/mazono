@@ -5,7 +5,9 @@ import { RouterLink, RouterView, useRoute } from 'vue-router'
 import { db } from './db/db'
 import { FarmRepo } from './db/repo'
 import { dateFormatPref, setLanguage } from './i18n'
+import AccountScreen from './screens/AccountScreen.vue'
 import SetupWizard from './screens/SetupWizard.vue'
+import { account } from './sync/account'
 import AppToast from './ui/AppToast.vue'
 import { type FarmData, provideFarm } from './ui/farm'
 import { useLiveQuery } from './ui/live'
@@ -96,6 +98,13 @@ watch(
 )
 
 const state = computed(() => {
+  if (account.mode === 'checking') {
+    return 'loading'
+  }
+  // With a server, nothing is shown until someone signs in.
+  if (account.mode === 'server' && !account.user) {
+    return 'account'
+  }
   if (farmId.value === undefined || (farmId.value && data.value === undefined)) {
     return 'loading'
   }
@@ -118,6 +127,7 @@ const nav = computed(() => [
 
 <template>
   <div v-if="state === 'loading'" class="splash">{{ $t('common.loading') }}</div>
+  <AccountScreen v-else-if="state === 'account'" />
   <SetupWizard v-else-if="state === 'setup'" />
   <div v-else class="shell">
     <RouterView :key="route.path" />
