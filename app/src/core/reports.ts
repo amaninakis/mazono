@@ -23,7 +23,8 @@ export interface FieldSeasonCell {
   trees: number
   units: Record<string, number>
   /**
-   * Trees used for "per tree": harvested trees if entered, otherwise all trees in the field.
+   * Trees used for "per tree": harvested trees if entered, otherwise all trees in the field;
+   * never more than the field has, even if more were logged.
    */
   perTreeOf: number
 }
@@ -96,7 +97,8 @@ export function fieldSeasonReport(
       seasons.add(Number(season))
       target.oilKg = round(target.oilKg, 1)
       target.netKg = round(target.netKg, 1)
-      target.perTreeOf = target.trees || field.trees
+      const harvested = field.trees > 0 ? Math.min(target.trees, field.trees) : target.trees
+      target.perTreeOf = harvested || field.trees
     }
     rows.push({ field, cells: byField })
   }

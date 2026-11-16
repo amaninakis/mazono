@@ -154,13 +154,17 @@ function cellDetail(fieldName: string, year: number, cell: FieldSeasonCell | und
     .map(([unitId, amount]) => `${fmt(amount)} ${unitLabel(unitById(unitId), amount)}`)
     .join(' · ')
 
-  return translate('reports.fieldCellDetail', {
+  const details = {
     field: fieldName,
     season: season(year),
     oil: fmt(cell.oilKg, 0),
     units: units || '–',
     trees: cell.perTreeOf,
-  })
+  }
+
+  return cell.oilKg
+    ? translate('reports.fieldCellDetail', details)
+    : translate('reports.fieldCellNoOil', details)
 }
 
 const fieldMax = computed(() =>

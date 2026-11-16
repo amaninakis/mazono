@@ -8,6 +8,7 @@ import AppModal from './AppModal.vue'
 import DateField from './DateField.vue'
 import { locationName, useFarm } from './farm'
 import NumberStepper from './NumberStepper.vue'
+import { useSaving } from './saving'
 import { showToast } from './toast'
 
 /** Move oil between places, or take it out of stock for own use / gifts. */
@@ -61,7 +62,13 @@ function fmt(value: number) {
   return formatNumber(value, formatLocale.value, 1)
 }
 
+const { saving, once } = useSaving()
+
 async function save() {
+  await once(saveMove)
+}
+
+async function saveMove() {
   if (!kg.value || !from.value || vintage.value == null) {
     return
   }
@@ -123,7 +130,9 @@ async function save() {
       <button type="button" class="btn ghost" @click="emit('close')">
         {{ $t('common.cancel') }}
       </button>
-      <button type="button" class="btn primary" @click="save">{{ $t('common.save') }}</button>
+      <button type="button" class="btn primary" :disabled="saving" @click="save">
+        {{ $t('common.save') }}
+      </button>
     </div>
   </AppModal>
 </template>
