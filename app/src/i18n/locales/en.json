@@ -397,6 +397,7 @@
     "perKg": "{{price}}/kg",
     "unitHint": "{{unit}} per tree.",
     "kgOil": "Kg of oil",
-    "units": "Units"
+    "units": "Units",
+    "fieldCellNoOil": "{{field}} · {{season}}: {{units}} from {{trees}} trees, not taken to the mill yet"
   }
 }

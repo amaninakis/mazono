@@ -5,6 +5,22 @@ function live<T extends { deletedAt?: number }>(rows: T[]) {
   return rows.filter((row) => !row.deletedAt)
 }
 
+/**
+ * Task types whose trees count together. Every task that records a harvest counts the same
+ * trees (a tree harvested under "Harvest" is not left for "Harvest with nets"); other tasks
+ * count on their own, since pruning and spraying are separate work on the same trees.
+ */
+export function countedTogether(taskType: TaskType, taskTypes: TaskType[]): string[] {
+  if (taskType.inputKind !== 'harvest') {
+    return [taskType.id]
+  }
+  const ids = live(taskTypes)
+    .filter((x) => x.inputKind === 'harvest')
+    .map((x) => x.id)
+
+  return ids.includes(taskType.id) ? ids : [...ids, taskType.id]
+}
+
 export interface FieldProgress {
   field: Field
   done: number // trees logged this season for the task
@@ -17,6 +33,7 @@ export interface FieldProgress {
  * Progress of every active field for one task type in the season containing `date`.
  * A field is finished when its trees are all logged, or when an entry marked it finished
  * (trees are not harvested every year, so the count may never reach zero).
+ * Pass all `taskTypes` so harvest tasks share one count (see countedTogether).
  */
 export function fieldProgress(
   fields: Field[],
@@ -25,11 +42,13 @@ export function fieldProgress(
   date: ISODate,
   seasonStartMonth = 10,
   excludeEntryId?: string,
+  taskTypes: TaskType[] = [taskType],
 ): FieldProgress[] {
   const season = seasonOf(date, seasonStartMonth)
+  const typeIds = new Set(countedTogether(taskType, taskTypes))
   const relevant = live(entries).filter(
     (entry) =>
-      entry.taskTypeId === taskType.id &&
+      typeIds.has(entry.taskTypeId) &&
       entry.id !== excludeEntryId &&
       seasonOf(entry.date, seasonStartMonth) === season,
   )
@@ -121,19 +140,23 @@ export function perTree(quantities: UnitAmount[], trees: number): Record<string,
   return out
 }
 
-/** Season-to-date harvest totals for one field: trees and amount per unit. */
+/**
+ * Season-to-date harvest totals for one field: trees and amount per unit. `taskTypeIds` is
+ * one task type id, or several that count together (see countedTogether).
+ */
 export function fieldSeasonHarvest(
   entries: TaskEntry[],
   fieldId: string,
-  taskTypeId: string,
+  taskTypeIds: string | string[],
   date: ISODate,
   seasonStartMonth = 10,
 ): { trees: number; amounts: Record<string, number> } {
   const season = seasonOf(date, seasonStartMonth)
+  const typeIds = new Set(typeof taskTypeIds === 'string' ? [taskTypeIds] : taskTypeIds)
   const amounts: Record<string, number> = {}
   let trees = 0
   for (const entry of live(entries)) {
-    if (entry.fieldId !== fieldId || entry.taskTypeId !== taskTypeId) {
+    if (entry.fieldId !== fieldId || !typeIds.has(entry.taskTypeId)) {
       continue
     }
     if (seasonOf(entry.date, seasonStartMonth) !== season) {
@@ -166,14 +189,14 @@ export interface HarvestYields {
 export function harvestYields(
   entries: TaskEntry[],
   field: Field,
-  taskTypeId: string,
+  taskTypeIds: string | string[],
   date: ISODate,
   seasonStartMonth = 10,
 ): HarvestYields {
   const { trees, amounts } = fieldSeasonHarvest(
     entries,
     field.id,
-    taskTypeId,
+    taskTypeIds,
     date,
     seasonStartMonth,
   )

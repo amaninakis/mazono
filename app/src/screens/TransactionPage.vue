@@ -19,6 +19,7 @@ import DateField from '../ui/DateField.vue'
 import { categoryName, locationName, useFarm } from '../ui/farm'
 import NumberStepper from '../ui/NumberStepper.vue'
 import { moneyPeriod } from '../ui/periods'
+import { useSaving } from '../ui/saving'
 import { showToast } from '../ui/toast'
 
 const { t: translate } = useTranslation()
@@ -245,7 +246,13 @@ function sourceLabel(isoDate: { vintage: number; locationId: string; kg: number 
 }
 
 /* ---------- save ---------- */
+const { saving, once } = useSaving()
+
 async function save() {
+  await once(saveTransaction)
+}
+
+async function saveTransaction() {
   error.value = ''
   if (kind === 'sale') {
     if (!kg.value || !price.value || !chosen.value) {
@@ -464,7 +471,7 @@ async function remove() {
       <button type="button" class="btn ghost" @click="router.push('/money')">
         {{ $t('common.cancel') }}
       </button>
-      <button type="button" class="btn primary big" @click="save">
+      <button type="button" class="btn primary big" :disabled="saving" @click="save">
         {{ $t('common.save') }}
       </button>
     </div>

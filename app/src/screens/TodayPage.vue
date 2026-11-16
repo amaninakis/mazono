@@ -7,6 +7,7 @@ import { addDays, todayISO } from '../core/dates'
 import { AMOUNT_UNITS } from '../core/defaults'
 import { formatNumber } from '../core/format'
 import {
+  countedTogether,
   defaultFieldId,
   defaultTaskTypeId,
   fieldProgress,
@@ -22,6 +23,7 @@ import FieldPicker from '../ui/FieldPicker.vue'
 import NewTaskModal from '../ui/NewTaskModal.vue'
 import NewUnitModal from '../ui/NewUnitModal.vue'
 import NumberStepper from '../ui/NumberStepper.vue'
+import { useSaving } from '../ui/saving'
 import { showToast } from '../ui/toast'
 import ToggleSwitch from '../ui/ToggleSwitch.vue'
 
@@ -84,7 +86,15 @@ function defaultFieldFor(id: string | undefined, isoDate: string) {
 
   return tt
     ? defaultFieldId(
-        fieldProgress(farm.value.fields, farm.value.entries, tt, isoDate, seasonStart()),
+        fieldProgress(
+          farm.value.fields,
+          farm.value.entries,
+          tt,
+          isoDate,
+          seasonStart(),
+          undefined,
+          farm.value.taskTypes,
+        ),
       )
     : undefined
 }
@@ -101,6 +111,7 @@ const progress = computed(() =>
         date.value,
         seasonStart(),
         editing?.id,
+        farm.value.taskTypes,
       )
     : [],
 )
@@ -204,7 +215,13 @@ function resetForNext() {
   hours.value = null
 }
 
+const { saving, once } = useSaving()
+
 async function save() {
+  await once(saveEntry)
+}
+
+async function saveEntry() {
   const tt = type.value
   if (!tt || !fieldId.value) {
     return
@@ -262,8 +279,16 @@ async function save() {
     tt,
     date.value,
     seasonStart(),
+    undefined,
+    farm.value.taskTypes,
   )
   fieldId.value = defaultFieldId(after)
+}
+
+/** Task types whose trees count together with this one (all harvest tasks share a count). */
+function sharedTypeIds(taskTypeId: string) {
+  const taskType = farm.value.taskTypes.find((x) => x.id === taskTypeId)
+  return taskType ? countedTogether(taskType, farm.value.taskTypes) : [taskTypeId]
 }
 
 /** All entries with `e` included once (the live list may already contain it). */
@@ -289,7 +314,13 @@ function summaryLines(entry: TaskEntry): string[] {
     if (todayYield) {
       lines.push(translate('today.todayTreeYield', { value: todayYield }))
     }
-    const y = harvestYields(withEntry(entry), fld, entry.taskTypeId, entry.date, seasonStart())
+    const y = harvestYields(
+      withEntry(entry),
+      fld,
+      sharedTypeIds(entry.taskTypeId),
+      entry.date,
+      seasonStart(),
+    )
     const treeValue = y.treeYield ? fmtPer(y.treeYield) : ''
     if (treeValue && treeValue !== todayYield) {
       lines.push(translate('today.seasonTreeYield', { field: fieldLabel, value: treeValue }))
@@ -476,7 +507,7 @@ function summaryLines(entry: TaskEntry): string[] {
       <button v-if="editing" type="button" class="btn ghost" @click="router.back()">
         {{ $t('common.cancel') }}
       </button>
-      <button type="button" class="btn primary big" @click="save">
+      <button type="button" class="btn primary big" :disabled="saving" @click="save">
         {{ $t('common.save') }}
       </button>
     </div>

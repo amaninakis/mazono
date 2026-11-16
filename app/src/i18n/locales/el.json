@@ -397,6 +397,7 @@
     "perKg": "{{price}}/κιλό",
     "unitHint": "{{unit}} ανά δέντρο.",
     "kgOil": "Κιλά λαδιού",
-    "units": "Μονάδες"
+    "units": "Μονάδες",
+    "fieldCellNoOil": "{{field}} · {{season}}: {{units}} από {{trees}} δέντρα, δεν έχουν πάει ακόμα στο ελαιουργείο"
   }
 }

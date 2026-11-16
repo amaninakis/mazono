@@ -112,7 +112,7 @@ The **season** is the backbone. A harvest season runs across two calendar years:
 | Transaction | date, type (expense / sale / other income), counterparty, category, € amount, kg and €/kg for sales, vintage | v0.3 |
 | User, membership | email, role per farm (owner / editor / viewer) | v0.5 |
 
-Trees remaining in a field for a task = trees in the field − trees logged for that task type in the current season. A field also counts as finished when an entry marks it "field finished", because not every tree is harvested every year.
+Trees remaining in a field for a task = trees in the field − trees logged for that task type in the current season. All task types that record a harvest count together (a tree harvested under one harvest task is not left for another), and share "field finished"; other tasks such as pruning or spraying count on their own. A field also counts as finished when an entry marks it "field finished", because not every tree is harvested every year.
 
 **Field yield and tree yield.** When not all trees of a field are harvested, the two per-tree figures differ:
 

@@ -10,6 +10,7 @@ import {
 } from './dates'
 import { formatMoney, formatYield } from './format'
 import {
+  countedTogether,
   defaultFieldId,
   defaultTaskTypeId,
   fieldProgress,
@@ -303,5 +304,79 @@ describe('parseTypedDate', () => {
     expect(parseTypedDate('tomorrow', 'el-GR', today)).toBeNull()
     expect(parseTypedDate('31/2/2026', 'el-GR', today)).toBeNull()
     expect(parseTypedDate('15', 'el-GR', today)).toBeNull()
+  })
+})
+
+describe('harvest tasks share one tree count', () => {
+  const field: Field = {
+    ...base,
+    id: 'V',
+    name: 'Vitsilopetres',
+    trees: 28,
+    archived: false,
+    order: 0,
+  }
+  const shaking: TaskType = {
+    ...harvest,
+    id: 'h2',
+    name: 'Harvest with nets',
+    builtin: undefined,
+  }
+  const pruningTask: TaskType = {
+    ...harvest,
+    id: 'p',
+    name: 'Pruning',
+    inputKind: 'trees',
+    builtin: 'pruning',
+  }
+  const logged = [
+    {
+      ...base,
+      id: 'e1',
+      date: '2025-11-10',
+      fieldId: 'V',
+      taskTypeId: harvest.id,
+      trees: 20,
+      fieldFinished: false,
+    },
+    {
+      ...base,
+      id: 'e2',
+      date: '2025-11-12',
+      fieldId: 'V',
+      taskTypeId: 'h2',
+      trees: 8,
+      fieldFinished: false,
+    },
+    {
+      ...base,
+      id: 'e3',
+      date: '2025-11-12',
+      fieldId: 'V',
+      taskTypeId: 'p',
+      trees: 5,
+      fieldFinished: false,
+    },
+  ] satisfies TaskEntry[]
+  const all = [harvest, shaking, pruningTask]
+
+  it('counts every harvest task against the same trees', () => {
+    expect(countedTogether(shaking, all)).toEqual([harvest.id, 'h2'])
+    const [row] = fieldProgress([field], logged, shaking, '2025-11-16', 10, undefined, all)
+
+    expect(row).toMatchObject({ done: 28, remaining: 0, finished: true })
+  })
+
+  it('keeps other tasks separate', () => {
+    expect(countedTogether(pruningTask, all)).toEqual(['p'])
+    const [row] = fieldProgress([field], logged, pruningTask, '2025-11-16', 10, undefined, all)
+
+    expect(row).toMatchObject({ done: 5, remaining: 23 })
+  })
+
+  it('adds up season yields across harvest tasks', () => {
+    expect(harvestYields(logged, field, [harvest.id, 'h2'], '2025-11-16').treesHarvested).toBe(
+      28,
+    )
   })
 })

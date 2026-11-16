@@ -20,6 +20,7 @@ import DateField from '../ui/DateField.vue'
 import { chargeName, locationName, useFarm } from '../ui/farm'
 import NumberStepper from '../ui/NumberStepper.vue'
 import { oilPeriod } from '../ui/periods'
+import { useSaving } from '../ui/saving'
 import { showToast } from '../ui/toast'
 
 const { t: translate } = useTranslation()
@@ -305,7 +306,13 @@ function onMillChange(event: Event) {
   }
 }
 
+const { saving, once } = useSaving()
+
 async function save() {
+  await once(saveExtraction)
+}
+
+async function saveExtraction() {
   if (!oliveKg.value || !oilKg.value) {
     error.value = translate('extraction.nothingToSave')
     return
@@ -522,7 +529,7 @@ async function remove() {
       <button type="button" class="btn ghost" @click="router.push('/oil')">
         {{ $t('common.cancel') }}
       </button>
-      <button type="button" class="btn primary big" @click="save">
+      <button type="button" class="btn primary big" :disabled="saving" @click="save">
         {{ $t('common.save') }}
       </button>
     </div>
