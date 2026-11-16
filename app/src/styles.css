@@ -482,3 +482,32 @@ button, input, select, textarea { font: inherit; color: inherit; }
 .month-nav > strong { text-align: center; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .month-nav .icon-btn { width: 38px; min-width: 38px; height: 40px; }
 .calendar-pop .month-nav > strong { font-size: 0.95rem; }
+
+/* Year selector with « » */
+.year-picker { display: inline-flex; align-items: center; gap: 2px; }
+.year-picker .icon-btn { width: 40px; min-width: 40px; }
+.year-picker .icon-btn:disabled { opacity: 0.3; }
+.value-places { display: flex; flex-direction: column; gap: 4px; margin-top: 8px; }
+.unit-caption { margin: 2px 0 6px; font-size: 0.875rem; font-weight: 600; color: var(--ink); }
+.report-table thead th { white-space: normal; vertical-align: bottom; }
+.reports .chip:disabled { opacity: 0.4; }
+
+/* Records (achievements) */
+.records h3 { font-size: 1rem; margin: 16px 0 8px; }
+.records h3:first-child { margin-top: 4px; }
+.record-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; margin: 0; padding: 0; list-style: none; }
+.record-card { display: flex; flex-direction: column; gap: 2px; padding: 12px; border-radius: 12px; background: var(--olive-soft); }
+.record-icon { font-size: 1.4rem; line-height: 1; }
+.record-name { font-size: 0.8rem; color: var(--muted); }
+.record-value { font-size: 1.15rem; font-variant-numeric: tabular-nums; overflow-wrap: anywhere; }
+.record-detail { font-size: 0.8rem; color: var(--muted); }
+.badge-list { display: flex; flex-direction: column; gap: 6px; margin: 0; padding: 0; list-style: none; }
+.badge { display: flex; align-items: center; gap: 10px; padding: 10px 12px; border: 1px solid var(--line); border-radius: 12px; }
+.badge.done { border-color: var(--olive); background: var(--olive-soft); }
+.badge-icon { font-size: 1.4rem; width: 1.6rem; text-align: center; }
+.badge:not(.done) .badge-icon { opacity: 0.6; }
+.badge-text { flex: 1; display: flex; flex-direction: column; gap: 6px; }
+.badge-bar { display: block; height: 6px; border-radius: 3px; background: var(--line); overflow: hidden; }
+.badge-bar > span { display: block; height: 100%; border-radius: 3px; background: var(--olive); }
+.badge-state { font-size: 0.85rem; color: var(--muted); font-variant-numeric: tabular-nums; }
+.badge.done .badge-state { color: var(--olive); font-weight: 700; }

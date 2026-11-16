@@ -206,7 +206,7 @@ Here n is the number of units of type u in entry i, and w is that unit's weight.
 | Oil sale | date, buyer, kg, €/kg → total, optional fee (% or €), vintage + location sold from | Deducts from that stock; warns if stock would go negative. Default = oldest vintage at the mill. The fee is remembered per buyer. |
 | Other income | date, source, € amount, category (subsidy, VAT refund, other) | Autocomplete like expenses. |
 
-Totals per **calendar year**: income, expenses, net result, and the value of remaining stock at the last sale price. Farming years are used only for field work, mill production and oil stock. An optional tax estimate % shows an after-tax figure.
+Totals per **calendar year**: income, expenses, net result, and the value of remaining stock at the last sale price; the user chooses which places' oil counts for that value (e.g. only the oil at the mill). Farming years are used only for field work, mill production and oil stock. An optional tax estimate % shows an after-tax figure.
 
 **How v0.3 implements it**
 
@@ -223,10 +223,12 @@ Totals per **calendar year**: income, expenses, net result, and the value of rem
 
 ## Reports — v0.4
 
-1. **Field × season comparison**: oil kg, oil per tree or units per tree, by field and season. Shows alternate bearing at a glance.
-2. **Season totals over the years**: olives, oil, net oil and yield per season.
-3. **Yield through the season**: yield of each extraction by date, to help decide when to harvest.
+1. **Field × year comparison**: olives collected (units, the default), oil kg, olives per tree or oil per tree, by field and year, with a caption naming the unit ("In sacks per tree"). Shows alternate bearing at a glance.
+2. **Years side by side**: olives (καρπός), oil, oil after charges and yield per year in a table; chips choose which one the bar chart shows, and every bar carries its value.
+3. **Yield through the year**: yield of each extraction by date, for up to three years the user picks (more cannot be told apart reliably by colour), with date labels on the 1st and 15th of each month.
 4. **Cost of your oil (per calendar year)**: income, expenses, net; cost per kg of net oil; break-even price. Money stays per calendar year and is set against the oil of the farming year with the same number: the 2026 costs of pruning, spraying and harvest produce the 2026 oil (including mill visits in January–February 2027). Cost per kg = expenses ÷ net oil; break-even price = (expenses − other income) ÷ net oil.
+
+5. **Records** (achievements): all-time bests (best year for oil and for yield, best field-year for oil per tree, field with the most oil, best and biggest production, biggest harvest day, most trees in a day, lowest acidity, best sale price), milestone badges (kg of oil, harvest days, productions, years) with progress to the next one, and lifetime totals. Logic in `core/records.ts`.
 
 How they work:
 - All four are on one Reports page (More → Reports), one tab each, with a short plain-words explanation and an empty-state hint.

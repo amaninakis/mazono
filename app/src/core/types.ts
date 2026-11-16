@@ -31,7 +31,9 @@ export interface FarmSettings {
   dateFormat?: DateFormat
   /** Optional tax estimate, % of a positive net result. */
   taxPercent?: number
-  seasonStartMonth: number // 1-12, default 10 (October)
+  seasonStartMonth: number // 1-12, default 3 (March)
+  /** Places whose oil counts for the stock value on the Money page; all when not set. */
+  stockValueLocations?: string[]
   labourEnabled: boolean
   setupDone: boolean
 }

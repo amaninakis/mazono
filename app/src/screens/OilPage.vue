@@ -21,6 +21,7 @@ import { chargeName, locationName, useFarm } from '../ui/farm'
 import { oilPeriod } from '../ui/periods'
 import StockMoveModal from '../ui/StockMoveModal.vue'
 import { showToast } from '../ui/toast'
+import YearPicker from '../ui/YearPicker.vue'
 
 const { t: translate } = useTranslation()
 const farm = useFarm()
@@ -208,15 +209,12 @@ async function removeMove(movement: StockMovement) {
   <main class="page oil">
     <header class="page-head row-between">
       <h1>{{ $t('nav.oil') }}</h1>
-      <select
+      <YearPicker
         v-model="season"
-        class="input select season-select"
-        :aria-label="$t('oil.season')"
-      >
-        <option v-for="s in seasons" :key="s" :value="s">
-          {{ $t('oil.season') }} {{ seasonLabel(s) }}
-        </option>
-      </select>
+        :years="seasons"
+        :label="$t('oil.season')"
+        :prefix="$t('oil.season')"
+      />
     </header>
 
     <RouterLink to="/oil/new" class="btn primary big block"
