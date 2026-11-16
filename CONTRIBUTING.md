@@ -14,6 +14,7 @@ Thanks for helping! Bug reports, translations and pull requests are all welcome.
 cd app
 npm install        # also installs the pre-commit hook
 npm run lint       # must report 0 problems (warnings count too)
+npm run server     # optional: the sync server on port 8787, for npm run dev
 npm run typecheck
 npm test
 npm run build

@@ -1,0 +1,20 @@
+{
+  // The sync server (run by Node directly, so imports between server files end in .ts)
+  // and its tests, which also load the app's database and sync code.
+  "compilerOptions": {
+    "target": "ES2023",
+    "lib": ["ES2023", "DOM"],
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "allowImportingTsExtensions": true,
+    "verbatimModuleSyntax": true,
+    "strict": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "resolveJsonModule": true,
+    "skipLibCheck": true,
+    "noEmit": true,
+    "types": ["node"],
+  },
+  "include": ["./**/*.ts", "../src/core/syncFormat.ts"],
+}

@@ -60,7 +60,7 @@ The design is based on a real grower's spreadsheet covering several seasons. Its
 
 ## Platform and architecture
 
-The app is a TypeScript PWA with a local database on the device. A small sync server comes later, and Capacitor will wrap the same code for Android/iOS, so one codebase covers all three.
+The app is a TypeScript PWA with a local database on the device and a small sync server (v0.5), and Capacitor will wrap the same code for Android/iOS, so one codebase covers all three.
 
 | Layer | Choice | Why |
 | --- | --- | --- |
@@ -93,6 +93,15 @@ The app is a TypeScript PWA with a local database on the device. A small sync se
 - **Home lab, private**: no ports open to the internet; reach it over Tailscale, using `tailscale serve` for an HTTPS address.
 
 Both need HTTPS, because browsers only allow offline mode and "install app" over HTTPS. Target footprint: under 256 MB RAM when idle.
+
+### Server and sync — v0.5a
+
+- **Server**: Node 22 + Fastify (`app/server`), data in one SQLite file (Node's built-in `node:sqlite`, so no native packages) in `/data`, with a daily `VACUUM INTO` copy kept for 14 days. The same container serves the web app. Node runs the TypeScript directly (type stripping), so there is no server build step.
+- **Accounts**: the first account is the **installation owner** and administrator of the groves it creates. Passwords are hashed with scrypt; at least 8 characters. Usernames are 2–40 letters or digits, not case-sensitive. Ten wrong passwords for the same name from the same address block sign-in for 15 minutes.
+- **Sessions**: a random token in an `HttpOnly`, `SameSite=Lax` cookie (`Secure` over HTTPS), valid for 90 days after the last use. Sign-in forms carry `autocomplete` hints so phones and browsers can remember the password. Signing out removes the farm's data from that device (it stays on the server) and warns first about changes not sent yet.
+- **Sync** (`src/sync/engine.ts`): every local write marks the row "not yet sent" (`_dirty`, set by Dexie hooks; rows written by the sync itself are not marked). A sync sends those rows (all rows the first time a farm syncs on a device), then receives every row changed on the server since the device's last sequence number. Each row keeps the newer version (`updatedAt`). The server stores each row as JSON with an increasing sequence number, refuses a change older than what it has (and sends its version back), and corrects a phone clock that is more than a minute off by the difference between the phone's and its own time.
+- **When**: 1.5 s after a change, every minute, when the phone comes back online and when the app is opened again. A signed-in phone opens and works without signal.
+- **Without a server** (e.g. `npm run preview`, or v0.4 deployments) the app works on its own as before.
 
 ## Core concepts
 
@@ -319,5 +328,6 @@ These are planned but not yet scheduled in detail. Open an issue before starting
 2. **v0.2 — Mill and stock** ✅: extraction form with charges, harvest linking with splits and allocation, season overview, stock by vintage and location.
 3. **v0.3 — Money** ✅: expenses, sales (deducting stock), other income, totals by calendar year.
 4. **v0.4 — Reports** ✅: the four reports above, CSV export.
-5. **v0.5 — Self-hosting**: sync server, login, farms and roles, backups, translator guide.
-6. **v1.0+**: Android/iOS builds (Capacitor), weather integration, daily reminders, location-aware default field, equipment log, tasks per tree (tree numbers and NFC tags), Labour reports, spreadsheet import, receipt photos, more languages.
+5. **v0.5a — Server and sync** ✅: server in the Docker image, administrator account, sign-in, offline sync between devices, daily backups.
+6. **v0.5b — Users**: administrators and users; per page, a user can see it or also change it; ready-made sets (worker, family, accountant); a temporary first password (typed by the admin or suggested as three words) that must be changed at first sign-in; data a user may not see never reaches their phone; the installation owner can create new groves with their own administrator; one person in several groves; the last administrator cannot be removed; entries show who logged them.
+7. **v1.0+**: Android/iOS builds (Capacitor), weather integration, daily reminders, location-aware default field, equipment log, tasks per tree (tree numbers and NFC tags), Labour reports, spreadsheet import, receipt photos, more languages.

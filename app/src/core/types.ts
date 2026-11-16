@@ -9,7 +9,7 @@ export type ISODate = string // 'YYYY-MM-DD'
 export interface BaseRecord {
   id: string // UUID, created on the device so records can be made offline
   farmId: string
-  updatedAt: number // ms epoch, used by sync later
+  updatedAt: number // ms epoch of the last change; the newest change wins when syncing
   deletedAt?: number // soft delete, so deletions can sync
 }
 
@@ -17,6 +17,8 @@ export interface Farm {
   id: string
   name: string
   createdAt: number
+  /** Set by the database on every change (see trackChanges). */
+  updatedAt?: number
 }
 
 export type YieldFormat = 'ratio' | 'percent'
@@ -26,6 +28,8 @@ export type DateFormat = 'auto' | 'GR' | 'GB' | 'US'
 
 export interface FarmSettings {
   farmId: string
+  /** Set by the database on every change (see trackChanges). */
+  updatedAt?: number
   language: Language
   yieldFormat: YieldFormat
   dateFormat?: DateFormat
