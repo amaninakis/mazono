@@ -16,11 +16,14 @@ the last mill visit (February), named by its year. Money is counted per calendar
 
 ### Reports (v0.4)
 
-- **Fields by season**: oil, oil per tree or harvest per tree for every field and season, shaded so
-  good and poor years (alternate bearing) stand out.
-- **Seasons over the years**: net oil per season as a bar chart, with olives, oil and yield.
-- **Yield through the season**: the yield of each mill visit by date, up to three seasons on one chart,
+- **Fields by year**: olives collected, oil, olives per tree or oil per tree for every field and year,
+  with the unit named above the table, shaded so good and poor years (alternate bearing) stand out.
+- **Years side by side**: olives, oil, oil after charges or yield per year as a labelled bar chart,
+  with the same figures in a table.
+- **Yield through the year**: the yield of each mill visit by date, for up to three chosen years,
   to help decide when to harvest.
+- **Records**: all-time bests (best year, best field, biggest harvest day, lowest acidity, best price…),
+  milestone badges with progress, and lifetime totals.
 - **Cost of your oil**: per calendar year, income, expenses and net result set against the oil of the
   same year, giving the cost per kg and the break-even price.
 - **CSV export** of every report, ready for Excel (Greek or English number style).

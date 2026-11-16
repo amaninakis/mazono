@@ -14,16 +14,18 @@ import {
 import { unitLabel } from '../core/units'
 import { formatLocale } from '../i18n'
 import { useFarm } from '../ui/farm'
+import RecordsBoard from '../ui/RecordsBoard.vue'
 import SeasonBars from '../ui/SeasonBars.vue'
 import YieldChart from '../ui/YieldChart.vue'
 
-type ReportKey = 'fields' | 'seasons' | 'yield' | 'money'
-type FieldMetric = 'oil' | 'oilPerTree' | 'unitsPerTree'
+type ReportKey = 'fields' | 'seasons' | 'yield' | 'money' | 'records'
+type FieldMetric = 'units' | 'oil' | 'unitsPerTree' | 'oilPerTree'
+type YearMetric = 'olives' | 'oil' | 'net' | 'yield'
 
 const { t: translate } = useTranslation()
 const farm = useFarm()
 const startMonth = computed(() => farm.value.settings.seasonStartMonth)
-const REPORTS: ReportKey[] = ['fields', 'seasons', 'yield', 'money']
+const REPORTS: ReportKey[] = ['fields', 'seasons', 'yield', 'money', 'records']
 const report = ref<ReportKey>('fields')
 
 function fmt(value: number, decimals = 1) {
@@ -81,10 +83,10 @@ const fieldReport = computed(() =>
 )
 /** The last five seasons fit on a phone; the CSV has all of them. */
 const fieldSeasons = computed(() => fieldReport.value.seasons.slice(-5))
-const fieldMetric = ref<FieldMetric>('oil')
+const fieldMetric = ref<FieldMetric>('units')
 /** Details of the cell the user tapped. */
 const cellInfo = ref('')
-const METRICS: FieldMetric[] = ['oil', 'oilPerTree', 'unitsPerTree']
+const METRICS: FieldMetric[] = ['units', 'oil', 'unitsPerTree', 'oilPerTree']
 
 /** Number used for shading (and the CSV); null when it cannot be worked out. */
 function metricValue(cell: FieldSeasonCell | undefined, metric: FieldMetric): number | null {
@@ -93,6 +95,9 @@ function metricValue(cell: FieldSeasonCell | undefined, metric: FieldMetric): nu
   }
   if (metric === 'oil') {
     return cell.oilKg || null
+  }
+  if (metric === 'units') {
+    return Object.values(cell.units).reduce((sum, amount) => sum + amount, 0) || null
   }
   if (!cell.perTreeOf) {
     return null
@@ -115,14 +120,19 @@ const onlyUnit = computed(() => {
 
   return ids.size === 1 ? unitById([...ids][0]) : undefined
 })
-const unitHint = computed(() => {
-  if (fieldMetric.value === 'oilPerTree') {
-    return translate('reports.unitHint', { unit: translate('reports.kgOil') })
-  }
+/** What the numbers in the table are, e.g. "In sacks per tree". */
+const unitCaption = computed(() => {
   const unit = onlyUnit.value
-  const name = unit ? (unit.pluralName ?? unit.name) : translate('reports.units')
+  const unitsName = (
+    unit ? (unit.pluralName ?? unit.name) : translate('reports.units')
+  ).toLocaleLowerCase(formatLocale.value)
+  const isOil = fieldMetric.value === 'oil' || fieldMetric.value === 'oilPerTree'
+  const name = isOil ? translate('reports.kgOil') : unitsName
+  const perTree = fieldMetric.value === 'unitsPerTree' || fieldMetric.value === 'oilPerTree'
 
-  return translate('reports.unitHint', { unit: name })
+  return translate(perTree ? 'reports.unitCaptionPerTree' : 'reports.unitCaption', {
+    unit: name,
+  })
 })
 
 function cellText(cell: FieldSeasonCell | undefined): string {
@@ -130,18 +140,23 @@ function cellText(cell: FieldSeasonCell | undefined): string {
   if (value == null || !cell) {
     return '–'
   }
-  if (fieldMetric.value !== 'unitsPerTree') {
-    return fmt(value, fieldMetric.value === 'oil' ? 0 : 1)
+  if (fieldMetric.value === 'oil') {
+    return fmt(value, 0)
   }
+  if (fieldMetric.value === 'oilPerTree') {
+    return fmt(value, 1)
+  }
+  const perTree = fieldMetric.value === 'unitsPerTree'
   if (onlyUnit.value) {
-    return fmt(value, 2)
+    return fmt(value, perTree ? 2 : 1)
   }
 
+  // Several units: show each one, e.g. "0,8 sacks · 0,1 bins".
   return Object.entries(cell.units)
     .filter(([, amount]) => amount > 0)
     .map(([unitId, amount]) => {
-      const perTree = amount / cell.perTreeOf
-      return `${fmt(perTree, 2)} ${unitLabel(unitById(unitId), perTree)}`
+      const shown = perTree ? amount / cell.perTreeOf : amount
+      return `${fmt(shown, perTree ? 2 : 1)} ${unitLabel(unitById(unitId), shown)}`
     })
     .join(' · ')
 }
@@ -188,55 +203,102 @@ function cellShade(cell: FieldSeasonCell | undefined) {
 /* ---------- 2. seasons ---------- */
 const history = computed(() => seasonHistory(farm.value.extractions, startMonth.value))
 const historyNewestFirst = computed(() => [...history.value].reverse())
+const YEAR_METRICS: YearMetric[] = ['olives', 'oil', 'net', 'yield']
+const yearMetric = ref<YearMetric>('net')
 const seasonBars = computed(() =>
-  history.value.slice(-6).map((row) => ({
-    label: season(row.season),
-    value: row.netKg,
-    valueText: `${fmt(row.netKg, 0)} ${translate('common.kg')}`,
-    detail: translate('reports.seasonBarDetail', {
-      net: fmt(row.netKg, 0),
-      oil: fmt(row.oilKg, 0),
-      olives: fmt(row.oliveKg, 0),
-      yield: yieldText(row.oliveKg, row.oilKg),
-    }),
-  })),
+  history.value.slice(-6).map((row) => {
+    const kg = { olives: row.oliveKg, oil: row.oilKg, net: row.netKg, yield: 0 }
+    if (yearMetric.value === 'yield') {
+      return {
+        label: season(row.season),
+        value: row.oliveKg ? row.oilKg / row.oliveKg : 0,
+        valueText: yieldText(row.oliveKg, row.oilKg),
+      }
+    }
+    const value = kg[yearMetric.value]
+
+    return {
+      label: season(row.season),
+      value,
+      valueText: `${fmt(value, 0)} ${translate('common.kg')}`,
+    }
+  }),
 )
 
 /* ---------- 3. yield through the season ---------- */
 const yieldSeasons = computed(() =>
   yieldThroughSeason(farm.value.extractions, startMonth.value),
 )
+/** Up to three years on the chart at once (more cannot be told apart reliably by colour). */
+const MAX_YIELD_YEARS = 3
+/** Shown years and their colour slot; a year keeps its colour while it stays on the chart. */
+const yieldSlots = ref<Map<number, number> | null>(null)
+const shownSlots = computed(() => {
+  if (yieldSlots.value) {
+    return yieldSlots.value
+  }
+  const latest = yieldSeasons.value.slice(0, MAX_YIELD_YEARS).map((line) => line.season)
+
+  return new Map(latest.map((year, i) => [year, i]))
+})
+
+function toggleYieldYear(year: number) {
+  const slots = new Map(shownSlots.value)
+  if (slots.has(year)) {
+    if (slots.size > 1) {
+      slots.delete(year)
+    }
+  } else if (slots.size < MAX_YIELD_YEARS) {
+    const used = new Set(slots.values())
+    const free = [0, 1, 2].find((slot) => !used.has(slot)) ?? 0
+    slots.set(year, free)
+  }
+  yieldSlots.value = slots
+}
+
 const yieldSeries = computed(() =>
-  yieldSeasons.value.slice(0, 3).map((line) => ({
-    key: line.season,
-    label: season(line.season),
-    points: line.points.map((point) => ({
-      day: point.day,
-      value: point.yield,
-      detail: [
-        shortDate(point.date),
-        yieldText(point.oliveKg, point.oilKg),
-        `${fmt(point.oliveKg, 0)} → ${fmt(point.oilKg, 0)} ${translate('common.kg')}`,
-        point.acidity == null ? '' : `${translate('oil.acidity')} ${fmt(point.acidity, 2)}%`,
-      ]
-        .filter(Boolean)
-        .join(' · '),
+  yieldSeasons.value
+    .filter((line) => shownSlots.value.has(line.season))
+    .map((line) => ({
+      key: line.season,
+      slot: shownSlots.value.get(line.season) ?? 0,
+      label: season(line.season),
+      points: line.points.map((point) => ({
+        day: point.day,
+        value: point.yield,
+        detail: [
+          shortDate(point.date),
+          yieldText(point.oliveKg, point.oilKg),
+          `${fmt(point.oliveKg, 0)} → ${fmt(point.oilKg, 0)} ${translate('common.kg')}`,
+          point.acidity == null ? '' : `${translate('oil.acidity')} ${fmt(point.acidity, 2)}%`,
+        ]
+          .filter(Boolean)
+          .join(' · '),
+      })),
     })),
-  })),
 )
-/** Where each month starts, counted in days from the start of the season. */
+/**
+ * Date ticks on the 1st and 15th of each month, counted in days from the start of the year.
+ */
 const monthTicks = computed(() => {
   const start = new Date(2001, startMonth.value - 1, 1)
-  const format = new Intl.DateTimeFormat(formatLocale.value, { month: 'short' })
-
-  return Array.from({ length: 12 }, (_, i) => {
-    const monthStart = new Date(2001, startMonth.value - 1 + i, 1)
-
-    return {
-      day: Math.round((monthStart.getTime() - start.getTime()) / 86_400_000),
-      label: format.format(monthStart),
-    }
+  const format = new Intl.DateTimeFormat(formatLocale.value, {
+    day: 'numeric',
+    month: 'short',
   })
+  const ticks: { day: number; label: string; minor: boolean }[] = []
+  for (let i = 0; i < 12; i++) {
+    for (const dayOfMonth of [1, 15]) {
+      const tick = new Date(2001, startMonth.value - 1 + i, dayOfMonth)
+      ticks.push({
+        day: Math.round((tick.getTime() - start.getTime()) / 86_400_000),
+        label: format.format(tick),
+        minor: dayOfMonth === 15,
+      })
+    }
+  }
+
+  return ticks
 })
 
 /* ---------- 4. money ---------- */
@@ -372,6 +434,7 @@ const hasData = computed(() => {
     seasons: history.value.length > 0,
     yield: yieldSeasons.value.length > 0,
     money: economics.value.length > 0,
+    records: farm.value.extractions.some((x) => !x.deletedAt) || farm.value.entries.length > 0,
   }
 
   return lookup[report.value]
@@ -416,6 +479,7 @@ const hasData = computed(() => {
             {{ $t(`reports.metric.${metric}`) }}
           </button>
         </div>
+        <p class="unit-caption">{{ unitCaption }}</p>
         <div class="table-scroll">
           <table class="heat-table">
             <thead>
@@ -444,22 +508,34 @@ const hasData = computed(() => {
           </table>
         </div>
         <p v-if="cellInfo" class="chart-tooltip" role="status">{{ cellInfo }}</p>
-        <p v-if="fieldMetric !== 'oil'" class="small">{{ unitHint }}</p>
         <p class="muted small">{{ $t('reports.fieldsNote') }}</p>
       </template>
 
       <!-- 2. seasons -->
       <template v-else-if="report === 'seasons'">
-        <SeasonBars :bars="seasonBars" :title="$t('reports.title.seasons')" />
+        <div class="chips tight">
+          <button
+            v-for="metric in YEAR_METRICS"
+            :key="metric"
+            type="button"
+            class="chip small"
+            :class="{ selected: yearMetric === metric }"
+            :aria-pressed="yearMetric === metric"
+            @click="yearMetric = metric"
+          >
+            {{ $t(`reports.col.${metric}`) }}
+          </button>
+        </div>
+        <SeasonBars :bars="seasonBars" :title="$t(`reports.col.${yearMetric}`)" />
         <div class="table-scroll">
           <table class="report-table">
             <thead>
               <tr>
                 <th scope="col">{{ $t('oil.season') }}</th>
-                <th scope="col">{{ $t('oil.olives') }}</th>
-                <th scope="col">{{ $t('oil.oil') }}</th>
-                <th scope="col">{{ $t('oil.net') }}</th>
-                <th scope="col">{{ $t('oil.yield') }}</th>
+                <th scope="col">{{ $t('reports.col.olives') }}</th>
+                <th scope="col">{{ $t('reports.col.oil') }}</th>
+                <th scope="col">{{ $t('reports.col.net') }}</th>
+                <th scope="col">{{ $t('reports.col.yield') }}</th>
               </tr>
             </thead>
             <tbody>
@@ -478,6 +554,20 @@ const hasData = computed(() => {
 
       <!-- 3. yield through the season -->
       <template v-else-if="report === 'yield'">
+        <div v-if="yieldSeasons.length > 1" class="chips tight">
+          <button
+            v-for="line in yieldSeasons"
+            :key="line.season"
+            type="button"
+            class="chip small"
+            :class="{ selected: shownSlots.has(line.season) }"
+            :aria-pressed="shownSlots.has(line.season)"
+            :disabled="!shownSlots.has(line.season) && shownSlots.size >= MAX_YIELD_YEARS"
+            @click="toggleYieldYear(line.season)"
+          >
+            {{ season(line.season) }}
+          </button>
+        </div>
         <YieldChart
           :series="yieldSeries"
           :months="monthTicks"
@@ -486,6 +576,9 @@ const hasData = computed(() => {
         />
         <p class="muted small">{{ $t('reports.yieldNote') }}</p>
       </template>
+
+      <!-- 5. records -->
+      <RecordsBoard v-else-if="report === 'records'" />
 
       <!-- 4. money -->
       <template v-else>
@@ -527,7 +620,12 @@ const hasData = computed(() => {
         <p class="muted small">{{ $t('reports.moneyNote') }}</p>
       </template>
 
-      <button v-if="hasData" type="button" class="btn ghost small" @click="exportCsv">
+      <button
+        v-if="hasData && report !== 'records'"
+        type="button"
+        class="btn ghost small"
+        @click="exportCsv"
+      >
         ⬇ {{ $t('reports.csv') }}
       </button>
     </section>

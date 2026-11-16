@@ -11,9 +11,11 @@ interface Point {
   detail: string
 }
 const props = defineProps<{
-  series: { key: number; label: string; points: Point[] }[]
-  /** Month ticks: day of the season where each month starts, and its short name. */
-  months: { day: number; label: string }[]
+  /** `slot` (0–2) picks the colour; the page keeps a year's slot while it is shown. */
+  series: { key: number; slot: number; label: string; points: Point[] }[]
+  /** Date ticks: day of the year where each tick falls, its label, and whether it is a
+   * mid-month tick (dropped when the chart spans too long to fit them). */
+  months: { day: number; label: string; minor?: boolean }[]
   formatValue: (value: number) => string
   title: string
 }>()
@@ -64,11 +66,14 @@ const valueTicks = computed(() => {
 
   return ticks
 })
-const monthTicks = computed(() =>
-  props.months.filter(
+const monthTicks = computed(() => {
+  const inRange = props.months.filter(
     (month) => month.day >= dayRange.value[0] && month.day <= dayRange.value[1],
-  ),
-)
+  )
+
+  // Up to about seven labels fit along the bottom of a phone screen.
+  return inRange.length > 7 ? inRange.filter((month) => !month.minor) : inRange
+})
 
 function linePath(points: Point[]) {
   return points
@@ -76,9 +81,9 @@ function linePath(points: Point[]) {
     .join(' ')
 }
 
-/** Colour slot by season, so a season keeps its colour as new seasons are added. */
-function colourOf(key: number) {
-  return `series-${key % 3}`
+/** Colour of a slot (the page keeps each shown year in the same slot). */
+function colourOf(slot: number) {
+  return `series-${slot % 3}`
 }
 
 /** End-of-line label positions, pushed apart so labels never overlap (12px apart at least). */
@@ -133,7 +138,7 @@ const tooltip = computed(() => {
       >
         {{ month.label }}
       </text>
-      <g v-for="(line, i) in series" :key="line.key" :class="colourOf(line.key)">
+      <g v-for="(line, i) in series" :key="line.key" :class="colourOf(line.slot)">
         <path class="chart-line" :d="linePath(line.points)" />
         <circle
           v-for="point in line.points"
@@ -162,7 +167,7 @@ const tooltip = computed(() => {
       <strong>{{ tooltip.label }}</strong> · {{ tooltip.point.detail }}
     </figcaption>
     <ul v-if="series.length > 1" class="chart-legend">
-      <li v-for="line in series" :key="line.key" :class="colourOf(line.key)">
+      <li v-for="line in series" :key="line.key" :class="colourOf(line.slot)">
         <span class="chart-swatch" aria-hidden="true"></span>{{ line.label }}
       </li>
     </ul>

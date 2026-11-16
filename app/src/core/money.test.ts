@@ -10,6 +10,7 @@ import {
   moneyTotals,
   partyNames,
   saleAmounts,
+  stockForValue,
   taxEstimate,
 } from './money'
 import { isUntrackedSale, stockLevels, trackedVintages } from './oil'
@@ -260,5 +261,19 @@ describe('lastSaleAcidity', () => {
     ).toBe(0.3)
 
     expect(lastSaleAcidity([tx({ kind: 'sale' })])).toBeUndefined()
+  })
+})
+
+describe('stockForValue', () => {
+  const stock = { 2024: { mill: 50, home: 20 }, 2025: { mill: 300, home: 40, village: 10 } }
+
+  it('counts every place by default', () => {
+    expect(stockForValue(stock)).toBe(420)
+  })
+
+  it('counts only the chosen places', () => {
+    expect(stockForValue(stock, ['home'])).toBe(60)
+    expect(stockForValue(stock, ['mill', 'village'])).toBe(360)
+    expect(stockForValue(stock, [])).toBe(0)
   })
 })

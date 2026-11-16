@@ -5,12 +5,20 @@ import { computed, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { byNewest, parseISODate, todayISO } from '../core/dates'
 import { formatMoney, formatNumber } from '../core/format'
-import { inPeriod, lastSalePrice, moneyTotals, type Period, taxEstimate } from '../core/money'
+import {
+  inPeriod,
+  lastSalePrice,
+  moneyTotals,
+  type Period,
+  stockForValue,
+  taxEstimate,
+} from '../core/money'
 import { isUntrackedSale, stockLevels, trackedVintages } from '../core/oil'
 import { formatLocale } from '../i18n'
-import { categoryName, useFarm } from '../ui/farm'
+import { categoryName, locationName, useFarm } from '../ui/farm'
 import OilDrop from '../ui/OilDrop.vue'
 import { moneyPeriod } from '../ui/periods'
+import YearPicker from '../ui/YearPicker.vue'
 
 const { t: translate } = useTranslation()
 const farm = useFarm()
@@ -42,6 +50,10 @@ const years = computed(() =>
     (left, right) => right - left,
   ),
 )
+const shownYear = computed({
+  get: () => moneyPeriod.year ?? yearOf(today),
+  set: (value: number) => (moneyPeriod.year = value),
+})
 const period = computed<Period>(() => ({
   kind: 'year',
   year: moneyPeriod.year ?? yearOf(today),
@@ -52,16 +64,33 @@ const totals = computed(() =>
   moneyTotals(farm.value.transactions, period.value, startMonth.value),
 )
 const tax = computed(() => taxEstimate(totals.value.net, farm.value.settings.taxPercent))
-const stockKg = computed(() =>
-  Object.values(
-    stockLevels(
-      farm.value.extractions,
-      farm.value.stockMovements,
-      startMonth.value,
-      farm.value.transactions,
-    ),
-  ).reduce((sum, byLoc) => sum + Object.values(byLoc).reduce((kgSum, kg) => kgSum + kg, 0), 0),
+const stock = computed(() =>
+  stockLevels(
+    farm.value.extractions,
+    farm.value.stockMovements,
+    startMonth.value,
+    farm.value.transactions,
+  ),
 )
+const anyStock = computed(() => stockForValue(stock.value) > 0.05)
+/** Places whose oil counts for the stock value (all, unless the user chose some). */
+const valueLocations = computed(() =>
+  farm.value.locations
+    .filter((location) => !location.deletedAt && !location.archived)
+    .sort((left, right) => left.order - right.order),
+)
+const counted = computed(
+  () => farm.value.settings.stockValueLocations ?? valueLocations.value.map((x) => x.id),
+)
+const stockKg = computed(() => stockForValue(stock.value, counted.value))
+
+function toggleValueLocation(id: string) {
+  const next = counted.value.includes(id)
+    ? counted.value.filter((x) => x !== id)
+    : [...counted.value, id]
+  const all = valueLocations.value.every((location) => next.includes(location.id))
+  void farm.value.repo.updateSettings({ stockValueLocations: all ? undefined : next })
+}
 const lastPrice = computed(() => lastSalePrice(farm.value.transactions))
 
 function categoryRows(kind: 'expense' | 'income') {
@@ -127,14 +156,7 @@ function icon(kind: TransactionKind) {
 
     <div class="row-between period-bar">
       <span class="muted">{{ $t('money.yearHint') }}</span>
-      <select
-        class="input select season-select"
-        :aria-label="$t('money.year')"
-        :value="period.year"
-        @change="(e) => (moneyPeriod.year = Number((e.target as HTMLSelectElement).value))"
-      >
-        <option v-for="y in years" :key="y" :value="y">{{ y }}</option>
-      </select>
+      <YearPicker v-model="shownYear" :years="years" :label="$t('money.year')" />
     </div>
 
     <div class="add-row">
@@ -198,7 +220,7 @@ function icon(kind: TransactionKind) {
               <td>{{ eur(totals.net - tax) }}</td>
             </tr>
           </template>
-          <tr v-if="stockKg > 0.05 && lastPrice">
+          <tr v-if="anyStock && lastPrice">
             <th>
               {{ $t('money.stockValue') }}
               <small class="muted block-line">{{
@@ -209,6 +231,22 @@ function icon(kind: TransactionKind) {
           </tr>
         </tbody>
       </table>
+      <div v-if="anyStock && lastPrice && valueLocations.length > 1" class="value-places">
+        <span class="muted small">{{ $t('money.stockValueCounts') }}</span>
+        <div class="chips tight">
+          <button
+            v-for="location in valueLocations"
+            :key="location.id"
+            type="button"
+            class="chip small"
+            :class="{ selected: counted.includes(location.id) }"
+            :aria-pressed="counted.includes(location.id)"
+            @click="toggleValueLocation(location.id)"
+          >
+            {{ locationName(translate, location) }}
+          </button>
+        </div>
+      </div>
     </section>
 
     <section v-if="expenseRows.length" class="card">

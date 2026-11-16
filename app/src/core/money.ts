@@ -196,3 +196,24 @@ export function lastSaleAcidity(transactions: Transaction[]): number | undefined
     .filter((tx) => tx.kind === 'sale' && tx.acidity != null)
     .sort(byNewest)[0]?.acidity
 }
+
+/**
+ * Oil in stock (kg) for the stock value, counting only the chosen places (all places when
+ * `locationIds` is not given). `stock` is kg by vintage, then by place, as from stockLevels().
+ */
+export function stockForValue(
+  stock: Record<number, Record<string, number>>,
+  locationIds?: string[],
+): number {
+  const counted = locationIds ? new Set(locationIds) : undefined
+  let kg = 0
+  for (const byLocation of Object.values(stock)) {
+    for (const [locationId, amount] of Object.entries(byLocation)) {
+      if (!counted || counted.has(locationId)) {
+        kg += amount
+      }
+    }
+  }
+
+  return kg
+}
