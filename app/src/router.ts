@@ -2,7 +2,6 @@ import { createRouter, createWebHistory } from 'vue-router'
 import ExtractionPage from './screens/ExtractionPage.vue'
 import JournalPage from './screens/JournalPage.vue'
 import MoneyPage from './screens/MoneyPage.vue'
-import MorePage from './screens/MorePage.vue'
 import OilPage from './screens/OilPage.vue'
 import ReportsPage from './screens/ReportsPage.vue'
 import SettingsPage from './screens/SettingsPage.vue'
@@ -22,7 +21,8 @@ export const router = createRouter({
     { path: '/money/new/:kind', name: 'transaction-new', component: TransactionPage },
     { path: '/money/:id', name: 'transaction', component: TransactionPage },
     { path: '/reports', name: 'reports', component: ReportsPage },
-    { path: '/more', name: 'more', component: MorePage },
+    // The old More menu: its two items are now in the bottom bar.
+    { path: '/more', redirect: '/settings' },
     { path: '/settings', name: 'settings', component: SettingsPage },
     { path: '/:rest(.*)', redirect: '/' },
   ],

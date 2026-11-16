@@ -443,7 +443,7 @@ const hasData = computed(() => {
 
 <template>
   <main class="page reports">
-    <h1>{{ $t('more.reports') }}</h1>
+    <h1>{{ $t('nav.reports') }}</h1>
     <div class="chips report-tabs" role="tablist">
       <button
         v-for="key in REPORTS"
