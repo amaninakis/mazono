@@ -1,7 +1,9 @@
 import type { FastifyReply, FastifyRequest } from 'fastify'
 import type { DatabaseSync } from 'node:sqlite'
+import type { Access, Role } from '../src/core/access.ts'
 import type {
   AccountInfo,
+  Member,
   SyncRecord,
   SyncRequest,
   SyncResponse,
@@ -12,6 +14,12 @@ import { join } from 'node:path'
 import fastifyCookie from '@fastify/cookie'
 import fastifyStatic from '@fastify/static'
 import Fastify from 'fastify'
+import {
+  cleanPermissions,
+  PRESETS,
+  readableTables,
+  writableTables,
+} from '../src/core/access.ts'
 import {
   isValidUsername,
   MIN_PASSWORD_LENGTH,
@@ -52,7 +60,16 @@ interface UserRow {
   is_owner: number
   must_change_password: number
   disabled: number
+  may_create_grove: number
 }
+
+interface MembershipRow {
+  role: Role
+  permissions: string
+}
+
+/** Records whose creator is shown ("logged by Giannis"); stamped by the server. */
+const CREATED_BY_TABLES = new Set(['entries', 'extractions', 'transactions', 'stockMovements'])
 
 const SYNC_TABLE_SET = new Set<string>(SYNC_TABLES)
 
@@ -83,9 +100,9 @@ export async function buildServer(options: ServerOptions) {
   }
 
   function accountInfo(user: UserRow): AccountInfo {
-    const farms = database
-      .prepare('SELECT farm_id AS id, role FROM memberships WHERE user_id = ?')
-      .all(user.id) as { id: string; role: 'admin' }[]
+    const rows = database
+      .prepare('SELECT farm_id AS id, role, permissions FROM memberships WHERE user_id = ?')
+      .all(user.id) as unknown as (MembershipRow & { id: string })[]
 
     return {
       user: {
@@ -93,9 +110,24 @@ export async function buildServer(options: ServerOptions) {
         username: user.username,
         isOwner: !!user.is_owner,
         mustChangePassword: !!user.must_change_password,
+        mayCreateGrove: !!user.is_owner || !!user.may_create_grove,
       },
-      farms,
+      farms: rows.map((row) => ({
+        id: row.id,
+        role: row.role,
+        permissions: cleanPermissions(JSON.parse(row.permissions)),
+      })),
     }
+  }
+
+  function membership(userId: string, farmId: string): Access | undefined {
+    const row = database
+      .prepare('SELECT role, permissions FROM memberships WHERE user_id = ? AND farm_id = ?')
+      .get(userId, farmId) as MembershipRow | undefined
+
+    return row
+      ? { role: row.role, permissions: cleanPermissions(JSON.parse(row.permissions)) }
+      : undefined
   }
 
   function startSession(request: FastifyRequest, reply: FastifyReply, user: UserRow) {
@@ -263,25 +295,31 @@ export async function buildServer(options: ServerOptions) {
   /* ---------- sync ---------- */
 
   /** May this user sync this farm? The owner may also create a new farm by syncing it. */
-  function canSync(user: UserRow, farmId: string): boolean {
-    const membership = database
-      .prepare('SELECT role FROM memberships WHERE user_id = ? AND farm_id = ?')
-      .get(user.id, farmId)
-    if (membership) {
-      return true
+  /**
+   * This user's access to the farm. The installation owner, or someone the owner allowed to
+   * start their own grove, creates a new farm by syncing it (and becomes its administrator).
+   */
+  function accessForSync(user: UserRow, farmId: string): Access | undefined {
+    const existing = membership(user.id, farmId)
+    if (existing) {
+      return existing
     }
     const farmExists = database.prepare('SELECT 1 FROM farms WHERE id = ?').get(farmId)
-    if (farmExists || !user.is_owner) {
-      return false
+    if (farmExists || (!user.is_owner && !user.may_create_grove)) {
+      return undefined
     }
     database
       .prepare('INSERT INTO farms (id, created_by, created_at) VALUES (?, ?, ?)')
       .run(farmId, user.id, now())
     database
-      .prepare("INSERT INTO memberships (user_id, farm_id, role) VALUES (?, ?, 'admin')")
+      .prepare(
+        "INSERT INTO memberships (user_id, farm_id, role, permissions) VALUES (?, ?, 'admin', '{}')",
+      )
       .run(user.id, farmId)
+    // One grove of their own; the owner may create as many as they like.
+    database.prepare('UPDATE users SET may_create_grove = 0 WHERE id = ?').run(user.id)
 
-    return true
+    return { role: 'admin', permissions: cleanPermissions({}) }
   }
 
   function isValidChange(change: SyncRecord, farmId: string): boolean {
@@ -314,10 +352,17 @@ export async function buildServer(options: ServerOptions) {
         ? time - body.clientNow
         : 0
 
+    if (user.must_change_password) {
+      return await reply.code(403).send({ error: 'change-password' })
+    }
+
     const result = inTransaction(database, () => {
-      if (!canSync(user, farmId)) {
+      const access = accessForSync(user, farmId)
+      if (!access) {
         return undefined
       }
+      const readable = readableTables(access)
+      const writable = writableTables(access)
       const refused: SyncRecord[] = []
       const find = database.prepare(
         'SELECT data, updated_at FROM records WHERE farm_id = ? AND tbl = ? AND id = ?',
@@ -335,6 +380,18 @@ export async function buildServer(options: ServerOptions) {
         const updatedAt = Math.min(change.updatedAt + offset, time)
         const existing = find.get(farmId, change.table, change.id) as
           { data: string; updated_at: number } | undefined
+        if (!writable.has(change.table)) {
+          // Not allowed to change this: send the server's version back (if they may see it).
+          if (existing && readable.has(change.table)) {
+            refused.push({
+              table: change.table,
+              id: change.id,
+              data: JSON.parse(existing.data) as Record<string, unknown>,
+              updatedAt: existing.updated_at,
+            })
+          }
+          continue
+        }
         if (existing && existing.updated_at > updatedAt) {
           // The server has a newer version: keep it and send it back.
           refused.push({
@@ -345,7 +402,13 @@ export async function buildServer(options: ServerOptions) {
           })
           continue
         }
-        const data = { ...change.data, updatedAt }
+        const data: Record<string, unknown> = { ...change.data, updatedAt }
+        if (CREATED_BY_TABLES.has(change.table)) {
+          // Who logged it: set by the server when the record first arrives, kept after that.
+          data.createdBy = existing
+            ? (JSON.parse(existing.data) as { createdBy?: string }).createdBy
+            : user.username
+        }
         save.run(
           farmId,
           change.table,
@@ -357,11 +420,14 @@ export async function buildServer(options: ServerOptions) {
       }
 
       const since = Number(body.since) || 0
+      const tables = [...readable]
       const rows = database
         .prepare(
-          'SELECT tbl, id, data, updated_at, seq FROM records WHERE farm_id = ? AND seq > ? ORDER BY seq LIMIT ?',
+          `SELECT tbl, id, data, updated_at, seq FROM records
+           WHERE farm_id = ? AND seq > ? AND tbl IN (${tables.map(() => '?').join(', ')})
+           ORDER BY seq LIMIT ?`,
         )
-        .all(farmId, since, PAGE_SIZE + 1) as {
+        .all(farmId, since, ...tables, PAGE_SIZE + 1) as {
         tbl: SyncRecord['table']
         id: string
         data: string
@@ -389,6 +455,236 @@ export async function buildServer(options: ServerOptions) {
 
     return await (result ?? reply.code(403).send({ error: 'not-a-member' }))
   })
+
+  /* ---------- members of a grove (for its administrators) ---------- */
+
+  interface MemberParams {
+    farmId: string
+    userId: string
+  }
+
+  /** The signed-in user if they administer this grove, else a 401/403 reply. */
+  function groveAdmin(
+    request: FastifyRequest<{ Params: { farmId: string } }>,
+    reply: FastifyReply,
+  ) {
+    const user = signedInUser(request, reply)
+    if (!user) {
+      return undefined
+    }
+    if (membership(user.id, request.params.farmId)?.role !== 'admin') {
+      void reply.code(403).send({ error: 'not-an-admin' })
+      return undefined
+    }
+
+    return user
+  }
+
+  function members(farmId: string): Member[] {
+    const rows = database
+      .prepare(
+        `SELECT u.id, u.username, u.is_owner, u.must_change_password, m.role, m.permissions
+         FROM memberships m JOIN users u ON u.id = m.user_id
+         WHERE m.farm_id = ? ORDER BY m.role, u.username COLLATE NOCASE`,
+      )
+      .all(farmId) as unknown as (MembershipRow & {
+      id: string
+      username: string
+      is_owner: number
+      must_change_password: number
+    })[]
+
+    return rows.map((row) => ({
+      userId: row.id,
+      username: row.username,
+      role: row.role,
+      permissions: cleanPermissions(JSON.parse(row.permissions)),
+      isOwner: !!row.is_owner,
+      mustChangePassword: !!row.must_change_password,
+    }))
+  }
+
+  function adminCount(farmId: string): number {
+    return (
+      database
+        .prepare(
+          "SELECT COUNT(*) AS count FROM memberships WHERE farm_id = ? AND role = 'admin'",
+        )
+        .get(farmId) as { count: number }
+    ).count
+  }
+
+  function memberRole(body: unknown): { role: Role; permissions: string } {
+    const given = (body ?? {}) as { role?: unknown; permissions?: unknown }
+    const role: Role = given.role === 'admin' ? 'admin' : 'user'
+    const permissions = cleanPermissions(given.permissions ?? PRESETS.worker)
+
+    return { role, permissions: JSON.stringify(permissions) }
+  }
+
+  app.get<{ Params: { farmId: string } }>('/api/farms/:farmId/members', (request, reply) => {
+    return groveAdmin(request, reply) ? reply.send(members(request.params.farmId)) : reply
+  })
+
+  /**
+   * Add someone with a temporary password they must change at first sign-in. With `ownGrove`
+   * (installation owner only) they are not added here but may start a grove of their own.
+   */
+  app.post<{ Params: { farmId: string } }>(
+    '/api/farms/:farmId/members',
+    async (request, reply) => {
+      const admin = groveAdmin(request, reply)
+      if (!admin) {
+        return await reply
+      }
+      const { farmId } = request.params
+      const body = (request.body ?? {}) as Record<string, unknown>
+      const username = typeof body.username === 'string' ? body.username.trim() : ''
+      const password = typeof body.password === 'string' ? body.password : ''
+      const ownGrove = body.ownGrove === true
+      if (!isValidUsername(username)) {
+        return await reply.code(400).send({ error: 'username' })
+      }
+      if (ownGrove && !admin.is_owner) {
+        return await reply.code(403).send({ error: 'owner-only' })
+      }
+      const { role, permissions } = memberRole(body)
+      const existing = findUser(username)
+      if (existing) {
+        // Only the installation owner may add someone who already has an account elsewhere.
+        if (!admin.is_owner || ownGrove) {
+          return await reply.code(409).send({ error: 'username-taken' })
+        }
+        if (membership(existing.id, farmId)) {
+          return await reply.code(409).send({ error: 'already-member' })
+        }
+        database
+          .prepare(
+            `INSERT INTO memberships (user_id, farm_id, role, permissions) VALUES (?, ?, ?, ?)
+             ON CONFLICT (user_id, farm_id) DO UPDATE SET role = excluded.role,
+               permissions = excluded.permissions`,
+          )
+          .run(existing.id, farmId, role, permissions)
+
+        // Their password stays as it is: the admin must not hand out a temporary one.
+        return await reply.send({ members: members(farmId), existingAccount: true })
+      }
+      if (password.length < MIN_PASSWORD_LENGTH) {
+        return await reply.code(400).send({ error: 'password-short' })
+      }
+      const id = randomUUID()
+      const passwordHash = await hashPassword(password)
+      inTransaction(database, () => {
+        database
+          .prepare(
+            `INSERT INTO users (id, username, password_hash, must_change_password, may_create_grove, created_at)
+             VALUES (?, ?, ?, 1, ?, ?)`,
+          )
+          .run(id, username, passwordHash, ownGrove ? 1 : 0, now())
+        if (!ownGrove) {
+          database
+            .prepare(
+              'INSERT INTO memberships (user_id, farm_id, role, permissions) VALUES (?, ?, ?, ?)',
+            )
+            .run(id, farmId, role, permissions)
+        }
+      })
+
+      return await reply.send({ members: members(farmId), existingAccount: false })
+    },
+  )
+
+  /** Change someone's role or permissions. The last administrator stays an administrator. */
+  app.post<{ Params: MemberParams }>(
+    '/api/farms/:farmId/members/:userId',
+    (request, reply) => {
+      if (!groveAdmin(request, reply)) {
+        return reply
+      }
+      const { farmId, userId } = request.params
+      const target = members(farmId).find((member) => member.userId === userId)
+      if (!target) {
+        return reply.code(404).send({ error: 'not-a-member' })
+      }
+      const { role, permissions } = memberRole(request.body)
+      if (target.isOwner && role !== 'admin') {
+        return reply.code(409).send({ error: 'owner-stays-admin' })
+      }
+      if (target.role === 'admin' && role !== 'admin' && adminCount(farmId) <= 1) {
+        return reply.code(409).send({ error: 'last-admin' })
+      }
+      database
+        .prepare(
+          'UPDATE memberships SET role = ?, permissions = ? WHERE user_id = ? AND farm_id = ?',
+        )
+        .run(role, permissions, userId, farmId)
+
+      return reply.send(members(farmId))
+    },
+  )
+
+  /** A new temporary password (to change at the next sign-in); signs them out everywhere. */
+  app.post<{ Params: MemberParams }>(
+    '/api/farms/:farmId/members/:userId/password',
+    async (request, reply) => {
+      const admin = groveAdmin(request, reply)
+      if (!admin) {
+        return await reply
+      }
+      const { farmId, userId } = request.params
+      const target = members(farmId).find((member) => member.userId === userId)
+      if (!target || target.isOwner || userId === admin.id) {
+        return await reply.code(403).send({ error: 'not-allowed' })
+      }
+      // Someone in groves this admin does not run: only the installation owner may.
+      const elsewhere = database
+        .prepare(
+          `SELECT 1 FROM memberships m WHERE m.user_id = ? AND NOT EXISTS (
+             SELECT 1 FROM memberships a WHERE a.user_id = ? AND a.farm_id = m.farm_id AND a.role = 'admin')`,
+        )
+        .get(userId, admin.id)
+      if (elsewhere && !admin.is_owner) {
+        return await reply.code(403).send({ error: 'not-allowed' })
+      }
+      const { password } = (request.body ?? {}) as { password?: unknown }
+      if (typeof password !== 'string' || password.length < MIN_PASSWORD_LENGTH) {
+        return await reply.code(400).send({ error: 'password-short' })
+      }
+      const passwordHash = await hashPassword(password)
+      database
+        .prepare('UPDATE users SET password_hash = ?, must_change_password = 1 WHERE id = ?')
+        .run(passwordHash, userId)
+      database.prepare('DELETE FROM sessions WHERE user_id = ?').run(userId)
+
+      return await reply.send(members(farmId))
+    },
+  )
+
+  /** Remove someone from the grove (their account stays, e.g. for other groves). */
+  app.post<{ Params: MemberParams }>(
+    '/api/farms/:farmId/members/:userId/remove',
+    (request, reply) => {
+      if (!groveAdmin(request, reply)) {
+        return reply
+      }
+      const { farmId, userId } = request.params
+      const target = members(farmId).find((member) => member.userId === userId)
+      if (!target) {
+        return reply.code(404).send({ error: 'not-a-member' })
+      }
+      if (target.isOwner) {
+        return reply.code(409).send({ error: 'owner-stays-admin' })
+      }
+      if (target.role === 'admin' && adminCount(farmId) <= 1) {
+        return reply.code(409).send({ error: 'last-admin' })
+      }
+      database
+        .prepare('DELETE FROM memberships WHERE user_id = ? AND farm_id = ?')
+        .run(userId, farmId)
+
+      return reply.send(members(farmId))
+    },
+  )
 
   /** Tables whose rows count as "data you entered"; the rest are defaults from setup. */
   const DATA_TABLES = [

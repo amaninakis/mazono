@@ -18,7 +18,7 @@ import {
 import { unitLabel } from '../core/units'
 import { formatLocale } from '../i18n'
 import DateField from '../ui/DateField.vue'
-import { taskName, useFarm } from '../ui/farm'
+import { canDo, taskName, useFarm } from '../ui/farm'
 import FieldPicker from '../ui/FieldPicker.vue'
 import NewTaskModal from '../ui/NewTaskModal.vue'
 import NewUnitModal from '../ui/NewUnitModal.vue'
@@ -365,6 +365,9 @@ function summaryLines(entry: TaskEntry): string[] {
 
   return lines
 }
+
+/** Adding a task type or unit from here changes the grove's settings. */
+const canEditSettings = computed(() => canDo(farm.value, 'settings', 'change'))
 </script>
 
 <template>
@@ -387,7 +390,12 @@ function summaryLines(entry: TaskEntry): string[] {
       >
         <span aria-hidden="true">{{ x.icon }}</span> {{ taskName($t, x) }}
       </button>
-      <button v-if="!editing" type="button" class="task-chip add" @click="newTask = true">
+      <button
+        v-if="!editing && canEditSettings"
+        type="button"
+        class="task-chip add"
+        @click="newTask = true"
+      >
         + {{ $t('task.new') }}
       </button>
     </div>
@@ -446,7 +454,7 @@ function summaryLines(entry: TaskEntry): string[] {
               @change="onUnitChange(i, $event)"
             >
               <option v-for="u in activeUnits" :key="u.id" :value="u.id">{{ u.name }}</option>
-              <option value="__new">{{ $t('today.newUnit') }}</option>
+              <option v-if="canEditSettings" value="__new">{{ $t('today.newUnit') }}</option>
             </select>
             <button
               v-if="quantities.length > 1"

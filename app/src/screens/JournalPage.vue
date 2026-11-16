@@ -7,7 +7,8 @@ import { addDays, monthGrid, parseISODate, todayISO } from '../core/dates'
 import { formatNumber } from '../core/format'
 import { unitLabel } from '../core/units'
 import { formatLocale } from '../i18n'
-import { taskName, useFarm } from '../ui/farm'
+import { account } from '../sync/account'
+import { canDo, taskName, useFarm } from '../ui/farm'
 import OilDrop from '../ui/OilDrop.vue'
 import { showToast } from '../ui/toast'
 
@@ -140,6 +141,14 @@ function details(entry: TaskEntry) {
 
   return parts.join(' · ')
 }
+
+/** Read-only for people who may only see the Journal. */
+const canEditWork = computed(() => canDo(farm.value, 'work', 'change'))
+const canEditOil = computed(() => canDo(farm.value, 'oil', 'change'))
+/** "logged by Giannis" when someone else logged it. */
+function loggedBy(createdBy: string | undefined) {
+  return createdBy && createdBy !== account.user?.username ? createdBy : undefined
+}
 </script>
 
 <template>
@@ -242,7 +251,12 @@ function details(entry: TaskEntry) {
 
     <ul v-if="dayExtractions.length" class="entries">
       <li v-for="x in dayExtractions" :key="x.id" class="entry oil-entry">
-        <button type="button" class="entry-main" @click="router.push(`/oil/${x.id}`)">
+        <button
+          type="button"
+          class="entry-main"
+          :class="{ readonly: !canEditOil }"
+          @click="canEditOil && router.push(`/oil/${x.id}`)"
+        >
           <span class="entry-icon" aria-hidden="true"><OilDrop /></span>
           <span class="entry-text">
             <strong>{{ $t('extraction.title') }}</strong>
@@ -259,7 +273,7 @@ function details(entry: TaskEntry) {
 
     <div v-if="dayEntries.length === 0" class="empty">
       <p class="muted">{{ $t('journal.noEntries') }}</p>
-      <RouterLink class="btn" :to="{ path: '/', query: { date } }"
+      <RouterLink v-if="canEditWork" class="btn" :to="{ path: '/', query: { date } }"
         >+ {{ $t('journal.logTask') }}</RouterLink
       >
     </div>
@@ -270,7 +284,12 @@ function details(entry: TaskEntry) {
         class="entry"
         :style="{ '--c': typeById.get(e.taskTypeId)?.color ?? '#777' }"
       >
-        <button type="button" class="entry-main" @click="router.push(`/entry/${e.id}`)">
+        <button
+          type="button"
+          class="entry-main"
+          :class="{ readonly: !canEditWork }"
+          @click="canEditWork && router.push(`/entry/${e.id}`)"
+        >
           <span class="entry-icon" aria-hidden="true">{{
             typeById.get(e.taskTypeId)?.icon
           }}</span>
@@ -282,9 +301,13 @@ function details(entry: TaskEntry) {
             </strong>
             <small>{{ details(e) }}</small>
             <small v-if="e.notes" class="muted">{{ e.notes }}</small>
+            <small v-if="loggedBy(e.createdBy)" class="muted">
+              {{ $t('journal.loggedBy', { name: loggedBy(e.createdBy) }) }}
+            </small>
           </span>
         </button>
         <button
+          v-if="canEditWork"
           type="button"
           class="icon-btn"
           :aria-label="$t('common.delete')"
@@ -293,7 +316,7 @@ function details(entry: TaskEntry) {
           🗑
         </button>
       </li>
-      <li>
+      <li v-if="canEditWork">
         <RouterLink class="btn ghost small" :to="{ path: '/', query: { date } }"
           >+ {{ $t('journal.logTask') }}</RouterLink
         >

@@ -1,3 +1,5 @@
+import type { Permissions, Role } from './access'
+
 /*
  * What the app and the server exchange when syncing. Shared by both sides, so it holds no
  * browser or Node code.
@@ -51,8 +53,25 @@ export interface SyncResponse {
 }
 
 export interface AccountInfo {
-  user: { id: string; username: string; isOwner: boolean; mustChangePassword: boolean }
-  farms: { id: string; role: 'admin' }[]
+  user: {
+    id: string
+    username: string
+    isOwner: boolean
+    mustChangePassword: boolean
+    /** May start a grove of their own (set by the installation owner). */
+    mayCreateGrove: boolean
+  }
+  farms: { id: string; role: Role; permissions: Permissions }[]
+}
+
+/** A person in a grove, as the grove's administrators see them. */
+export interface Member {
+  userId: string
+  username: string
+  role: Role
+  permissions: Permissions
+  isOwner: boolean
+  mustChangePassword: boolean
 }
 
 /** The id a row is stored under: `farmId` for settings, `id` for everything else. */

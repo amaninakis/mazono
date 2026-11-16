@@ -536,3 +536,33 @@ button, input, select, textarea { font: inherit; color: inherit; }
 .grove-list li.open { border-color: var(--olive); background: var(--olive-soft); }
 .grove-name { flex: 1; display: flex; flex-direction: column; min-width: 0; }
 .btn.danger { color: var(--danger); }
+
+/* Rows a person may see but not change */
+.readonly { cursor: default; }
+fieldset.plain { margin: 0; padding: 0; border: 0; min-width: 0; }
+fieldset.plain:disabled .btn, fieldset.plain:disabled .input { opacity: 0.7; }
+
+/* People and permissions */
+.chip.static { cursor: default; }
+.permissions { margin: 10px 0 4px; }
+.permission-grid { width: 100%; border-collapse: collapse; margin-top: 10px; }
+.permission-grid th { text-align: left; font-weight: 500; padding: 6px 8px 6px 0; font-size: 0.95rem; }
+.permission-grid td { padding: 6px 0; text-align: right; }
+.segmented { display: inline-flex; border: 1px solid var(--line); border-radius: 10px; overflow: hidden; }
+.segmented button {
+  min-height: 38px; min-width: 64px; padding: 0 10px; border: 0; background: var(--card);
+  color: var(--ink); font: inherit; font-size: 0.9rem; cursor: pointer;
+}
+.segmented button + button { border-left: 1px solid var(--line); }
+.segmented button.selected { background: var(--olive); color: #fff; }
+.member-list { list-style: none; margin: 10px 0; padding: 0; }
+.member-list li { border-top: 1px solid var(--line); padding: 10px 0; }
+.member-list li:first-child { border-top: 0; }
+.member-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.member-name { display: flex; flex-direction: column; min-width: 0; }
+.member-edit { margin-top: 10px; }
+.member-add { margin-top: 10px; display: flex; flex-direction: column; gap: 6px; }
+.member-add .row-between .input { flex: 1; min-width: 0; }
+.hand-over { margin: 10px 0; padding: 12px; border-radius: 12px; background: var(--olive-soft); }
+.hand-over p { margin: 6px 0 0; }
+.hand-over code { font-size: 1.05rem; font-weight: 600; }

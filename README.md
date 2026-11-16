@@ -7,9 +7,20 @@ production season by season, and compare fields and years.
 
 Available in **English** and **Ελληνικά**. Works offline on your phone as an installable web app (PWA).
 
-> Status: **v0.5a – server and sync**. More users with their own permissions are next (see [Roadmap](#roadmap)).
+> Status: **v0.5b – people and permissions**. Next: Android/iOS apps and more (see [Roadmap](#roadmap)).
 
 ## What it does
+
+### People and permissions (v0.5b)
+
+- Administrators add people in **Settings → People** with a temporary password (type your own
+  or press *Suggest*). At their first sign-in they choose their own password.
+- Choose what each person may **see** or **change**: Work (Today, Journal), Oil, Money, Reports and
+  Settings, or pick a ready-made set: **Worker**, **Family** or **Accountant**.
+- The server checks every change, and data someone may not see never reaches their phone.
+- The Journal shows **who logged** each entry. Give a new temporary password or remove someone
+  at any time; what they logged stays.
+- The installation owner can also create someone who **starts their own grove**.
 
 ### Server, sign-in and sync (v0.5a)
 
@@ -156,8 +167,8 @@ A test checks that every language has the same keys as English.
    your oil per year, CSV export
 5. **v0.5a – Server and sync** ✅: server, administrator account, sign-in, offline sync between
    devices, daily backups
-6. **v0.5b – Users**: more users with per-page access (see / edit), temporary first password,
-   more groves per installation
+6. **v0.5b – Users** ✅: more people with per-area access (see / change), temporary first
+   password, more groves per installation
 7. **v1.0+**: Android/iOS apps (Capacitor), daily reminders, location-aware default field,
    equipment log, tasks per tree (numbered or NFC-tagged trees), weather integration, labour reports, spreadsheet import
 

@@ -1,7 +1,10 @@
+import type { Access } from '../core/access'
 import type { AccountInfo } from '../core/syncFormat'
 import { reactive } from 'vue'
+import { PRESETS } from '../core/access'
 import { db, onLocalChange } from '../db/db'
 import {
+  ApiError,
   changePassword as changePasswordCall,
   createOwner,
   serverStatus,
@@ -25,43 +28,87 @@ import { chooseCurrentGrove, removeLocalGrove } from './groves'
  */
 
 type User = AccountInfo['user']
+type GroveAccess = AccountInfo['farms'][number]
 
-export const account = reactive({
-  /**
-   * checking: finding out whether there is a server; local: no server; server: there is one.
-   */
-  mode: 'checking',
+interface AccountState {
+  /** checking: finding out whether there is a server; local: no server; server: there is. */
+  mode: 'checking' | 'local' | 'server'
   /** The server has no accounts yet: the first person creates the administrator. */
-  needsSetup: false,
-  user: undefined as User | undefined,
-  sync: 'idle',
+  needsSetup: boolean
+  user: User | undefined
+  sync: 'idle' | 'syncing' | 'offline' | 'error'
   /** When the last sync finished (ms), 0 = never on this device. */
-  lastSync: 0,
+  lastSync: number
   /** Changes on this device not yet on the server. */
-  pending: 0,
+  pending: number
   /**
    * Bringing the account's data to this device right after signing in (or to a device that
    * has none yet). Meanwhile the app shows a loading screen, never the first-time setup, so
    * nobody starts a new, empty grove by mistake.
    */
+  loading: 'idle' | 'loading' | 'failed'
+  /** The groves of this account on the server, with this person's role and permissions. */
+  farms: GroveAccess[]
+  /**
+   * The temporary password just used to sign in (to set a new one without typing it again).
+   */
+  temporaryPassword: string
+}
+
+export const account = reactive<AccountState>({
+  mode: 'checking',
+  needsSetup: false,
+  user: undefined,
+  sync: 'idle',
+  lastSync: 0,
+  pending: 0,
   loading: 'idle',
-  /** Groves of this account on the server. */
-  farms: [] as string[],
+  farms: [],
+  temporaryPassword: '',
 })
+
+/** This person's access to a grove; full access without a server (the app on its own). */
+export function accessTo(farmId: string | undefined): Access | undefined {
+  if (account.mode !== 'server') {
+    return { role: 'admin', permissions: PRESETS.family }
+  }
+  const grove = account.farms.find((farm) => farm.id === farmId)
+  if (grove) {
+    return grove
+  }
+
+  // A grove made on this device, not yet on the server: whoever made it runs it.
+  return farmId && account.user?.mayCreateGrove
+    ? { role: 'admin', permissions: PRESETS.family }
+    : undefined
+}
 
 const ACCOUNT_KEY = 'account'
 const SYNC_DELAY = 1500
 const SYNC_EVERY = 60_000
 
-async function storedUser(): Promise<User | undefined> {
+/** Who is signed in and their groves, kept on the device so it also works offline. */
+async function storedAccount(): Promise<{ user: User; farms: GroveAccess[] } | undefined> {
   const stored = await db.meta.get(ACCOUNT_KEY)
-  return stored ? (JSON.parse(stored.value) as User) : undefined
+  if (!stored) {
+    return undefined
+  }
+  const value = JSON.parse(stored.value) as {
+    user?: User
+    farms?: GroveAccess[]
+  } & Partial<User>
+
+  // Before v0.5b only the user was stored.
+  return value.user
+    ? { user: value.user, farms: value.farms ?? [] }
+    : { user: value as User, farms: [] }
 }
 
-async function rememberUser(user: User | undefined) {
+async function rememberAccount(user: User | undefined, farms: GroveAccess[] = account.farms) {
   account.user = user
+  account.farms = farms
   await (user
-    ? db.meta.put({ key: ACCOUNT_KEY, value: JSON.stringify(user) })
+    ? db.meta.put({ key: ACCOUNT_KEY, value: JSON.stringify({ user, farms }) })
     : db.meta.delete(ACCOUNT_KEY))
 }
 
@@ -78,10 +125,12 @@ let timer: ReturnType<typeof setTimeout> | undefined
  */
 async function syncEverything() {
   const info = await whoAmI()
-  account.user = info.user
-  account.farms = info.farms.map((farm) => farm.id)
-  const onServer = new Set(account.farms)
-  const toSync = new Set(account.farms)
+  await rememberAccount(info.user, info.farms)
+  if (info.user.mustChangePassword) {
+    throw new ApiError(403, 'change-password')
+  }
+  const onServer = new Set(info.farms.map((farm) => farm.id))
+  const toSync = new Set(onServer)
   for (const farm of await db.farms.toArray()) {
     const syncedBefore = (await syncedSeq(db, farm.id)) !== undefined
     if (onServer.has(farm.id) || !syncedBefore) {
@@ -92,7 +141,7 @@ async function syncEverything() {
   }
 
   for (const farmId of toSync) {
-    await syncFarm(db, farmId, syncCall)
+    await syncFarm(db, farmId, syncCall, accessTo(farmId))
   }
   // The open grove was removed: open another one.
   const current = (await db.meta.get('currentFarmId'))?.value
@@ -128,7 +177,7 @@ export async function syncNow(): Promise<boolean> {
       if (error instanceof SignedOutError) {
         // The session ended (e.g. signed out from another device): ask to sign in again.
         // Nothing is lost: unsent changes stay here and go out after signing in.
-        await rememberUser(undefined)
+        await rememberAccount(undefined)
       }
       account.sync = navigator.onLine ? 'error' : 'offline'
     } finally {
@@ -191,7 +240,8 @@ export async function retryLoad(): Promise<void> {
 
 /** Find out whether there is a server and who is signed in on this device. */
 export async function startAccount(): Promise<void> {
-  const [status, user] = await Promise.all([serverStatus(), storedUser()])
+  const [status, stored] = await Promise.all([serverStatus(), storedAccount()])
+  const user = stored?.user
   account.pending = await pendingCount(db)
   if (!status && !user) {
     account.mode = 'local'
@@ -200,6 +250,7 @@ export async function startAccount(): Promise<void> {
   account.mode = 'server'
   account.needsSetup = status?.needsSetup ?? false
   account.user = user
+  account.farms = stored?.farms ?? []
   if (!user) {
     return
   }
@@ -215,26 +266,35 @@ export async function startAccount(): Promise<void> {
   await loadData(!hasFarm)
 }
 
-async function afterSignIn(info: AccountInfo) {
+async function afterSignIn(info: AccountInfo, password: string) {
   account.needsSetup = false
-  account.loading = 'loading'
-  await rememberUser(info.user)
+  await rememberAccount(info.user, info.farms)
   startSyncing()
+  if (info.user.mustChangePassword) {
+    // First sign-in with a temporary password: the new-password screen comes first.
+    account.temporaryPassword = password
+    return
+  }
   await loadData(true)
 }
 
 /** Create the first account (the installation owner) and send this device's data. */
 export async function createAdministrator(username: string, password: string): Promise<void> {
-  await afterSignIn(await createOwner(username, password))
+  await afterSignIn(await createOwner(username, password), password)
 }
 
 export async function signIn(username: string, password: string): Promise<void> {
-  await afterSignIn(await signInCall(username, password))
+  await afterSignIn(await signInCall(username, password), password)
 }
 
 export async function changePassword(current: string, next: string): Promise<void> {
+  const wasTemporary = !!account.user?.mustChangePassword
   const info = await changePasswordCall(current, next)
-  await rememberUser(info.user)
+  account.temporaryPassword = ''
+  await rememberAccount(info.user, info.farms)
+  if (wasTemporary) {
+    await loadData(true) // now their data may come
+  }
 }
 
 /**

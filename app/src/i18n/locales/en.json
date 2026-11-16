@@ -146,7 +146,8 @@
     "unknownField": "Deleted field",
     "extractionLine": "{{olives}} kg olives → {{oil}} kg oil",
     "prevYear": "Previous year",
-    "nextYear": "Next year"
+    "nextYear": "Next year",
+    "loggedBy": "Logged by {{name}}"
   },
   "settings": {
     "title": "Settings",
@@ -177,6 +178,7 @@
     "about": "About",
     "version": "Version {{version}} · open source (MIT)",
     "storageNote": "Your data is stored on this device. Export a backup regularly until server sync is available.",
+    "storageNoteServer": "Everything is saved on the server, which keeps daily backups. You can also export a copy of this grove.",
     "oilSection": "Mill and oil",
     "mills": "Mills",
     "addMill": "Add mill",
@@ -506,6 +508,71 @@
     "groveOpened": "Grove opened",
     "groveRemoveHelp": "Remove the grove “{{name}}”? It has no data, so nothing is lost. It is removed from the server and every device.",
     "groveRemoved": "“{{name}}” removed",
-    "groveNotEmpty": "This grove holds data, so it cannot be removed."
+    "groveNotEmpty": "This grove holds data, so it cannot be removed.",
+    "noGroveTitle": "You are not in a grove yet",
+    "noGroveHelp": "Ask the grove’s administrator to add you. Then open the app again.",
+    "newPasswordTitle": "Choose your own password",
+    "newPasswordHelp": "You signed in with a temporary password. Choose your own; only you will know it.",
+    "temporaryPassword": "Temporary password",
+    "savePassword": "Save my password",
+    "errorSameAsTemporary": "Choose a password different from the temporary one.",
+    "errorTemporary": "The temporary password is wrong."
+  },
+  "users": {
+    "title": "People",
+    "help": "Who can use this grove, and what each person may see and change.",
+    "admin": "Administrator",
+    "user": "Limited",
+    "owner": "owner",
+    "you": "you",
+    "waiting": "waiting for a new password",
+    "edit": "Change",
+    "role": "Access",
+    "adminHelp": "Administrators can see and change everything, and manage people.",
+    "preset": "Ready-made choices",
+    "presets": {
+      "worker": "Worker",
+      "family": "Family",
+      "accountant": "Accountant",
+      "custom": "Custom"
+    },
+    "presetHelp": {
+      "worker": "Logs field work in Today and the Journal. Sees nothing about oil or money.",
+      "family": "Logs work and oil, sees money and reports. Cannot change money or settings.",
+      "accountant": "Sees oil, money and reports. Cannot change anything."
+    },
+    "areas": {
+      "work": "Work (Today, Journal)",
+      "oil": "Oil",
+      "money": "Money",
+      "reports": "Reports",
+      "settings": "Settings"
+    },
+    "levels": {
+      "none": "No",
+      "see": "See",
+      "change": "Change"
+    },
+    "addPerson": "Add a person",
+    "add": "Add",
+    "suggest": "Suggest",
+    "temporaryHelp": "Pick any password, or keep the suggested one. They will choose their own when they first sign in.",
+    "ownGrove": "Starts their own grove (their own administrator)",
+    "ownGroveHelp": "They will set up a new grove of their own and will not see this one.",
+    "newPassword": "New temporary password",
+    "remove": "Remove from grove",
+    "removeHelp": "{{name}} will no longer see this grove. What they logged stays.",
+    "handOverTitle": "Give these to {{name}}",
+    "handOverName": "Username:",
+    "handOverPassword": "Temporary password:",
+    "handOverHelp": "They sign in at this same address and then choose their own password.",
+    "handOverOwnGrove": "They sign in at this same address, choose their own password and set up their grove.",
+    "errorTaken": "That username is already used. Choose another.",
+    "errorLastAdmin": "The grove needs at least one administrator.",
+    "errorOwner": "The owner always stays an administrator.",
+    "errorNotAllowed": "You are not allowed to do that.",
+    "errorAlreadyMember": "This person is already in the grove. Use Change next to their name.",
+    "existingTitle": "{{name}} was added",
+    "existingHelp": "They already had an account, so they keep their own password. They will see this grove the next time the app syncs."
   }
 }

@@ -104,6 +104,14 @@ Both need HTTPS, because browsers only allow offline mode and "install app" over
 - **Signing in on a new device**: a loading screen stays until the account's data has arrived (with "try again" if it fails); the first-time setup is never shown then, so nobody starts an empty grove by mistake. Every device syncs all the groves of the account; when the app opens, an empty open grove gives way to one that has data. Settings → Account lists the groves when there is more than one, to open another or remove an empty one (refused by the server for a grove with data).
 - **Without a server** (e.g. `npm run preview`, or v0.4 deployments) the app works on its own as before.
 
+### People and permissions — v0.5b
+
+- **Roles**: in each grove a person is an **administrator** (sees and changes everything, manages people) or a **user** with a level per area: *no*, *see* or *change*. Areas: **Work** (Today and the Journal), **Oil**, **Money**, **Reports** (see only) and **Settings**. Ready-made sets: **Worker** (changes work, nothing else), **Family** (changes work and oil, sees money, reports and settings), **Accountant** (sees oil, money and reports, changes nothing). The rules live in `src/core/access.ts`, shared by the app and the server.
+- **The server enforces them**: a sync only sends the tables a person may see (`readableTables`), so data they may not see never reaches their phone, and it refuses changes to tables they may not change (`writableTables`) by sending its own version back. The app hides pages and buttons to match, removes tables that are no longer allowed, and reloads the grove when someone's access changes.
+- **Adding someone** (Settings → People, administrators only): a username and a **temporary password**, typed by the administrator or suggested (two Greeklish words and a number, e.g. `elia-ladi-27`). The screen then shows what to hand over. At the first sign-in they must choose their own password before anything syncs. An administrator can give a new temporary password later (this signs them out everywhere), change their access, or remove them from the grove; what they logged stays.
+- **Safety**: the installation owner always stays an administrator, and a grove always keeps at least one administrator. Only the owner can add a person who already has an account in another grove (they keep their own password), and only the owner can create someone who **starts their own grove** as its administrator. A person can be in several groves.
+- **Who logged it**: the server stamps `createdBy` on new work, mill, stock and money records; the Journal shows "Logged by …" for entries made by someone else.
+
 ## Core concepts
 
 The **farming year** (called "season" in the code, *χρονιά* in Greek) is the backbone. It holds all the work that leads to one harvest: it starts with the spring work on **1 March** and ends on the last day of February, so a harvest and mill visits that run into January or February still count for that year's crop. It is named by the year it starts in ("2026"). The start month can be changed in Settings. Field work, mill production and oil stock belong to a farming year; **money is always per calendar year** (1 Jan – 31 Dec), as taxes are. Until v0.4 the year started in October and was labelled "2025–26"; existing farms were moved to March by a database upgrade (v5).
@@ -120,7 +128,7 @@ The **farming year** (called "season" in the code, *χρονιά* in Greek) is t
 | Charge | extraction, charge type, kg (or % applied) | v0.2 |
 | Stock movement | date, vintage, location, kg (+ in / − out), reason (extraction, sale, transfer, own use) | v0.2 |
 | Transaction | date, type (expense / sale / other income), counterparty, category, € amount, kg and €/kg for sales, vintage | v0.3 |
-| User, membership | email, role per farm (owner / editor / viewer) | v0.5 |
+| User, membership | username, password hash, must-change flag; per grove: role (administrator / user) and a level per area (none / see / change) | v0.5b |
 
 Trees remaining in a field for a task = trees in the field − trees logged for that task type in the current season. All task types that record a harvest count together (a tree harvested under one harvest task is not left for another), and share "field finished"; other tasks such as pruning or spraying count on their own. A field also counts as finished when an entry marks it "field finished", because not every tree is harvested every year.
 
@@ -330,5 +338,5 @@ These are planned but not yet scheduled in detail. Open an issue before starting
 3. **v0.3 — Money** ✅: expenses, sales (deducting stock), other income, totals by calendar year.
 4. **v0.4 — Reports** ✅: the four reports above, CSV export.
 5. **v0.5a — Server and sync** ✅: server in the Docker image, administrator account, sign-in, offline sync between devices, daily backups.
-6. **v0.5b — Users**: administrators and users; per page, a user can see it or also change it; ready-made sets (worker, family, accountant); a temporary first password (typed by the admin or suggested as three words) that must be changed at first sign-in; data a user may not see never reaches their phone; the installation owner can create new groves with their own administrator; one person in several groves; the last administrator cannot be removed; entries show who logged them.
+6. **v0.5b — Users** ✅: administrators and users; per page, a user can see it or also change it; ready-made sets (worker, family, accountant); a temporary first password (typed by the admin or suggested) that must be changed at first sign-in; data a user may not see never reaches their phone; the installation owner can create new groves with their own administrator; one person in several groves; the last administrator cannot be removed; entries show who logged them.
 7. **v1.0+**: Android/iOS builds (Capacitor), weather integration, daily reminders, location-aware default field, equipment log, tasks per tree (tree numbers and NFC tags), Labour reports, spreadsheet import, receipt photos, more languages.
