@@ -40,3 +40,13 @@ constants, no nested ternaries, explicit `public`/`private` in classes, multi-wo
 ## Translations
 
 See [Translating](README.md#translating) in the README.
+
+Greek terms used in the app (keep them consistent):
+
+| English | Greek |
+|---|---|
+| mill (olive mill) | ελαιοτριβείο |
+| mill extraction / production run | παραγωγή |
+| farming year (the code's "season") | χρονιά |
+| harvest | μάζεμα |
+| net oil | καθαρό λάδι |

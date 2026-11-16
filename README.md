@@ -11,6 +11,9 @@ Available in **English** and **Ελληνικά**. Works offline on your phone a
 
 ## What it does
 
+Work is grouped by **farming year**: from the spring work (1 March) to the end of the harvest and
+the last mill visit (February), named by its year. Money is counted per calendar year.
+
 ### Reports (v0.4)
 
 - **Fields by season**: oil, oil per tree or harvest per tree for every field and season, shaded so
@@ -19,7 +22,7 @@ Available in **English** and **Ελληνικά**. Works offline on your phone a
 - **Yield through the season**: the yield of each mill visit by date, up to three seasons on one chart,
   to help decide when to harvest.
 - **Cost of your oil**: per calendar year, income, expenses and net result set against the oil of the
-  season that starts that year, giving the cost per kg and the break-even price.
+  same year, giving the cost per kg and the break-even price.
 - **CSV export** of every report, ready for Excel (Greek or English number style).
 
 ### Money (v0.3)
@@ -55,7 +58,7 @@ Available in **English** and **Ελληνικά**. Works offline on your phone a
   tree and per tree in the field. Entering trees is optional; the field's tree count is used instead.
 - **Journal**: day by day, with a month calendar showing a coloured dot for each task type.
   Tap an entry to edit it; delete with undo.
-- **Settings**: fields, units, task types (colour, icon, suggested months), season start month,
+- **Settings**: fields, units, task types (colour, icon, suggested months), farming year start (March),
   optional labour tracking, JSON backup export / restore.
 - Data is stored on the device (IndexedDB) and the app works without signal.
 

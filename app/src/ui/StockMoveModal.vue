@@ -103,7 +103,7 @@ async function saveMove() {
     <label class="label" for="mv-vintage">{{ $t('move.vintage') }}</label>
     <select id="mv-vintage" v-model="vintage" class="input select">
       <option v-for="v in vintages" :key="v" :value="v">
-        {{ seasonLabel(v, farm.settings.seasonStartMonth) }}
+        {{ seasonLabel(v) }}
       </option>
     </select>
     <label class="label" for="mv-from">{{ $t('move.from') }}</label>

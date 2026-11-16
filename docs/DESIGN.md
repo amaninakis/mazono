@@ -96,7 +96,7 @@ Both need HTTPS, because browsers only allow offline mode and "install app" over
 
 ## Core concepts
 
-The **season** is the backbone. A harvest season runs across two calendar years: with the default start month of October, season 2025 runs from 1 Oct 2025 to 30 Sep 2026 and is labelled "2025–26". Field work and extractions belong to a season. Money is reported per calendar year only.
+The **farming year** (called "season" in the code, *χρονιά* in Greek) is the backbone. It holds all the work that leads to one harvest: it starts with the spring work on **1 March** and ends on the last day of February, so a harvest and mill visits that run into January or February still count for that year's crop. It is named by the year it starts in ("2026"). The start month can be changed in Settings. Field work, mill production and oil stock belong to a farming year; **money is always per calendar year** (1 Jan – 31 Dec), as taxes are. Until v0.4 the year started in October and was labelled "2025–26"; existing farms were moved to March by a database upgrade (v5).
 
 | Entity | Key fields | Status |
 | --- | --- | --- |
@@ -204,7 +204,7 @@ Here n is the number of units of type u in entry i, and w is that unit's weight.
 | Oil sale | date, buyer, kg, €/kg → total, optional fee (% or €), vintage + location sold from | Deducts from that stock; warns if stock would go negative. Default = oldest vintage at the mill. The fee is remembered per buyer. |
 | Other income | date, source, € amount, category (subsidy, VAT refund, other) | Autocomplete like expenses. |
 
-Totals per **calendar year**: income, expenses, net result, and the value of remaining stock at the last sale price. Seasons are used only for field work and mill extractions. An optional tax estimate % shows an after-tax figure.
+Totals per **calendar year**: income, expenses, net result, and the value of remaining stock at the last sale price. Farming years are used only for field work, mill production and oil stock. An optional tax estimate % shows an after-tax figure.
 
 **How v0.3 implements it**
 
@@ -223,7 +223,7 @@ Totals per **calendar year**: income, expenses, net result, and the value of rem
 1. **Field × season comparison**: oil kg, oil per tree or units per tree, by field and season. Shows alternate bearing at a glance.
 2. **Season totals over the years**: olives, oil, net oil and yield per season.
 3. **Yield through the season**: yield of each extraction by date, to help decide when to harvest.
-4. **Cost of your oil (per calendar year)**: income, expenses, net; cost per kg of net oil; break-even price. Money stays per calendar year, so each year is set against the oil of the season that *starts* in it (with an October start, the 2025 costs of pruning, spraying and harvest produce the 2025–26 oil). Cost per kg = expenses ÷ net oil; break-even price = (expenses − other income) ÷ net oil.
+4. **Cost of your oil (per calendar year)**: income, expenses, net; cost per kg of net oil; break-even price. Money stays per calendar year and is set against the oil of the farming year with the same number: the 2026 costs of pruning, spraying and harvest produce the 2026 oil (including mill visits in January–February 2027). Cost per kg = expenses ÷ net oil; break-even price = (expenses − other income) ÷ net oil.
 
 How they work:
 - All four are on one Reports page (More → Reports), one tab each, with a short plain-words explanation and an empty-state hint.
@@ -289,7 +289,7 @@ These are planned but not yet scheduled in detail. Open an issue before starting
 | Users | Multiple users. One installation hosts many farms, each with its own group of users. |
 | Harvest split | One day's harvest can be split across several extractions. |
 | Unit weights | Optional; the app calculates them from collected data. |
-| Season start | 1 October by default (configurable). |
+| Farming year | Starts 1 March (spring work) and ends in February, named by its year ("2026"); configurable. Money uses calendar years. |
 | Labour | Opt-in module, off by default. |
 | Fertilizer cost per field | Not included. |
 | Spreadsheet import | To be decided; maybe selected seasons, or test data only. |
@@ -306,7 +306,7 @@ These are planned but not yet scheduled in detail. Open an issue before starting
 | Trees are not all harvested every year | "Field finished" closes a field for the season regardless of the count. |
 | Harvest and pruning seasons overlap | Default by active months, then by the most recently logged task. |
 | Data only on one phone can be lost | Offline-first with server sync (v0.5), scheduled backups and one-tap export. |
-| Harvest season ≠ tax year | Field work and oil use seasons; money uses calendar years. |
+| Farming year ≠ tax year | Field work and oil use farming years (March–February); money uses calendar years. |
 
 ## Roadmap
 

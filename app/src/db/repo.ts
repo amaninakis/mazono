@@ -206,7 +206,7 @@ export async function createFarm(
         farmId,
         language,
         yieldFormat: 'ratio',
-        seasonStartMonth: 10,
+        seasonStartMonth: 3,
         labourEnabled: false,
         setupDone: false,
       })

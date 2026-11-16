@@ -46,7 +46,7 @@ function percent(value: number) {
 }
 
 function season(year: number) {
-  return seasonLabel(year, startMonth.value)
+  return seasonLabel(year)
 }
 
 function unitById(id: string) {
@@ -490,7 +490,7 @@ const hasData = computed(() => {
       <!-- 4. money -->
       <template v-else>
         <article v-for="row in economics" :key="row.year" class="year-card">
-          <h3>{{ row.year }} · {{ $t('reports.oilOf', { season: season(row.year) }) }}</h3>
+          <h3>{{ row.year }}</h3>
           <div class="hero-row">
             <div>
               <span class="muted small">{{ $t('reports.costPerKg') }}</span>

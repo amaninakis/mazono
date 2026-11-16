@@ -117,7 +117,7 @@ describe('seasonHistory and yieldThroughSeason', () => {
     const seasons = yieldThroughSeason(extractions)
 
     expect(seasons.map((x) => x.season)).toEqual([2026, 2025])
-    expect(seasons[1].points[0]).toMatchObject({ day: 45, yield: 0.2, acidity: 0.3 })
+    expect(seasons[1].points[0]).toMatchObject({ day: 259, yield: 0.2, acidity: 0.3 }) // 15 Nov = day 259 from 1 March
   })
 })
 

@@ -214,7 +214,7 @@ async function removeMove(movement: StockMovement) {
         :aria-label="$t('oil.season')"
       >
         <option v-for="s in seasons" :key="s" :value="s">
-          {{ $t('oil.season') }} {{ seasonLabel(s, startMonth) }}
+          {{ $t('oil.season') }} {{ seasonLabel(s) }}
         </option>
       </select>
     </header>
@@ -225,7 +225,7 @@ async function removeMove(movement: StockMovement) {
 
     <!-- Season totals -->
     <section v-if="totals.count" class="card">
-      <h2>{{ $t('oil.total') }} · {{ seasonLabel(season, startMonth) }}</h2>
+      <h2>{{ $t('oil.total') }} · {{ seasonLabel(season) }}</h2>
       <table class="kv">
         <tbody>
           <tr>
@@ -318,7 +318,7 @@ async function removeMove(movement: StockMovement) {
           </thead>
           <tbody>
             <tr v-for="r in stockRows" :key="r.vintage">
-              <th>{{ seasonLabel(r.vintage, startMonth) }}</th>
+              <th>{{ seasonLabel(r.vintage) }}</th>
               <td v-for="l in usedLocations" :key="l.id">
                 {{ r.byLoc[l.id] ? fmt(r.byLoc[l.id]) : '–' }}
               </td>
@@ -353,8 +353,7 @@ async function removeMove(movement: StockMovement) {
         <ul class="list moves">
           <li v-for="mv in movements" :key="(mv.movement ?? mv.sale)!.id" class="row-between">
             <span>
-              <small class="muted"
-                >{{ day(mv.date) }} · {{ seasonLabel(mv.vintage, startMonth) }}</small
+              <small class="muted">{{ day(mv.date) }} · {{ seasonLabel(mv.vintage) }}</small
               ><br />
               <template v-if="mv.movement">{{ moveLine(mv.movement) }}</template>
               <RouterLink v-else :to="`/money/${mv.sale!.id}`">

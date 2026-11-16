@@ -300,6 +300,7 @@ async function confirmImport() {
       >
         <option v-for="m in months" :key="m.number" :value="m.number">{{ m.long }}</option>
       </select>
+      <p class="muted small">{{ $t('settings.seasonStartHelp') }}</p>
     </section>
 
     <section class="card">

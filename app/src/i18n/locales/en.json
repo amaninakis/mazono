@@ -60,7 +60,7 @@
   "setup": {
     "welcome": "Welcome to HarvestLog",
     "tagline": "Harvesting olives is hard work. Keeping track of it shouldn't be.",
-    "intro": "Log field work in seconds, then follow your olive oil production season by season. Everything is stored on this device and works without signal.",
+    "intro": "Log field work in seconds, then follow your olive oil production year by year. Everything is stored on this device and works without signal.",
     "language": "Language",
     "farmName": "Farm name",
     "farmNamePlaceholder": "My olive grove",
@@ -105,7 +105,7 @@
     "productPlaceholder": "e.g. 20-10-10",
     "amount": "Amount",
     "fieldFinished": "Field finished",
-    "fieldFinishedHelp": "Close this field for the season, even if trees are left.",
+    "fieldFinishedHelp": "Close this field for the year, even if trees are left.",
     "notes": "Notes",
     "workers": "Workers",
     "hours": "Hours",
@@ -114,14 +114,14 @@
     "updated": "Entry updated",
     "perTree": "{{value}} {{unit}} / tree",
     "treesDoneLeft": "{{done}} trees · {{left}} left",
-    "fieldClosed": "{{field}} is finished for this season",
+    "fieldClosed": "{{field}} is finished for this year",
     "newTaskTitle": "New task type",
     "newTaskName": "Task name",
     "newTaskKind": "What do you record?",
     "create": "Create",
     "todayTreeYield": "Today: {{value}} per tree",
-    "seasonTreeYield": "{{field}} this season: {{value}} per harvested tree",
-    "seasonFieldYield": "{{field}} this season: {{value}} per tree in the field",
+    "seasonTreeYield": "{{field}} this year: {{value}} per harvested tree",
+    "seasonFieldYield": "{{field}} this year: {{value}} per tree in the field",
     "addHalf": "Add half",
     "moreFields": "More fields",
     "prevFields": "Previous fields",
@@ -157,7 +157,7 @@
     "yieldFormat": "Show oil yield as",
     "yieldRatio": "Ratio (1/4.3)",
     "yieldPercent": "Percent (23.2%)",
-    "seasonStart": "Season starts in",
+    "seasonStart": "The farming year starts in",
     "modules": "Optional modules",
     "labour": "Labour tracking",
     "labourHelp": "Record workers and hours for each task.",
@@ -196,7 +196,8 @@
     "taxPercent": "Tax estimate (% of a profit, optional)",
     "expenseCategories": "Expense categories",
     "incomeCategories": "Income categories",
-    "addCategory": "Add category"
+    "addCategory": "Add category",
+    "seasonStartHelp": "A year holds all the work that leads to its oil: from spring work to the end of the harvest and the last mill visit (until the end of February when it starts in March). Money is always counted per calendar year."
   },
   "chargeType": {
     "millFee": "Mill fee",
@@ -208,10 +209,10 @@
     "home": "At home"
   },
   "oil": {
-    "season": "Season",
+    "season": "Year",
     "newExtraction": "New extraction",
     "extractions": "Extractions",
-    "noExtractions": "No mill extractions this season yet.",
+    "noExtractions": "No mill extractions this year yet.",
     "olives": "Olives",
     "oil": "Oil",
     "yield": "Yield",
@@ -267,7 +268,7 @@
   "move": {
     "transferTitle": "Move oil",
     "ownUseTitle": "Own use or gift",
-    "vintage": "Oil of season",
+    "vintage": "Oil of year",
     "from": "From",
     "to": "To",
     "kg": "Kg",
@@ -340,7 +341,7 @@
     "newCategoryName": "Name of the category",
     "inYear": "In {{period}}",
     "untrackedOption": "{{season}} · not recorded in the app",
-    "untrackedHelp": "The app has no extractions for season {{season}}, so this sale counts as income but does not reduce the oil in stock. If you enter that season’s extractions later, the sale will be taken from its stock automatically.",
+    "untrackedHelp": "The app has no extractions for {{season}}, so this sale counts as income but does not reduce the oil in stock. If you enter that year’s extractions later, the sale will be taken from its stock automatically.",
     "notFromStock": "not from recorded stock",
     "fee": "Fee (optional)",
     "received": "You receive",
@@ -349,25 +350,25 @@
   "reports": {
     "tab": {
       "fields": "Fields",
-      "seasons": "Seasons",
+      "seasons": "Years",
       "yield": "Yield",
       "money": "Costs"
     },
     "title": {
-      "fields": "Fields by season",
-      "seasons": "Seasons over the years",
-      "yield": "Yield through the season",
+      "fields": "Fields by year",
+      "seasons": "Years side by side",
+      "yield": "Yield through the year",
       "money": "Cost of your oil"
     },
     "about": {
-      "fields": "How much each field gave each season. Darker cells mean more, so good and poor years stand out.",
-      "seasons": "Net oil you kept each season, after the mill’s charges.",
+      "fields": "How much each field gave each year. Darker cells mean more, so good and poor years stand out.",
+      "seasons": "Net oil you kept each year, after the mill’s charges.",
       "yield": "Oil from each mill visit as a share of the olives, by date. Use it to see when the olives give the most oil.",
-      "money": "Money per calendar year, set against the oil of the season that starts that year."
+      "money": "Expenses and income of each calendar year, set against the oil of the same year."
     },
     "empty": {
       "fields": "Log harvests (and mill extractions) to compare your fields.",
-      "seasons": "Add a mill extraction to see season totals.",
+      "seasons": "Add a mill extraction to see the year’s totals.",
       "yield": "Add mill extractions with olive and oil kg to see the yield.",
       "money": "Add expenses or sales, or a mill extraction, to see the cost of your oil."
     },
@@ -381,8 +382,7 @@
     "fieldCellDetail": "{{field}} · {{season}}: {{oil}} kg oil from {{units}}, {{trees}} trees",
     "seasonBarDetail": "{{net}} kg net ({{oil}} kg oil from {{olives}} kg olives, yield {{yield}})",
     "kgNote": "All amounts in kg. Tap a bar for details.",
-    "yieldNote": "Up to three recent seasons. Tap a point for its date, yield and acidity.",
-    "oilOf": "oil of {{season}}",
+    "yieldNote": "Up to three recent years. Tap a point for its date, yield and acidity.",
     "costPerKg": "Cost per kg of oil",
     "breakEven": "Break-even price",
     "netOilOfSeason": "Net oil (kg)",

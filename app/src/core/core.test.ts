@@ -80,15 +80,17 @@ function entry(overrides: Partial<TaskEntry>): TaskEntry {
 
 describe('seasons', () => {
   it('starts in October by default', () => {
-    expect(seasonOf('2025-10-01')).toBe(2025)
-    expect(seasonOf('2025-09-30')).toBe(2024)
+    expect(seasonOf('2025-03-01')).toBe(2025)
+    expect(seasonOf('2025-02-28')).toBe(2024)
     expect(seasonOf('2026-01-10')).toBe(2025)
+    expect(seasonOf('2025-10-01', 10)).toBe(2025)
+    expect(seasonOf('2025-09-30', 10)).toBe(2024)
   })
 
   it('labels and ranges', () => {
-    expect(seasonLabel(2025)).toBe('2025–26')
-    expect(seasonLabel(2025, 1)).toBe('2025')
-    expect(seasonRange(2025)).toEqual(['2025-10-01', '2026-09-30'])
+    expect(seasonLabel(2025)).toBe('2025')
+    expect(seasonRange(2025)).toEqual(['2025-03-01', '2026-02-28'])
+    expect(seasonRange(2027)).toEqual(['2027-03-01', '2028-02-29'])
   })
 
   it('adds days across months', () => {
@@ -145,7 +147,7 @@ describe('field progress', () => {
       fields,
       [entry({ taskTypeId: 'w', fieldId: 'A', fieldFinished: true })],
       weeding,
-      '2026-04-02',
+      '2026-02-02',
     )
 
     expect(rows[0]).toMatchObject({ remaining: null, finished: true })
@@ -385,7 +387,6 @@ describe('harvest tasks share one tree count', () => {
 describe('isCompleteTypedDate', () => {
   it('is complete once the year is typed', () => {
     expect(isCompleteTypedDate('16/2/2026', 'el-GR')).toBe(true)
-    expect(isCompleteTypedDate('16/2/26', 'el-GR')).toBe(true)
     expect(isCompleteTypedDate('2026-02-16', 'el-GR')).toBe(true)
     expect(isCompleteTypedDate('2/16/2026', 'en-US')).toBe(true)
   })
@@ -393,6 +394,7 @@ describe('isCompleteTypedDate', () => {
   it('waits while the date is still being typed', () => {
     expect(isCompleteTypedDate('16/2', 'el-GR')).toBe(false)
     expect(isCompleteTypedDate('16/2/2', 'el-GR')).toBe(false)
+    expect(isCompleteTypedDate('16/2/20', 'el-GR')).toBe(false)
     expect(isCompleteTypedDate('16/2/202', 'el-GR')).toBe(false)
     expect(isCompleteTypedDate('2026-02-1', 'el-GR')).toBe(false)
   })

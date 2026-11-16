@@ -46,7 +46,7 @@ export function fieldSeasonReport(
   extractions: Extraction[],
   units: Unit[],
   harvestTypeIds: Set<string>,
-  seasonStartMonth = 10,
+  seasonStartMonth = 3,
 ): FieldSeasonReport {
   const cells = new Map<string, Record<number, FieldSeasonCell>>()
   function cell(fieldId: string, season: number) {
@@ -120,7 +120,7 @@ export interface SeasonHistoryRow {
 /** Mill totals for every season with extractions, oldest first. */
 export function seasonHistory(
   extractions: Extraction[],
-  seasonStartMonth = 10,
+  seasonStartMonth = 3,
 ): SeasonHistoryRow[] {
   const seasons = new Set(live(extractions).map((x) => seasonOf(x.date, seasonStartMonth)))
 
@@ -157,7 +157,7 @@ export interface YieldPoint {
 /** Yield of each extraction by date, grouped by season (newest season first). */
 export function yieldThroughSeason(
   extractions: Extraction[],
-  seasonStartMonth = 10,
+  seasonStartMonth = 3,
 ): { season: number; points: YieldPoint[] }[] {
   const bySeason = new Map<number, YieldPoint[]>()
   for (const x of live(extractions)) {
@@ -228,7 +228,7 @@ export interface YearEconomics {
 export function yearEconomics(
   transactions: Transaction[],
   extractions: Extraction[],
-  seasonStartMonth = 10,
+  seasonStartMonth = 3,
 ): YearEconomics[] {
   const netBySeason: Record<number, number> = {}
   for (const x of live(extractions)) {

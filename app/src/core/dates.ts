@@ -32,26 +32,27 @@ export function monthOf(isoDate: ISODate): number {
  * Start year of the season a date belongs to. Season 2025 = 1 Oct 2025 – 30 Sep 2026 (start
  * month 10).
  */
-export function seasonOf(isoDate: ISODate, startMonth = 10): number {
+/**
+ * The farming year a date belongs to, named by the year it starts in. By default it runs
+ * from 1 March (spring work) to the end of February, so a harvest that goes on into January
+ * or February still counts for the year whose crop it is.
+ */
+export function seasonOf(isoDate: ISODate, startMonth = 3): number {
   const year = Number(isoDate.slice(0, 4))
   return monthOf(isoDate) >= startMonth ? year : year - 1
 }
 
-/** First and last day (inclusive) of a season. */
-export function seasonRange(startYear: number, startMonth = 10): [ISODate, ISODate] {
+/** First and last day (inclusive) of a farming year. */
+export function seasonRange(startYear: number, startMonth = 3): [ISODate, ISODate] {
   const start = `${startYear}-${pad(startMonth)}-01`
   const end = addDays(`${startYear + 1}-${pad(startMonth)}-01`, -1)
 
   return [start, end]
 }
 
-/** '2025–26', or '2025' when the season starts in January. */
-export function seasonLabel(startYear: number, startMonth = 10): string {
-  if (startMonth === 1) {
-    return String(startYear)
-  }
-
-  return `${startYear}–${String(startYear + 1).slice(2)}`
+/** A farming year is named by the year it starts in: "2026". */
+export function seasonLabel(startYear: number): string {
+  return String(startYear)
 }
 
 /** Days of the month grid, Monday first, padded with nulls. */
@@ -147,9 +148,10 @@ export function parseTypedDate(text: string, locale: string, today: ISODate): IS
 }
 
 /**
- * True when typed text already holds a whole date with its year (e.g. "16/2/2026", "16/2/26"
- * or "2026-02-16"), so the app can use it straight away instead of waiting for the user to
- * leave the box. "16/2" (no year yet) or "16/2/2" (year still being typed) are not complete.
+ * True when typed text already holds a whole date with a four-digit year (e.g. "16/2/2026" or
+ * "2026-02-16"), so the app can use it straight away instead of waiting for the user to leave
+ * the box. "16/2", "16/2/2" or "16/2/20" are not complete: "20" may be the start of "2027".
+ * (A two-digit year still works on Enter or when leaving the box.)
  */
 export function isCompleteTypedDate(text: string, locale: string): boolean {
   const numbers = text
@@ -164,5 +166,5 @@ export function isCompleteTypedDate(text: string, locale: string): boolean {
   }
   const year = numbers[dateFieldOrder(locale).indexOf('year')]
 
-  return year.length === 2 || year.length === 4
+  return year.length === 4
 }

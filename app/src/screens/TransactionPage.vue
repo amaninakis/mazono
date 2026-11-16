@@ -257,7 +257,7 @@ function setFee(value: number | null) {
 
 function sourceLabel(isoDate: { vintage: number; locationId: string; kg: number }) {
   const location = farm.value.locations.find((x) => x.id === isoDate.locationId)
-  return `${seasonLabel(isoDate.vintage, startMonth)} · ${location ? locationName(translate, location) : '?'} (${fmt(isoDate.kg)})`
+  return `${seasonLabel(isoDate.vintage)} · ${location ? locationName(translate, location) : '?'} (${fmt(isoDate.kg)})`
 }
 
 /* ---------- save ---------- */
@@ -385,11 +385,11 @@ async function remove() {
             {{ sourceLabel(s) }}
           </option>
           <option v-for="v in untrackedSeasons" :key="`u${v}`" :value="`${v}|${UNTRACKED}`">
-            {{ $t('tx.untrackedOption', { season: seasonLabel(v, startMonth) }) }}
+            {{ $t('tx.untrackedOption', { season: seasonLabel(v) }) }}
           </option>
         </select>
         <p v-if="chosen?.untracked" class="notice">
-          {{ $t('tx.untrackedHelp', { season: seasonLabel(chosen.vintage, startMonth) }) }}
+          {{ $t('tx.untrackedHelp', { season: seasonLabel(chosen.vintage) }) }}
         </p>
         <label class="label" for="tx-kg">{{ $t('tx.kg') }}</label>
         <NumberStepper
