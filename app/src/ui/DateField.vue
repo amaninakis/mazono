@@ -1,7 +1,13 @@
 <script setup lang="ts">
 import { useTranslation } from 'i18next-vue'
 import { computed, ref, useTemplateRef, watch } from 'vue'
-import { isCompleteTypedDate, parseISODate, parseTypedDate, todayISO } from '../core/dates'
+import {
+  addDays,
+  isCompleteTypedDate,
+  parseISODate,
+  parseTypedDate,
+  todayISO,
+} from '../core/dates'
 import { formatLocale } from '../i18n'
 import CalendarPicker from './CalendarPicker.vue'
 
@@ -10,7 +16,8 @@ import CalendarPicker from './CalendarPicker.vue'
  * Tapping the box selects the date in it, so typing or pasting replaces it. A date is used as
  * soon as it is fully typed (with its year), so the rest of the page updates straight away.
  */
-const props = defineProps<{ id?: string; max?: string; label?: string }>()
+/** `arrows` adds ‹ › buttons that move the date one day back or forward. */
+const props = defineProps<{ id?: string; max?: string; label?: string; arrows?: boolean }>()
 const model = defineModel<string>({ required: true })
 const { t: translate } = useTranslation()
 const input = useTemplateRef<HTMLInputElement>('input')
@@ -115,6 +122,20 @@ function onTap(event: MouseEvent) {
   })
 }
 
+const canGoForward = computed(() => !props.max || !model.value || model.value < props.max)
+
+/** Move the date one day back (-1) or forward (+1). */
+function shiftDay(delta: number) {
+  const next = addDays(model.value || todayISO(), delta)
+  if (props.max && next > props.max) {
+    return
+  }
+  typing = false
+  error.value = ''
+  model.value = next
+  text.value = formatDate(next)
+}
+
 function toggleCalendar() {
   if (!calendarOpen.value && typing) {
     commit()
@@ -135,33 +156,54 @@ function onPick(isoDate: string) {
 
 <template>
   <div ref="wrap" class="date-wrap">
-    <div class="date-field" :class="{ invalid: error }">
-      <input
-        :id="id"
-        ref="input"
-        v-model="text"
-        type="text"
-        class="date-text"
-        autocomplete="off"
-        :placeholder="example"
-        :aria-label="label"
-        :aria-invalid="!!error"
-        @focus="onFocus"
-        @pointerdown="onPress"
-        @click="onTap"
-        @input="onInput"
-        @change="commit"
-        @keydown.enter.prevent="commit"
-      />
+    <div class="date-line">
       <button
+        v-if="arrows"
         type="button"
-        class="date-button"
-        :aria-label="$t('common.openCalendar')"
-        :aria-expanded="calendarOpen"
-        :title="$t('common.openCalendar')"
-        @click="toggleCalendar"
+        class="icon-btn date-step"
+        :aria-label="$t('journal.prevDay')"
+        @click="shiftDay(-1)"
       >
-        <span aria-hidden="true">📅</span>
+        ‹
+      </button>
+      <div class="date-field" :class="{ invalid: error }">
+        <input
+          :id="id"
+          ref="input"
+          v-model="text"
+          type="text"
+          class="date-text"
+          autocomplete="off"
+          :placeholder="example"
+          :aria-label="label"
+          :aria-invalid="!!error"
+          @focus="onFocus"
+          @pointerdown="onPress"
+          @click="onTap"
+          @input="onInput"
+          @change="commit"
+          @keydown.enter.prevent="commit"
+        />
+        <button
+          type="button"
+          class="date-button"
+          :aria-label="$t('common.openCalendar')"
+          :aria-expanded="calendarOpen"
+          :title="$t('common.openCalendar')"
+          @click="toggleCalendar"
+        >
+          <span aria-hidden="true">📅</span>
+        </button>
+      </div>
+      <button
+        v-if="arrows"
+        type="button"
+        class="icon-btn date-step"
+        :aria-label="$t('journal.nextDay')"
+        :disabled="!canGoForward"
+        @click="shiftDay(1)"
+      >
+        ›
       </button>
     </div>
     <CalendarPicker

@@ -147,7 +147,9 @@
     "nextMonth": "Επόμενος μήνας",
     "goToday": "Σήμερα",
     "unknownField": "Διαγραμμένο χωράφι",
-    "extractionLine": "{{olives}} κιλά ελιές → {{oil}} κιλά λάδι"
+    "extractionLine": "{{olives}} κιλά ελιές → {{oil}} κιλά λάδι",
+    "prevYear": "Προηγούμενο έτος",
+    "nextYear": "Επόμενο έτος"
   },
   "settings": {
     "title": "Ρυθμίσεις",

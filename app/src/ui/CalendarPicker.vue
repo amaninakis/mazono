@@ -39,7 +39,14 @@ const canGoForward = computed(() => {
 })
 
 function shiftMonth(delta: number) {
-  const index = shown.value[0] * 12 + (shown.value[1] - 1) + delta
+  let index = shown.value[0] * 12 + (shown.value[1] - 1) + delta
+  if (props.max) {
+    // Never past the month of the last allowed day.
+    index = Math.min(
+      index,
+      Number(props.max.slice(0, 4)) * 12 + Number(props.max.slice(5, 7)) - 1,
+    )
+  }
   shown.value = [Math.floor(index / 12), (index % 12) + 1]
 }
 
@@ -84,25 +91,46 @@ onBeforeUnmount(() => {
 
 <template>
   <div ref="panel" class="calendar-pop" role="dialog" :aria-label="title">
-    <div class="row-between">
-      <button
-        type="button"
-        class="icon-btn"
-        :aria-label="$t('journal.prevMonth')"
-        @click="shiftMonth(-1)"
-      >
-        ‹
-      </button>
+    <div class="row-between month-nav">
+      <span>
+        <button
+          type="button"
+          class="icon-btn"
+          :aria-label="$t('journal.prevYear')"
+          @click="shiftMonth(-12)"
+        >
+          «
+        </button>
+        <button
+          type="button"
+          class="icon-btn"
+          :aria-label="$t('journal.prevMonth')"
+          @click="shiftMonth(-1)"
+        >
+          ‹
+        </button>
+      </span>
       <strong class="cap">{{ title }}</strong>
-      <button
-        type="button"
-        class="icon-btn"
-        :aria-label="$t('journal.nextMonth')"
-        :disabled="!canGoForward"
-        @click="shiftMonth(1)"
-      >
-        ›
-      </button>
+      <span>
+        <button
+          type="button"
+          class="icon-btn"
+          :aria-label="$t('journal.nextMonth')"
+          :disabled="!canGoForward"
+          @click="shiftMonth(1)"
+        >
+          ›
+        </button>
+        <button
+          type="button"
+          class="icon-btn"
+          :aria-label="$t('journal.nextYear')"
+          :disabled="!canGoForward"
+          @click="shiftMonth(12)"
+        >
+          »
+        </button>
+      </span>
     </div>
     <div class="cal-grid">
       <span v-for="(weekday, i) in weekdays" :key="`w${i}`" class="cal-wd">{{ weekday }}</span>

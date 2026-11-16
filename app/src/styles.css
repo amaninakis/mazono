@@ -319,6 +319,9 @@ button, input, select, textarea { font: inherit; color: inherit; }
 .learned { flex-basis: 100%; }
 
 /* Date field: app-formatted date with the native picker invisibly on top */
+.date-line { display: inline-flex; align-items: center; gap: 4px; }
+.date-step { min-width: 40px; min-height: 40px; font-size: 1.4rem; }
+.date-step:disabled { opacity: 0.3; }
 .date-wrap { position: relative; display: inline-flex; flex-direction: column; align-items: flex-end; gap: 4px; }
 .date-field {
   display: inline-flex; align-items: center;
@@ -338,7 +341,8 @@ button, input, select, textarea { font: inherit; color: inherit; }
   border-radius: 0 10px 10px 0; background: transparent; font-size: 1.1em; cursor: pointer;
 }
 .date-button:hover, .date-button:focus-visible { background: var(--olive-soft); }
-.modal .date-wrap, .modal .date-field { display: flex; width: 100%; }
+.modal .date-wrap, .modal .date-line, .modal .date-field { display: flex; width: 100%; }
+.modal .date-line .date-field { flex: 1; }
 .modal .date-text { flex: 1; }
 
 /* Field picker: two rows that scroll sideways when there are more than four fields */
@@ -471,3 +475,10 @@ button, input, select, textarea { font: inherit; color: inherit; }
 }
 .suggestions li { padding: 12px; border-radius: 8px; cursor: pointer; }
 .suggestions li:hover, .suggestions li.highlighted { background: var(--olive-soft); }
+
+/* Month header with year (« ») and month (‹ ›) buttons */
+.month-nav { display: grid; grid-template-columns: auto 1fr auto; align-items: center; gap: 4px; }
+.month-nav > span { display: inline-flex; gap: 0; }
+.month-nav > strong { text-align: center; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.month-nav .icon-btn { width: 38px; min-width: 38px; height: 40px; }
+.calendar-pop .month-nav > strong { font-size: 0.95rem; }
