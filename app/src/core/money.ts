@@ -15,7 +15,7 @@ export interface Period {
   year: number
 }
 
-export function inPeriod(date: ISODate, period: Period, seasonStartMonth = 10): boolean {
+export function inPeriod(date: ISODate, period: Period, seasonStartMonth = 3): boolean {
   return period.kind === 'year'
     ? Number(date.slice(0, 4)) === period.year
     : seasonOf(date, seasonStartMonth) === period.year
@@ -40,7 +40,7 @@ export interface MoneyTotals {
 export function moneyTotals(
   transactions: Transaction[],
   period: Period,
-  seasonStartMonth = 10,
+  seasonStartMonth = 3,
 ): MoneyTotals {
   let salesGross = 0
   const totals: MoneyTotals = {

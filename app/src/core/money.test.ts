@@ -31,7 +31,8 @@ describe('periods', () => {
   it('season vs calendar year', () => {
     expect(inPeriod('2026-01-10', { kind: 'season', year: 2025 })).toBe(true)
     expect(inPeriod('2026-01-10', { kind: 'year', year: 2025 })).toBe(false)
-    expect(inPeriod('2025-09-30', { kind: 'season', year: 2025 })).toBe(false)
+    expect(inPeriod('2025-02-28', { kind: 'season', year: 2025 })).toBe(false)
+    expect(inPeriod('2025-09-30', { kind: 'season', year: 2025 }, 10)).toBe(false)
   })
 })
 
@@ -78,7 +79,7 @@ describe('money totals', () => {
     tx({ kind: 'expense', party: 'Deleted', amount: 5, deletedAt: 1 }),
   ]
   it('by season', () => {
-    const totals = moneyTotals(list, { kind: 'season', year: 2025 })
+    const totals = moneyTotals(list, { kind: 'season', year: 2025 }, 10)
 
     expect(totals).toMatchObject({
       sales: 1050,

@@ -141,6 +141,19 @@ export class HarvestDB extends Dexie {
           await tx.table('categories').bulkPut(moneyDefaults(farm.id, uuid))
         }
       })
+    // v5: the farming year starts in March (spring work) instead of October, so that a
+    // year holds all the work that leads to its harvest.
+    this.version(5).upgrade(
+      async (tx) =>
+        await tx
+          .table('settings')
+          .toCollection()
+          .modify((settings: { seasonStartMonth?: number }) => {
+            if (settings.seasonStartMonth === 10) {
+              settings.seasonStartMonth = 3
+            }
+          }),
+    )
   }
 }
 

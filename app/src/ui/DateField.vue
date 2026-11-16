@@ -61,11 +61,14 @@ function readTyped(): { date?: string; error?: string } {
 /** While typing: use the date as soon as it is complete and valid. */
 function onInput() {
   typing = true
+  error.value = ''
   if (isCompleteTypedDate(text.value, formatLocale.value)) {
-    const { date } = readTyped()
+    const { date, error: problem } = readTyped()
     if (date && date !== model.value) {
       model.value = date
     }
+    // Say straight away if a whole date cannot be used (e.g. a future harvest day).
+    error.value = problem ?? ''
   }
 }
 
@@ -87,20 +90,29 @@ function commit() {
   text.value = formatDate(date)
 }
 
-// Select the whole date on tap, so typing or pasting replaces it. The first mouseup after
-// focusing would otherwise put the cursor where the finger landed and undo the selection.
-let selectOnMouseUp = false
+// Select the whole date on every tap, so typing or pasting replaces it. Without this the tap
+// would put the cursor (or part of a selection) where the finger landed. If the finger moved,
+// the user is selecting text on purpose, so that selection is kept.
+let pressedAt: [number, number] | null = null
 function onFocus() {
-  selectOnMouseUp = true
   input.value?.select()
 }
 
-function onMouseUp(event: MouseEvent) {
-  if (selectOnMouseUp) {
-    event.preventDefault()
-    input.value?.select()
-    selectOnMouseUp = false
-  }
+function onPress(event: PointerEvent) {
+  pressedAt = [event.clientX, event.clientY]
+}
+
+function onTap(event: MouseEvent) {
+  const moved =
+    !!pressedAt && Math.hypot(event.clientX - pressedAt[0], event.clientY - pressedAt[1]) > 8
+  const before = text.value
+  // After the browser has handled this tap, unless typing has already begun.
+  setTimeout(() => {
+    const box = input.value
+    if (!moved && box && text.value === before && document.activeElement === box) {
+      box.select()
+    }
+  })
 }
 
 function toggleCalendar() {
@@ -135,7 +147,8 @@ function onPick(isoDate: string) {
         :aria-label="label"
         :aria-invalid="!!error"
         @focus="onFocus"
-        @mouseup="onMouseUp"
+        @pointerdown="onPress"
+        @click="onTap"
         @input="onInput"
         @change="commit"
         @keydown.enter.prevent="commit"

@@ -40,7 +40,7 @@ export function fieldProgress(
   entries: TaskEntry[],
   taskType: TaskType,
   date: ISODate,
-  seasonStartMonth = 10,
+  seasonStartMonth = 3,
   excludeEntryId?: string,
   taskTypes: TaskType[] = [taskType],
 ): FieldProgress[] {
@@ -149,7 +149,7 @@ export function fieldSeasonHarvest(
   fieldId: string,
   taskTypeIds: string | string[],
   date: ISODate,
-  seasonStartMonth = 10,
+  seasonStartMonth = 3,
 ): { trees: number; amounts: Record<string, number> } {
   const season = seasonOf(date, seasonStartMonth)
   const typeIds = new Set(typeof taskTypeIds === 'string' ? [taskTypeIds] : taskTypeIds)
@@ -191,7 +191,7 @@ export function harvestYields(
   field: Field,
   taskTypeIds: string | string[],
   date: ISODate,
-  seasonStartMonth = 10,
+  seasonStartMonth = 3,
 ): HarvestYields {
   const { trees, amounts } = fieldSeasonHarvest(
     entries,

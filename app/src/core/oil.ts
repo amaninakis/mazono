@@ -223,10 +223,7 @@ export function batchUnits(x: Pick<Extraction, 'allocations'>): Record<string, n
 /* ---------- stock ---------- */
 
 /** Seasons that have at least one extraction recorded, i.e. whose oil the app knows about. */
-export function trackedVintages(
-  extractions: Extraction[],
-  seasonStartMonth = 10,
-): Set<number> {
+export function trackedVintages(extractions: Extraction[], seasonStartMonth = 3): Set<number> {
   return new Set(live(extractions).map((x) => seasonOf(x.date, seasonStartMonth)))
 }
 
@@ -246,7 +243,7 @@ export function isUntrackedSale(tx: Transaction, tracked: Set<number>): boolean 
 export function stockLevels(
   extractions: Extraction[],
   movements: StockMovement[],
-  seasonStartMonth = 10,
+  seasonStartMonth = 3,
   transactions: Transaction[] = [],
 ): Record<number, Record<string, number>> {
   const stock: Record<number, Record<string, number>> = {}
@@ -300,7 +297,7 @@ export interface SeasonTotals {
 export function seasonTotals(
   extractions: Extraction[],
   season: number,
-  seasonStartMonth = 10,
+  seasonStartMonth = 3,
 ): SeasonTotals {
   const totals: SeasonTotals = {
     count: 0,
