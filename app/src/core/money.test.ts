@@ -5,6 +5,7 @@ import {
   defaultSaleSource,
   feeForBuyer,
   inPeriod,
+  lastSaleAcidity,
   lastSalePrice,
   moneyTotals,
   partyNames,
@@ -244,5 +245,20 @@ describe('sale fees', () => {
 
     expect(feeForBuyer(list, 'mill coop')).toEqual({ kind: 'percent', value: 1 })
     expect(feeForBuyer(list, 'Other')).toBeUndefined()
+  })
+})
+
+describe('lastSaleAcidity', () => {
+  it('suggests the acidity of the latest sale that had one', () => {
+    expect(
+      lastSaleAcidity([
+        tx({ kind: 'sale', date: '2026-01-10', acidity: 0.4 }),
+        tx({ kind: 'sale', date: '2026-03-02', acidity: 0.3 }),
+        tx({ kind: 'sale', date: '2026-05-20' }),
+        tx({ kind: 'expense', date: '2026-06-01' }),
+      ]),
+    ).toBe(0.3)
+
+    expect(lastSaleAcidity([tx({ kind: 'sale' })])).toBeUndefined()
   })
 })
