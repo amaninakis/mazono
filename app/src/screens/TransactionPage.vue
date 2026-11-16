@@ -17,6 +17,7 @@ import { formatLocale } from '../i18n'
 import AppModal from '../ui/AppModal.vue'
 import DateField from '../ui/DateField.vue'
 import { categoryName, locationName, useFarm } from '../ui/farm'
+import NameInput from '../ui/NameInput.vue'
 import NumberStepper from '../ui/NumberStepper.vue'
 import { moneyPeriod } from '../ui/periods'
 import { useSaving } from '../ui/saving'
@@ -56,7 +57,21 @@ const error = ref('')
 const newCategory = ref(false)
 const newCategoryName = ref('')
 
-const names = computed(() => partyNames(farm.value.transactions, kind))
+/**
+ * Names used before: this kind first (most used first), then, once something is typed,
+ * names from the other kinds too (a business may both buy oil and sell supplies).
+ */
+const names = computed(() => {
+  const own = partyNames(farm.value.transactions, kind)
+  if (!party.value.trim()) {
+    return own
+  }
+  const others = (['expense', 'sale', 'income'] as const)
+    .filter((other) => other !== kind)
+    .flatMap((other) => partyNames(farm.value.transactions, other))
+
+  return [...new Set([...own, ...others])]
+})
 const categories = computed(() =>
   kind === 'sale'
     ? []
@@ -330,18 +345,7 @@ async function remove() {
         <DateField id="tx-date" v-model="date" :label="$t('common.date')" />
       </div>
       <label class="label" for="tx-party">{{ $t(partyLabel) }}</label>
-      <input
-        id="tx-party"
-        v-model="party"
-        class="input"
-        list="tx-parties"
-        autocomplete="off"
-        @change="onPartyChange"
-        @blur="onPartyChange"
-      />
-      <datalist id="tx-parties">
-        <option v-for="n in names" :key="n" :value="n"></option>
-      </datalist>
+      <NameInput id="tx-party" v-model="party" :names="names" @done="onPartyChange" />
 
       <template v-if="kind !== 'sale'">
         <label class="label" for="tx-category">{{ $t('tx.category') }}</label>

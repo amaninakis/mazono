@@ -145,3 +145,24 @@ export function parseTypedDate(text: string, locale: string, today: ISODate): IS
 
   return toISODate(date)
 }
+
+/**
+ * True when typed text already holds a whole date with its year (e.g. "16/2/2026", "16/2/26"
+ * or "2026-02-16"), so the app can use it straight away instead of waiting for the user to
+ * leave the box. "16/2" (no year yet) or "16/2/2" (year still being typed) are not complete.
+ */
+export function isCompleteTypedDate(text: string, locale: string): boolean {
+  const numbers = text
+    .trim()
+    .split(/[\s./-]+/)
+    .filter(Boolean)
+  if (numbers.length !== 3 || numbers.some((part) => !/^\d+$/.test(part))) {
+    return false
+  }
+  if (numbers[0].length === 4) {
+    return numbers[2].length === 2
+  }
+  const year = numbers[dateFieldOrder(locale).indexOf('year')]
+
+  return year.length === 2 || year.length === 4
+}

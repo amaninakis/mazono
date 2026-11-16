@@ -54,7 +54,8 @@
     "notes": "Σημειώσεις",
     "dateInvalid": "Γράψτε μια ημερομηνία όπως {{example}}",
     "dateTooLate": "Η ημερομηνία δεν μπορεί να είναι μετά τις {{max}}",
-    "openCalendar": "Άνοιγμα ημερολογίου"
+    "openCalendar": "Άνοιγμα ημερολογίου",
+    "today": "Σήμερα"
   },
   "setup": {
     "welcome": "Καλώς ήρθατε στο HarvestLog",

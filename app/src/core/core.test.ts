@@ -2,6 +2,7 @@ import type { Field, TaskEntry, TaskType } from './types'
 import { describe, expect, it } from 'vitest'
 import {
   addDays,
+  isCompleteTypedDate,
   monthGrid,
   parseTypedDate,
   seasonLabel,
@@ -378,5 +379,21 @@ describe('harvest tasks share one tree count', () => {
     expect(harvestYields(logged, field, [harvest.id, 'h2'], '2025-11-16').treesHarvested).toBe(
       28,
     )
+  })
+})
+
+describe('isCompleteTypedDate', () => {
+  it('is complete once the year is typed', () => {
+    expect(isCompleteTypedDate('16/2/2026', 'el-GR')).toBe(true)
+    expect(isCompleteTypedDate('16/2/26', 'el-GR')).toBe(true)
+    expect(isCompleteTypedDate('2026-02-16', 'el-GR')).toBe(true)
+    expect(isCompleteTypedDate('2/16/2026', 'en-US')).toBe(true)
+  })
+
+  it('waits while the date is still being typed', () => {
+    expect(isCompleteTypedDate('16/2', 'el-GR')).toBe(false)
+    expect(isCompleteTypedDate('16/2/2', 'el-GR')).toBe(false)
+    expect(isCompleteTypedDate('16/2/202', 'el-GR')).toBe(false)
+    expect(isCompleteTypedDate('2026-02-1', 'el-GR')).toBe(false)
   })
 })

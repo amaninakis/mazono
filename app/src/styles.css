@@ -319,7 +319,7 @@ button, input, select, textarea { font: inherit; color: inherit; }
 .learned { flex-basis: 100%; }
 
 /* Date field: app-formatted date with the native picker invisibly on top */
-.date-wrap { display: inline-flex; flex-direction: column; align-items: flex-end; gap: 4px; }
+.date-wrap { position: relative; display: inline-flex; flex-direction: column; align-items: flex-end; gap: 4px; }
 .date-field {
   display: inline-flex; align-items: center;
   min-height: 40px; border: 1px solid var(--line); border-radius: 10px;
@@ -338,7 +338,6 @@ button, input, select, textarea { font: inherit; color: inherit; }
   border-radius: 0 10px 10px 0; background: transparent; font-size: 1.1em; cursor: pointer;
 }
 .date-button:hover, .date-button:focus-visible { background: var(--olive-soft); }
-.date-native { position: absolute; inset: 0; width: 100%; height: 100%; opacity: 0; border: 0; padding: 0; pointer-events: none; }
 .modal .date-wrap, .modal .date-field { display: flex; width: 100%; }
 .modal .date-text { flex: 1; }
 
@@ -443,3 +442,32 @@ button, input, select, textarea { font: inherit; color: inherit; }
 .chart-legend { display: flex; flex-wrap: wrap; gap: 12px; margin: 6px 0 0; padding: 0; list-style: none; font-size: 0.875rem; }
 .chart-legend li { display: inline-flex; align-items: center; gap: 6px; }
 .chart-swatch { width: 14px; height: 4px; border-radius: 2px; background: var(--series); }
+
+/* Calendar that opens under a date box */
+.calendar-pop {
+  position: absolute; top: calc(100% + 6px); right: 0; z-index: 40;
+  width: min(320px, calc(100vw - 32px)); padding: 10px;
+  border: 1px solid var(--line); border-radius: 14px; background: var(--card);
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.18);
+}
+.calendar-pop.open-right { right: auto; left: 0; }
+.calendar-pop .cal-day { min-height: 40px; }
+.calendar-pop .cal-day:disabled { opacity: 0.3; cursor: default; }
+.calendar-pop .icon-btn:disabled { opacity: 0.3; }
+.calendar-foot { display: flex; justify-content: flex-end; gap: 8px; margin-top: 8px; }
+
+/* Olive-oil drop: golden olive green, a little lighter in dark mode */
+.oil-drop { display: inline-block; vertical-align: -0.125em; }
+@media (prefers-color-scheme: dark) { .oil-drop { --oil: #9aae2c; --oil-edge: #6f8019; } }
+.oil-mark .oil-drop { width: 0.7rem; height: 0.7rem; }
+
+/* Name suggestions under a text box */
+.name-input { position: relative; }
+.suggestions {
+  position: absolute; top: calc(100% + 4px); left: 0; right: 0; z-index: 30;
+  margin: 0; padding: 4px; list-style: none;
+  border: 1px solid var(--line); border-radius: 12px; background: var(--card);
+  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.16);
+}
+.suggestions li { padding: 12px; border-radius: 8px; cursor: pointer; }
+.suggestions li:hover, .suggestions li.highlighted { background: var(--olive-soft); }
