@@ -246,3 +246,60 @@ describe('sync', () => {
     expect(result.body.records).toEqual([])
   })
 })
+
+describe('removing a grove', () => {
+  async function prepare() {
+    const { cookies } = await setUp()
+    async function sync(farmId: string, changes: object[]) {
+      return await app.inject({
+        method: 'POST',
+        url: '/api/sync',
+        cookies,
+        payload: { farmId, since: 0, clientNow: clock, changes },
+      })
+    }
+
+    function settings(farmId: string) {
+      return {
+        table: 'settings',
+        id: farmId,
+        updatedAt: clock,
+        data: { farmId, language: 'el', updatedAt: clock },
+      }
+    }
+    await sync('empty', [settings('empty')])
+    await sync('real', [settings('real'), field('a', 'real', 'Upper', clock)])
+
+    async function remove(farmId: string) {
+      return await app.inject({ method: 'POST', url: `/api/farms/${farmId}/remove`, cookies })
+    }
+
+    async function farms() {
+      return (await app.inject({ url: '/api/me', cookies }))
+        .json<AccountInfo>()
+        .farms.map((x) => x.id)
+    }
+
+    return { remove, farms }
+  }
+
+  it('removes a grove with no data', async () => {
+    const { remove, farms } = await prepare()
+
+    expect((await remove('empty')).statusCode).toBe(200)
+    expect(await farms()).toEqual(['real'])
+  })
+
+  it('never removes a grove that holds data', async () => {
+    const { remove, farms } = await prepare()
+
+    expect((await remove('real')).statusCode).toBe(409)
+    expect(await farms()).toContain('real')
+  })
+
+  it('only lets members remove a grove', async () => {
+    const { remove } = await prepare()
+
+    expect((await remove('someone-elses')).statusCode).toBe(403)
+  })
+})

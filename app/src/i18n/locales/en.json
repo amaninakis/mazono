@@ -492,6 +492,20 @@
     "signOut": "Sign out",
     "signOutHelp": "Your data stays on the server; it is removed from this device until you sign in again.",
     "signOutPending_one": "{{count}} change has not reached the server and will be lost.",
-    "signOutPending_other": "{{count}} changes have not reached the server and will be lost."
+    "signOutPending_other": "{{count}} changes have not reached the server and will be lost.",
+    "loadingTitle": "Bringing your data…",
+    "loadingHelp": "The first time on a new phone this can take a little while. Please keep the app open.",
+    "loadFailedTitle": "Your data could not be loaded",
+    "loadFailedHelp": "Check that the phone is connected (and, at home, to Tailscale), then try again.",
+    "tryAgain": "Try again",
+    "groves": "Groves",
+    "groveOpen": "open now",
+    "groveEmpty": "· no data",
+    "groveOpenButton": "Open",
+    "groveRemove": "Remove",
+    "groveOpened": "Grove opened",
+    "groveRemoveHelp": "Remove the grove “{{name}}”? It has no data, so nothing is lost. It is removed from the server and every device.",
+    "groveRemoved": "“{{name}}” removed",
+    "groveNotEmpty": "This grove holds data, so it cannot be removed."
   }
 }
