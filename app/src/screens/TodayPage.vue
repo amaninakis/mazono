@@ -391,7 +391,7 @@ function summaryLines(entry: TaskEntry): string[] {
           >
             {{ $t('today.yesterday') }}
           </button>
-          <DateField id="date" v-model="date" :max="today" :label="$t('today.date')" />
+          <DateField id="date" v-model="date" :max="today" :label="$t('today.date')" arrows />
         </div>
       </div>
     </section>

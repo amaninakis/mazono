@@ -145,24 +145,44 @@ function details(entry: TaskEntry) {
 <template>
   <main class="page journal">
     <section class="card calendar">
-      <div class="row-between">
-        <button
-          type="button"
-          class="icon-btn"
-          :aria-label="$t('journal.prevMonth')"
-          @click="shiftMonth(-1)"
-        >
-          ‹
-        </button>
+      <div class="row-between month-nav">
+        <span>
+          <button
+            type="button"
+            class="icon-btn"
+            :aria-label="$t('journal.prevYear')"
+            @click="shiftMonth(-12)"
+          >
+            «
+          </button>
+          <button
+            type="button"
+            class="icon-btn"
+            :aria-label="$t('journal.prevMonth')"
+            @click="shiftMonth(-1)"
+          >
+            ‹
+          </button>
+        </span>
         <strong class="cap">{{ monthTitle }}</strong>
-        <button
-          type="button"
-          class="icon-btn"
-          :aria-label="$t('journal.nextMonth')"
-          @click="shiftMonth(1)"
-        >
-          ›
-        </button>
+        <span>
+          <button
+            type="button"
+            class="icon-btn"
+            :aria-label="$t('journal.nextMonth')"
+            @click="shiftMonth(1)"
+          >
+            ›
+          </button>
+          <button
+            type="button"
+            class="icon-btn"
+            :aria-label="$t('journal.nextYear')"
+            @click="shiftMonth(12)"
+          >
+            »
+          </button>
+        </span>
       </div>
       <div class="cal-grid">
         <span v-for="(w, i) in weekdays" :key="`w${i}`" class="cal-wd">{{ w }}</span>

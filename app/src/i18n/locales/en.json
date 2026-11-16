@@ -147,7 +147,9 @@
     "nextMonth": "Next month",
     "goToday": "Today",
     "unknownField": "Deleted field",
-    "extractionLine": "{{olives}} kg olives → {{oil}} kg oil"
+    "extractionLine": "{{olives}} kg olives → {{oil}} kg oil",
+    "prevYear": "Previous year",
+    "nextYear": "Next year"
   },
   "settings": {
     "title": "Settings",

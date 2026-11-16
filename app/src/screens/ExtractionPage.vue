@@ -150,10 +150,21 @@ interface Row {
   take: UnitAmount[]
 }
 
-const previous = previousExtractionDate(farm.value.extractions, date.value, editing?.id)
-const season = seasonOf(date.value, farm.value.settings.seasonStartMonth)
-const rows = ref<Row[]>(
-  farm.value.entries
+function seasonOfDate(isoDate: string) {
+  return seasonOf(isoDate, farm.value.settings.seasonStartMonth)
+}
+
+/**
+ * Harvest days that can go into a production on `forDate`: the days of that farming year with
+ * olives not yet sent to the mill (plus days this production already holds when editing).
+ * Days since the previous production are pre-ticked, with leftovers of days already partly
+ * milled.
+ */
+function buildRows(forDate: string): Row[] {
+  const previous = previousExtractionDate(farm.value.extractions, forDate, editing?.id)
+  const season = seasonOfDate(forDate)
+
+  return farm.value.entries
     .filter(
       (entry) =>
         harvestTypeIds.value.has(entry.taskTypeId) &&
@@ -162,15 +173,13 @@ const rows = ref<Row[]>(
     .map((entry) => {
       const available = availableUnits(entry, farm.value.extractions, editing?.id)
       const mine = editing?.allocations.find((allocation) => allocation.entryId === entry.id)
-      // Pre-tick this season's harvest days since the previous extraction, and leftovers of days
-      // already partly sent to the mill.
       const partlyMilled =
         Object.keys(allocatedUnits(entry.id, farm.value.extractions, editing?.id)).length > 0
-      const sameSeason = seasonOf(entry.date, farm.value.settings.seasonStartMonth) === season
+      const sameSeason = seasonOfDate(entry.date) === season
       const preTick =
         !editing &&
         sameSeason &&
-        entry.date <= date.value &&
+        entry.date <= forDate &&
         (!previous || entry.date >= previous || partlyMilled)
 
       return {
@@ -183,12 +192,27 @@ const rows = ref<Row[]>(
     })
     .filter(
       (row) =>
-        row.selected ||
-        (row.available.length > 0 &&
-          seasonOf(row.entry.date, farm.value.settings.seasonStartMonth) === season),
+        row.selected || (row.available.length > 0 && seasonOfDate(row.entry.date) === season),
     )
-    .sort((left, right) => byNewest(left.entry, right.entry)),
-)
+    .sort((left, right) => byNewest(left.entry, right.entry))
+}
+
+const rows = ref<Row[]>(buildRows(date.value))
+/** True once the user ticks, unticks or splits a day by hand. */
+let rowsTouched = false
+function markTouched() {
+  rowsTouched = true
+}
+
+// A different date (e.g. a past production) lists the harvest days of its own farming year.
+// Ticks made by hand are kept while the date stays in the same year.
+watch(date, (next, before) => {
+  if (rowsTouched && seasonOfDate(next) === seasonOfDate(before)) {
+    return
+  }
+  rows.value = buildRows(next)
+  rowsTouched = false
+})
 
 /** Copy of a list of unit amounts (so editing a row never changes the saved entry). */
 function copyUnits(quantities: UnitAmount[]) {
@@ -232,6 +256,7 @@ function rowDate(isoDate: string) {
 }
 
 function togglePart(row: Row) {
+  rowsTouched = true
   row.partial = !row.partial
   if (!row.partial) {
     row.take = row.available.map((quantity) => ({ ...quantity }))
@@ -476,7 +501,7 @@ async function remove() {
         >
           <div class="hr-main">
             <label class="check">
-              <input v-model="r.selected" type="checkbox" />
+              <input v-model="r.selected" type="checkbox" @change="markTouched" />
               <span>
                 <strong>{{ rowDate(r.entry.date) }} · {{ fieldName(r.entry.fieldId) }}</strong>
                 <small class="muted">{{ availableText(r) }}</small>
