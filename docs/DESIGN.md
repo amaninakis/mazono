@@ -231,7 +231,7 @@ Totals per **calendar year**: income, expenses, net result, and the value of rem
 5. **Records** (achievements): all-time bests (best year for oil and for yield, best field-year for oil per tree, field with the most oil, best and biggest production, biggest harvest day, most trees in a day, lowest acidity, best sale price), milestone badges (kg of oil, harvest days, productions, years) with progress to the next one, and lifetime totals. Logic in `core/records.ts`.
 
 How they work:
-- All four are on one Reports page (More → Reports), one tab each, with a short plain-words explanation and an empty-state hint.
+- All reports are on one Reports page (in the bottom bar), one tab each, with a short plain-words explanation and an empty-state hint.
 - Field oil is the field's share of each extraction by olive weight (the same estimate as the Oil page). "Per tree" uses the trees entered as harvested, or the field's tree count when none were entered. Cells are shaded darker for bigger values; tapping a cell shows its details.
 - Charts are plain SVG (no chart library): bars for season totals, lines for yield (up to three seasons, each season keeping its colour). Every mark can be tapped for its numbers; tables carry the same data.
 - CSV export of each report: `;` columns and decimal commas in Greek number style, `,` and decimal points otherwise, UTF-8 with BOM so Excel shows Greek text.

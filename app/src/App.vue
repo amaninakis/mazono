@@ -111,7 +111,8 @@ const nav = computed(() => [
   { to: '/journal', icon: '📅', label: translate('nav.journal') },
   { to: '/oil', icon: 'oil', label: translate('nav.oil') },
   { to: '/money', icon: '€', label: translate('nav.money') },
-  { to: '/more', icon: '☰', label: translate('nav.more') },
+  { to: '/reports', icon: '📊', label: translate('nav.reports') },
+  { to: '/settings', icon: '⚙️', label: translate('nav.settings') },
 ])
 </script>
 

@@ -183,8 +183,12 @@ button, input, select, textarea { font: inherit; color: inherit; }
 }
 .bottom-nav a {
   flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center;
-  min-height: 64px; text-decoration: none; color: var(--muted); font-size: 0.75rem; gap: 2px;
+  min-width: 0; min-height: 64px; text-decoration: none; color: var(--muted); font-size: 0.75rem; gap: 2px;
 }
+/* Six items: labels shrink a little on narrow phones and never spill over. */
+.bottom-nav a > span:last-child { max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; padding: 0 1px; }
+@media (max-width: 400px) { .bottom-nav a { font-size: 0.68rem; } }
+@media (max-width: 370px) { .bottom-nav a { font-size: 0.62rem; letter-spacing: -0.01em; } }
 .bottom-nav .nav-icon { font-size: 1.25rem; line-height: 1; }
 .bottom-nav a.active { color: var(--olive); font-weight: 700; }
 
