@@ -347,7 +347,8 @@
     "notFromStock": "not from recorded stock",
     "fee": "Fee (optional)",
     "received": "You receive",
-    "feeShort": "Fee"
+    "feeShort": "Fee",
+    "acidity": "Acidity % (optional)"
   },
   "reports": {
     "tab": {

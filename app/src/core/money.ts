@@ -189,3 +189,10 @@ export function feeForBuyer(transactions: Transaction[], party: string): SaleFee
     ? { kind: 'percent', value: last.feePercent }
     : { kind: 'euro', value: last.fee }
 }
+
+/** Acidity of the most recent sale that recorded one, to suggest for the next sale. */
+export function lastSaleAcidity(transactions: Transaction[]): number | undefined {
+  return live(transactions)
+    .filter((tx) => tx.kind === 'sale' && tx.acidity != null)
+    .sort(byNewest)[0]?.acidity
+}

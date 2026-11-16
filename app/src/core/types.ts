@@ -206,6 +206,8 @@ export interface Transaction extends BaseRecord {
   feePercent?: number
   vintage?: number
   locationId?: string
+  /** Acidity % of the oil sold (optional). */
+  acidity?: number
   // expenses
   invoiceNo?: string
   fieldId?: string

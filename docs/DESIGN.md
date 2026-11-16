@@ -129,6 +129,8 @@ Users join farms through a membership with a role; one person can belong to seve
 
 ## Today screen (home) — v0.1
 
+
+The trees box starts with all the trees still left in the chosen field for that task (if the field has a tree count), and follows the field, task and date until the user changes the number.
 The app opens here. Everything for one entry sits on a single scrollable page with a sticky **Save** button.
 
 **Shared top area**
@@ -209,6 +211,7 @@ Totals per **calendar year**: income, expenses, net result, and the value of rem
 **How v0.3 implements it**
 
 - One `Transaction` record per expense, oil sale or other income, and `Category` records for expense and income categories (built-in ones are translated; users can rename, add and archive).
+- An oil sale can record the oil's acidity (optional); a new sale starts with the previous sale's acidity.
 - An oil sale stores its kg, € per kg, season (vintage) and place; `stockLevels()` subtracts it, so stock and money cannot disagree. The kg cannot exceed what that season's oil has in that place.
 - **Oil not recorded in the app** (e.g. sold before the user started): a sale can come from a season with no extractions in the app. It counts as income but does not reduce stock, and is marked "not from recorded stock". As soon as that season's extractions are entered, the sale is deducted from that season's stock automatically (`isUntrackedSale()` / `trackedVintages()`), so entering past data later never double-counts.
 - The category last used with a business is filled in when the business is typed again (`categoryForParty()`).

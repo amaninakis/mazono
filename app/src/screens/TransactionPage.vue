@@ -9,6 +9,7 @@ import {
   categoryForParty,
   defaultSaleSource,
   feeForBuyer,
+  lastSaleAcidity,
   partyNames,
   saleAmounts,
 } from '../core/money'
@@ -238,6 +239,10 @@ const available = computed(() =>
 )
 const kg = ref<number | null>(editing?.kg ?? null)
 const price = ref<number | null>(editing?.pricePerKg ?? null)
+/** Acidity of the oil sold; a new sale starts with the previous sale's value. */
+const acidity = ref<number | null>(
+  editing ? (editing.acidity ?? null) : (lastSaleAcidity(farm.value.transactions) ?? null),
+)
 const amounts = computed(() =>
   saleAmounts(
     kg.value ?? 0,
@@ -299,6 +304,7 @@ async function saveTransaction() {
         : undefined,
     kg: kind === 'sale' ? kg.value! : undefined,
     pricePerKg: kind === 'sale' ? price.value! : undefined,
+    acidity: kind === 'sale' ? (acidity.value ?? undefined) : undefined,
     vintage: kind === 'sale' ? chosen.value!.vintage : undefined,
     locationId: kind === 'sale' ? chosen.value!.locationId : undefined,
     invoiceNo: kind === 'expense' ? invoiceNo.value.trim() || undefined : undefined,
@@ -406,6 +412,13 @@ async function remove() {
           id="tx-price"
           v-model="price"
           :label="$t('tx.pricePerKg')"
+          :step="0.1"
+        />
+        <label class="label" for="tx-acidity">{{ $t('tx.acidity') }}</label>
+        <NumberStepper
+          id="tx-acidity"
+          v-model="acidity"
+          :label="$t('tx.acidity')"
           :step="0.1"
         />
         <label class="label" for="tx-fee">{{ $t('tx.fee') }}</label>

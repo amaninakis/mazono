@@ -139,6 +139,25 @@ watch([trees, () => current.value?.remaining], ([value, remaining]) => {
   }
 })
 
+// The trees box starts with all the trees still left in the chosen field (for tasks that count
+// trees). It follows the field, task and date until the user changes the number by hand.
+let treesFollowField = !editing
+let lastAutoTrees: number | null = null
+function fillTrees() {
+  if (!treesFollowField) {
+    return
+  }
+  const remaining = current.value?.remaining
+  lastAutoTrees = kind.value !== 'done' && remaining ? remaining : null
+  trees.value = lastAutoTrees
+}
+watch([fieldId, typeId, () => current.value?.remaining], fillTrees, { immediate: true })
+watch(trees, (value) => {
+  if (value !== lastAutoTrees) {
+    treesFollowField = false
+  }
+})
+
 function setFinished(value: boolean) {
   finished.value = value
   autoFinished = false
@@ -206,6 +225,8 @@ function addUnitRow() {
 
 function resetForNext() {
   autoFinished = false
+  treesFollowField = true
+  lastAutoTrees = null
   trees.value = null
   quantities.value = emptyQuantities()
   amount.value = null
