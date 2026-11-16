@@ -8,6 +8,7 @@ import { formatNumber } from '../core/format'
 import { unitLabel } from '../core/units'
 import { formatLocale } from '../i18n'
 import { taskName, useFarm } from '../ui/farm'
+import OilDrop from '../ui/OilDrop.vue'
 import { showToast } from '../ui/toast'
 
 const { t: translate } = useTranslation()
@@ -183,7 +184,7 @@ function details(entry: TaskEntry) {
                 :style="{ background: x.color }"
               ></i>
               <b v-if="dayTypes(d).length > 3">+</b>
-              <em v-if="extractionDays.has(d)" class="oil-mark">💧</em>
+              <em v-if="extractionDays.has(d)" class="oil-mark"><OilDrop /></em>
             </span>
           </button>
           <span v-else></span>
@@ -211,7 +212,7 @@ function details(entry: TaskEntry) {
       </button>
     </div>
     <button
-      v-if="date !== today"
+      v-if="date !== today || month !== today.slice(0, 7)"
       type="button"
       class="btn ghost small center"
       @click="setDate(today)"
@@ -222,7 +223,7 @@ function details(entry: TaskEntry) {
     <ul v-if="dayExtractions.length" class="entries">
       <li v-for="x in dayExtractions" :key="x.id" class="entry oil-entry">
         <button type="button" class="entry-main" @click="router.push(`/oil/${x.id}`)">
-          <span class="entry-icon" aria-hidden="true">💧</span>
+          <span class="entry-icon" aria-hidden="true"><OilDrop /></span>
           <span class="entry-text">
             <strong>{{ $t('extraction.title') }}</strong>
             <small>{{

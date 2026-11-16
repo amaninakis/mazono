@@ -1,17 +1,22 @@
 <script setup lang="ts">
 import { useTranslation } from 'i18next-vue'
 import { computed, ref, useTemplateRef, watch } from 'vue'
-import { parseISODate, parseTypedDate, todayISO } from '../core/dates'
+import { isCompleteTypedDate, parseISODate, parseTypedDate, todayISO } from '../core/dates'
 import { formatLocale } from '../i18n'
+import CalendarPicker from './CalendarPicker.vue'
 
 /**
- * A date box: type the date in the app's format (e.g. 15/11/2026), or tap the calendar button
- * to pick it from the phone's date picker.
+ * A date box: type the date in the app's format (e.g. 15/11/2026), or tap the calendar button.
+ * Tapping the box selects the date in it, so typing or pasting replaces it. A date is used as
+ * soon as it is fully typed (with its year), so the rest of the page updates straight away.
  */
 const props = defineProps<{ id?: string; max?: string; label?: string }>()
 const model = defineModel<string>({ required: true })
 const { t: translate } = useTranslation()
-const picker = useTemplateRef<HTMLInputElement>('picker')
+const input = useTemplateRef<HTMLInputElement>('input')
+const wrap = useTemplateRef<HTMLElement>('wrap')
+/** Open the calendar towards the side of the screen that has room for it. */
+const openToRight = ref(false)
 
 function formatDate(isoDate: string) {
   if (!isoDate) {
@@ -27,57 +32,101 @@ function formatDate(isoDate: string) {
 
 const text = ref(formatDate(model.value))
 const error = ref('')
+const calendarOpen = ref(false)
+let typing = false
 watch([model, formatLocale], () => {
-  text.value = formatDate(model.value)
+  // Keep what the user is typing (e.g. "16/2/26") instead of reformatting it under them.
+  if (!typing) {
+    text.value = formatDate(model.value)
+  }
   error.value = ''
 })
 
 /** Shown in the empty box and in the error message, e.g. "15/11/2026". */
 const example = computed(() => formatDate(todayISO()))
 
-/** Save what was typed; if it is not a valid date, say so and keep the last good date. */
-function commit() {
+/** The typed date, or an error message key when it cannot be used. */
+function readTyped(): { date?: string; error?: string } {
   const typed = parseTypedDate(text.value, formatLocale.value, todayISO())
   if (!typed) {
-    error.value = translate('common.dateInvalid', { example: example.value })
-    text.value = formatDate(model.value)
-
-    return
+    return { error: translate('common.dateInvalid', { example: example.value }) }
   }
   if (props.max && typed > props.max) {
-    error.value = translate('common.dateTooLate', { max: formatDate(props.max) })
+    return { error: translate('common.dateTooLate', { max: formatDate(props.max) }) }
+  }
+
+  return { date: typed }
+}
+
+/** While typing: use the date as soon as it is complete and valid. */
+function onInput() {
+  typing = true
+  if (isCompleteTypedDate(text.value, formatLocale.value)) {
+    const { date } = readTyped()
+    if (date && date !== model.value) {
+      model.value = date
+    }
+  }
+}
+
+/**
+ * On Enter or leaving the box: use the date, or say what is wrong and keep the last good one.
+ */
+function commit() {
+  typing = false
+  const { date, error: problem } = readTyped()
+  if (!date) {
+    error.value = problem ?? ''
     text.value = formatDate(model.value)
 
     return
   }
 
   error.value = ''
-  model.value = typed
-  text.value = formatDate(typed)
+  model.value = date
+  text.value = formatDate(date)
 }
 
-function openCalendar() {
-  try {
-    picker.value?.showPicker()
-  } catch {
-    picker.value?.focus()
-    picker.value?.click()
+// Select the whole date on tap, so typing or pasting replaces it. The first mouseup after
+// focusing would otherwise put the cursor where the finger landed and undo the selection.
+let selectOnMouseUp = false
+function onFocus() {
+  selectOnMouseUp = true
+  input.value?.select()
+}
+
+function onMouseUp(event: MouseEvent) {
+  if (selectOnMouseUp) {
+    event.preventDefault()
+    input.value?.select()
+    selectOnMouseUp = false
   }
 }
 
-function onPick(event: Event) {
-  const value = (event.target as HTMLInputElement).value
-  if (value) {
-    model.value = value
+function toggleCalendar() {
+  if (!calendarOpen.value && typing) {
+    commit()
   }
+  const box = wrap.value?.getBoundingClientRect()
+  openToRight.value = !!box && box.right < Math.min(330, window.innerWidth - 16)
+  calendarOpen.value = !calendarOpen.value
+}
+
+function onPick(isoDate: string) {
+  typing = false
+  model.value = isoDate
+  text.value = formatDate(isoDate)
+  error.value = ''
+  calendarOpen.value = false
 }
 </script>
 
 <template>
-  <div class="date-wrap">
+  <div ref="wrap" class="date-wrap">
     <div class="date-field" :class="{ invalid: error }">
       <input
         :id="id"
+        ref="input"
         v-model="text"
         type="text"
         class="date-text"
@@ -85,6 +134,9 @@ function onPick(event: Event) {
         :placeholder="example"
         :aria-label="label"
         :aria-invalid="!!error"
+        @focus="onFocus"
+        @mouseup="onMouseUp"
+        @input="onInput"
         @change="commit"
         @keydown.enter.prevent="commit"
       />
@@ -92,22 +144,21 @@ function onPick(event: Event) {
         type="button"
         class="date-button"
         :aria-label="$t('common.openCalendar')"
+        :aria-expanded="calendarOpen"
         :title="$t('common.openCalendar')"
-        @click="openCalendar"
+        @click="toggleCalendar"
       >
         <span aria-hidden="true">📅</span>
-        <input
-          ref="picker"
-          type="date"
-          class="date-native"
-          tabindex="-1"
-          aria-hidden="true"
-          :value="model"
-          :max="max"
-          @change="onPick"
-        />
       </button>
     </div>
+    <CalendarPicker
+      v-if="calendarOpen"
+      :class="{ 'open-right': openToRight }"
+      :selected="model"
+      :max="max"
+      @pick="onPick"
+      @close="calendarOpen = false"
+    />
     <small v-if="error" class="error" role="alert">{{ error }}</small>
   </div>
 </template>

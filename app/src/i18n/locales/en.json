@@ -54,7 +54,8 @@
     "notes": "Notes",
     "dateInvalid": "Type a date like {{example}}",
     "dateTooLate": "The date can’t be after {{max}}",
-    "openCalendar": "Open calendar"
+    "openCalendar": "Open calendar",
+    "today": "Today"
   },
   "setup": {
     "welcome": "Welcome to HarvestLog",

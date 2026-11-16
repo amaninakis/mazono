@@ -9,6 +9,7 @@ import SetupWizard from './screens/SetupWizard.vue'
 import AppToast from './ui/AppToast.vue'
 import { type FarmData, provideFarm } from './ui/farm'
 import { useLiveQuery } from './ui/live'
+import OilDrop from './ui/OilDrop.vue'
 
 const { t: translate } = useTranslation()
 const route = useRoute()
@@ -108,7 +109,7 @@ const state = computed(() => {
 const nav = computed(() => [
   { to: '/', icon: '✚', label: translate('nav.today'), exact: true },
   { to: '/journal', icon: '📅', label: translate('nav.journal') },
-  { to: '/oil', icon: '💧', label: translate('nav.oil') },
+  { to: '/oil', icon: 'oil', label: translate('nav.oil') },
   { to: '/money', icon: '€', label: translate('nav.money') },
   { to: '/more', icon: '☰', label: translate('nav.more') },
 ])
@@ -126,7 +127,10 @@ const nav = computed(() => [
         :to="item.to"
         :class="{ active: item.exact ? route.path === '/' : route.path.startsWith(item.to) }"
       >
-        <span class="nav-icon" aria-hidden="true">{{ item.icon }}</span>
+        <span class="nav-icon" aria-hidden="true">
+          <OilDrop v-if="item.icon === 'oil'" />
+          <template v-else>{{ item.icon }}</template>
+        </span>
         <span>{{ item.label }}</span>
       </RouterLink>
     </nav>

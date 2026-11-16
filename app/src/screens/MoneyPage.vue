@@ -9,6 +9,7 @@ import { inPeriod, lastSalePrice, moneyTotals, type Period, taxEstimate } from '
 import { isUntrackedSale, stockLevels, trackedVintages } from '../core/oil'
 import { formatLocale } from '../i18n'
 import { categoryName, useFarm } from '../ui/farm'
+import OilDrop from '../ui/OilDrop.vue'
 import { moneyPeriod } from '../ui/periods'
 
 const { t: translate } = useTranslation()
@@ -114,7 +115,7 @@ function detail(x: Transaction) {
 }
 
 function icon(kind: TransactionKind) {
-  return { sale: '💧', income: '＋', expense: '−' }[kind]
+  return { sale: '', income: '＋', expense: '−' }[kind]
 }
 </script>
 
@@ -141,7 +142,7 @@ function icon(kind: TransactionKind) {
         − {{ $t('money.addExpense') }}
       </button>
       <button type="button" class="btn small" @click="router.push('/money/new/sale')">
-        💧 {{ $t('money.addSale') }}
+        <OilDrop /> {{ $t('money.addSale') }}
       </button>
       <button type="button" class="btn small" @click="router.push('/money/new/income')">
         + {{ $t('money.addIncome') }}
@@ -263,7 +264,10 @@ function icon(kind: TransactionKind) {
             :class="[x.kind]"
             @click="router.push(`/money/${x.id}`)"
           >
-            <span class="tx-icon" aria-hidden="true">{{ icon(x.kind) }}</span>
+            <span class="tx-icon" aria-hidden="true">
+              <OilDrop v-if="x.kind === 'sale'" />
+              <template v-else>{{ icon(x.kind) }}</template>
+            </span>
             <span class="tx-text">
               <strong>{{ x.party || detail(x) }}</strong>
               <small class="muted"
