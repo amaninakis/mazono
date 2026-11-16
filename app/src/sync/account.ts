@@ -11,7 +11,8 @@ import {
   syncCall,
   whoAmI,
 } from './api'
-import { pendingCount, syncFarm } from './engine'
+import { pendingCount, syncedSeq, syncFarm } from './engine'
+import { chooseCurrentGrove, removeLocalGrove } from './groves'
 
 /*
  * Who is signed in, and keeping this device in step with the server.
@@ -38,6 +39,14 @@ export const account = reactive({
   lastSync: 0,
   /** Changes on this device not yet on the server. */
   pending: 0,
+  /**
+   * Bringing the account's data to this device right after signing in (or to a device that
+   * has none yet). Meanwhile the app shows a loading screen, never the first-time setup, so
+   * nobody starts a new, empty grove by mistake.
+   */
+  loading: 'idle',
+  /** Groves of this account on the server. */
+  farms: [] as string[],
 })
 
 const ACCOUNT_KEY = 'account'
@@ -60,31 +69,48 @@ async function rememberUser(user: User | undefined) {
 
 let running: Promise<void> | undefined
 let again = false
+let lastResult = true
 let timer: ReturnType<typeof setTimeout> | undefined
 
-async function syncEverything(farmIds: string[] = []) {
-  const local = (await db.farms.toArray()).map((farm) => farm.id)
-  for (const farmId of new Set([...local, ...farmIds])) {
+/**
+ * Sync every grove of the account and every grove made on this device, and forget groves
+ * that were removed on the server.
+ */
+async function syncEverything() {
+  const info = await whoAmI()
+  account.user = info.user
+  account.farms = info.farms.map((farm) => farm.id)
+  const onServer = new Set(account.farms)
+  const toSync = new Set(account.farms)
+  for (const farm of await db.farms.toArray()) {
+    const syncedBefore = (await syncedSeq(db, farm.id)) !== undefined
+    if (onServer.has(farm.id) || !syncedBefore) {
+      toSync.add(farm.id) // includes groves new on this device: send them
+    } else {
+      await removeLocalGrove(db, farm.id) // removed on the server
+    }
+  }
+
+  for (const farmId of toSync) {
     await syncFarm(db, farmId, syncCall)
   }
-  // A new device: open the first farm that came from the server.
-  const current = await db.meta.get('currentFarmId')
-  const first = (await db.farms.toArray())[0]
-  if (!current && first) {
-    await db.meta.put({ key: 'currentFarmId', value: first.id })
+  // The open grove was removed: open another one.
+  const current = (await db.meta.get('currentFarmId'))?.value
+  if (!current || !(await db.farms.get(current))) {
+    await chooseCurrentGrove(db)
   }
 }
 
-/** Sync now (or right after the sync that is already running). */
-export async function syncNow(farmIds?: string[]): Promise<void> {
+/** Sync now (or right after the sync that is already running). True when it worked. */
+export async function syncNow(): Promise<boolean> {
   if (account.mode !== 'server' || !account.user) {
-    return
+    return false
   }
   if (running) {
     again = true
     await running
 
-    return
+    return lastResult
   }
   running = (async () => {
     account.sync = 'syncing'
@@ -92,11 +118,13 @@ export async function syncNow(farmIds?: string[]): Promise<void> {
     try {
       do {
         again = false
-        await syncEverything(farmIds)
+        await syncEverything()
       } while (again)
       account.sync = 'idle'
       account.lastSync = Date.now()
+      lastResult = true
     } catch (error) {
+      lastResult = false
       if (error instanceof SignedOutError) {
         // The session ended (e.g. signed out from another device): ask to sign in again.
         // Nothing is lost: unsent changes stay here and go out after signing in.
@@ -108,8 +136,9 @@ export async function syncNow(farmIds?: string[]): Promise<void> {
       running = undefined
     }
   })()
-
   await running
+
+  return lastResult
 }
 
 function syncSoon() {
@@ -134,6 +163,30 @@ function startSyncing() {
   })
 }
 
+/**
+ * Sync, showing the loading screen meanwhile when `blocking` (the device has no data yet).
+ * If that first load fails, the screen offers to try again.
+ */
+async function loadData(blocking: boolean) {
+  if (blocking) {
+    account.loading = 'loading'
+  }
+  const ok = await syncNow()
+  if (ok) {
+    // On opening the app or signing in: if the open grove is empty but another one has
+    // data (e.g. a grove started by mistake while signing in), open that one.
+    await chooseCurrentGrove(db)
+  }
+  if (blocking) {
+    account.loading = ok || !account.user ? 'idle' : 'failed'
+  }
+}
+
+/** Try the first load again (from the loading screen). */
+export async function retryLoad(): Promise<void> {
+  await loadData(true)
+}
+
 /* ---------- start, sign in, sign out ---------- */
 
 /** Find out whether there is a server and who is signed in on this device. */
@@ -151,29 +204,23 @@ export async function startAccount(): Promise<void> {
     return
   }
   startSyncing()
+  // A signed-in device without data yet (e.g. its first load failed): load before showing.
+  const hasFarm = (await db.farms.count()) > 0
   if (!status) {
     account.sync = 'offline' // signed in earlier, server out of reach: keep working
+    account.loading = hasFarm ? 'idle' : 'failed'
+
     return
   }
-
-  try {
-    const info = await whoAmI()
-    await rememberUser(info.user)
-    await syncNow(info.farms.map((farm) => farm.id))
-  } catch (error) {
-    if (error instanceof SignedOutError) {
-      await rememberUser(undefined)
-    } else {
-      account.sync = 'offline'
-    }
-  }
+  await loadData(!hasFarm)
 }
 
 async function afterSignIn(info: AccountInfo) {
   account.needsSetup = false
+  account.loading = 'loading'
   await rememberUser(info.user)
   startSyncing()
-  await syncNow(info.farms.map((farm) => farm.id))
+  await loadData(true)
 }
 
 /** Create the first account (the installation owner) and send this device's data. */

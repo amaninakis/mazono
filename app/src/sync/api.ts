@@ -27,13 +27,24 @@ export interface ServerStatus {
   needsSetup: boolean
 }
 
+/** Give up on a request after `ms` (AbortSignal.timeout only exists from iOS 16). */
+function timeout(ms: number): AbortSignal {
+  if (typeof AbortSignal.timeout === 'function') {
+    return AbortSignal.timeout(ms)
+  }
+  const controller = new AbortController()
+  setTimeout(() => controller.abort(), ms)
+
+  return controller.signal
+}
+
 async function call<T>(path: string, body?: unknown, timeoutMs = 20_000): Promise<T> {
   const response = await fetch(path, {
     method: body === undefined ? 'GET' : 'POST',
     headers: body === undefined ? {} : { 'Content-Type': 'application/json' },
     body: body === undefined ? undefined : JSON.stringify(body),
     credentials: 'same-origin',
-    signal: AbortSignal.timeout(timeoutMs),
+    signal: timeout(timeoutMs),
   })
   if (response.status === 401 && path !== '/api/login') {
     throw new SignedOutError()
@@ -85,4 +96,9 @@ export async function changePassword(current: string, next: string) {
 
 export async function syncCall(request: SyncRequest) {
   return await call<SyncResponse>('/api/sync', request, 60_000)
+}
+
+/** Remove a grove that holds no data (refused with "not-empty" otherwise). */
+export async function removeFarm(farmId: string) {
+  return await call<{ ok: boolean }>(`/api/farms/${encodeURIComponent(farmId)}/remove`, {})
 }

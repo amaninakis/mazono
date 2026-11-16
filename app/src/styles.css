@@ -524,3 +524,15 @@ button, input, select, textarea { font: inherit; color: inherit; }
 .sync-line { font-size: 0.9rem; color: var(--muted); }
 .sync-line.error, .sync-line.offline { color: var(--warn, #9a6b00); }
 .password-form { display: flex; flex-direction: column; gap: 4px; margin-top: 12px; }
+
+/* Loading the account's data after signing in */
+.loading-data { display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 70vh; text-align: center; gap: 8px; }
+.spinner { width: 40px; height: 40px; border: 4px solid var(--olive-soft); border-top-color: var(--olive); border-radius: 50%; animation: spin 0.9s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+@media (prefers-reduced-motion: reduce) { .spinner { animation-duration: 3s; } }
+.account-card h3 { font-size: 1rem; margin: 16px 0 6px; }
+.grove-list { display: flex; flex-direction: column; gap: 6px; margin: 0; padding: 0; list-style: none; }
+.grove-list li { display: flex; align-items: center; gap: 8px; padding: 8px 10px; border: 1px solid var(--line); border-radius: 10px; }
+.grove-list li.open { border-color: var(--olive); background: var(--olive-soft); }
+.grove-name { flex: 1; display: flex; flex-direction: column; min-width: 0; }
+.btn.danger { color: var(--danger); }

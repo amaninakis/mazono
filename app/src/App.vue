@@ -7,7 +7,7 @@ import { FarmRepo } from './db/repo'
 import { dateFormatPref, setLanguage } from './i18n'
 import AccountScreen from './screens/AccountScreen.vue'
 import SetupWizard from './screens/SetupWizard.vue'
-import { account } from './sync/account'
+import { account, retryLoad } from './sync/account'
 import AppToast from './ui/AppToast.vue'
 import { type FarmData, provideFarm } from './ui/farm'
 import { useLiveQuery } from './ui/live'
@@ -101,9 +101,13 @@ const state = computed(() => {
   if (account.mode === 'checking') {
     return 'loading'
   }
-  // With a server, nothing is shown until someone signs in.
+  // With a server, nothing is shown until someone signs in…
   if (account.mode === 'server' && !account.user) {
     return 'account'
+  }
+  // …and their data has arrived (so the first-time setup is never shown by mistake).
+  if (account.mode === 'server' && account.loading !== 'idle') {
+    return 'loading-data'
   }
   if (farmId.value === undefined || (farmId.value && data.value === undefined)) {
     return 'loading'
@@ -128,6 +132,20 @@ const nav = computed(() => [
 <template>
   <div v-if="state === 'loading'" class="splash">{{ $t('common.loading') }}</div>
   <AccountScreen v-else-if="state === 'account'" />
+  <main v-else-if="state === 'loading-data'" class="setup loading-data">
+    <template v-if="account.loading === 'loading'">
+      <div class="spinner" aria-hidden="true"></div>
+      <h1>{{ $t('account.loadingTitle') }}</h1>
+      <p class="muted">{{ $t('account.loadingHelp') }}</p>
+    </template>
+    <template v-else>
+      <h1>{{ $t('account.loadFailedTitle') }}</h1>
+      <p class="muted">{{ $t('account.loadFailedHelp') }}</p>
+      <button type="button" class="btn primary big block" @click="retryLoad()">
+        {{ $t('account.tryAgain') }}
+      </button>
+    </template>
+  </main>
   <SetupWizard v-else-if="state === 'setup'" />
   <div v-else class="shell">
     <RouterView :key="route.path" />

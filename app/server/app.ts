@@ -390,6 +390,52 @@ export async function buildServer(options: ServerOptions) {
     return await (result ?? reply.code(403).send({ error: 'not-a-member' }))
   })
 
+  /** Tables whose rows count as "data you entered"; the rest are defaults from setup. */
+  const DATA_TABLES = [
+    'fields',
+    'entries',
+    'extractions',
+    'transactions',
+    'stockMovements',
+    'mills',
+  ]
+
+  /**
+   * Remove a grove that holds no data (e.g. one created by mistake). Only its administrator
+   * can, and never a grove with fields, work, productions, money or oil movements in it.
+   */
+  app.post<{ Params: { farmId: string } }>('/api/farms/:farmId/remove', (request, reply) => {
+    const user = signedInUser(request, reply)
+    if (!user) {
+      return reply
+    }
+    const { farmId } = request.params
+    const membership = database
+      .prepare('SELECT role FROM memberships WHERE user_id = ? AND farm_id = ?')
+      .get(user.id, farmId) as { role: string } | undefined
+    if (membership?.role !== 'admin') {
+      return reply.code(403).send({ error: 'not-a-member' })
+    }
+    const rows = database
+      .prepare(
+        `SELECT data FROM records WHERE farm_id = ? AND tbl IN (${DATA_TABLES.map(() => '?').join(', ')})`,
+      )
+      .all(farmId, ...DATA_TABLES) as { data: string }[]
+    const hasData = rows.some(
+      (row) => !(JSON.parse(row.data) as { deletedAt?: number }).deletedAt,
+    )
+    if (hasData) {
+      return reply.code(409).send({ error: 'not-empty' })
+    }
+    inTransaction(database, () => {
+      database.prepare('DELETE FROM records WHERE farm_id = ?').run(farmId)
+      database.prepare('DELETE FROM memberships WHERE farm_id = ?').run(farmId)
+      database.prepare('DELETE FROM farms WHERE id = ?').run(farmId)
+    })
+
+    return reply.send({ ok: true })
+  })
+
   app.all(
     '/api/*',
     async (_request, reply) => await reply.code(404).send({ error: 'not-found' }),
