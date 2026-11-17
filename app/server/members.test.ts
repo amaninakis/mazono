@@ -1,4 +1,4 @@
-import type { Member, SyncResponse } from '../src/core/syncFormat.ts'
+import type { Member, ServerAccount, SyncResponse } from '../src/core/syncFormat.ts'
 import { beforeEach, describe, expect, it } from 'vitest'
 import { PRESETS } from '../src/core/access.ts'
 import { buildServer, SESSION_COOKIE } from './app.ts'
@@ -7,6 +7,7 @@ import { openDatabase } from './database.ts'
 /* People in a grove: adding them, what they may see and change, and the safety rules. */
 
 let app: Awaited<ReturnType<typeof buildServer>>
+let database: ReturnType<typeof openDatabase>
 let owner: Record<string, string>
 const clock = 1_800_000_000_000
 
@@ -80,7 +81,8 @@ async function memberWith(username: string, permissions: object, role = 'user') 
 }
 
 beforeEach(async () => {
-  app = await buildServer({ database: openDatabase(':memory:'), now: () => clock })
+  database = openDatabase(':memory:')
+  app = await buildServer({ database, now: () => clock })
   const setup = await app.inject({
     method: 'POST',
     url: '/api/setup',
@@ -234,7 +236,7 @@ describe('safety rules', () => {
       cookies: owner,
     })
 
-    expect((await sync(worker)).statusCode).toBe(403)
+    expect((await sync(worker)).statusCode).toBe(401) // their last grove: account deleted
   })
 })
 
@@ -257,5 +259,119 @@ describe('a grove of their own', () => {
     )
 
     expect(response.statusCode).toBe(403)
+  })
+})
+
+async function accounts(cookies = owner) {
+  return await app.inject({ method: 'GET', url: '/api/accounts', cookies })
+}
+
+async function removeAccount(userId: string, cookies = owner) {
+  return await app.inject({ method: 'POST', url: `/api/accounts/${userId}/remove`, cookies })
+}
+
+function accountOf(response: { json: <T>() => T }, username: string) {
+  return response.json<ServerAccount[]>().find((account) => account.username === username)!
+}
+
+describe('removing someone', () => {
+  it('deletes the account with their last grove, so the name can be used again', async () => {
+    await memberWith('testuser', PRESETS.worker)
+    const id = accountOf(await accounts(), 'testuser').userId
+    await app.inject({
+      method: 'POST',
+      url: `/api/farms/grove/members/${id}/remove`,
+      cookies: owner,
+    })
+
+    expect(accountOf(await accounts(), 'testuser')).toBeUndefined()
+    expect((await signIn('testuser', 'testuser-own-password')).status).toBe(401)
+
+    const again = await addMember({ username: 'testuser', password: 'temporary-2' })
+
+    expect(again.json<{ existingAccount: boolean }>().existingAccount).toBe(false)
+  })
+})
+
+describe('every account, for the installation owner', () => {
+  it('lists accounts and groves, naming only groves the owner is in', async () => {
+    await memberWith('giannis', PRESETS.worker)
+    await addMember({ username: 'nikos', password: 'temporary-1', ownGrove: true })
+    const { cookies } = await signIn('nikos', 'temporary-1')
+    await changePassword(cookies, 'temporary-1', 'nikos-own-pass')
+    await sync(cookies, [row('farms', 'nikos-grove', { name: 'Secret grove' })], 'nikos-grove')
+    const list = await accounts()
+
+    expect(list.json<ServerAccount[]>().map((account) => account.username)).toEqual([
+      'andreas',
+      'giannis',
+      'nikos',
+    ])
+
+    expect(accountOf(list, 'giannis').groves).toEqual([
+      expect.objectContaining({ farmId: 'grove', role: 'user', people: 2 }),
+    ])
+
+    expect(accountOf(list, 'nikos').groves).toEqual([
+      { farmId: 'nikos-grove', role: 'admin', people: 1, admins: 1 },
+    ])
+
+    expect(accountOf(list, 'nikos').lastActive).toBe(clock)
+    expect(JSON.stringify(list.json())).not.toContain('Secret grove')
+  })
+
+  it('is only for the owner', async () => {
+    const admin = await memberWith('maria', {}, 'admin')
+
+    expect((await accounts(admin)).statusCode).toBe(403)
+  })
+
+  it('gives a new temporary password to someone in another grove', async () => {
+    await addMember({ username: 'nikos', password: 'temporary-1', ownGrove: true })
+    const id = accountOf(await accounts(), 'nikos').userId
+    const response = await app.inject({
+      method: 'POST',
+      url: `/api/accounts/${id}/password`,
+      cookies: owner,
+      payload: { password: 'help-me-2026' },
+    })
+
+    expect(accountOf(response, 'nikos').mustChangePassword).toBe(true)
+    expect((await signIn('nikos', 'help-me-2026')).status).toBe(200)
+  })
+
+  it('deletes an account with the groves nobody else uses', async () => {
+    await addMember({ username: 'nikos', password: 'temporary-1', ownGrove: true })
+    const { cookies } = await signIn('nikos', 'temporary-1')
+    await changePassword(cookies, 'temporary-1', 'nikos-own-pass')
+    await sync(cookies, [row('fields', 'n1', { name: 'Theirs' })], 'nikos-grove')
+    const id = accountOf(await accounts(), 'nikos').userId
+
+    expect((await removeAccount(id)).statusCode).toBe(200)
+    expect(accountOf(await accounts(), 'nikos')).toBeUndefined()
+    expect(
+      database
+        .prepare("SELECT COUNT(*) AS count FROM records WHERE farm_id = 'nikos-grove'")
+        .get(),
+    ).toEqual({ count: 0 })
+  })
+
+  it('keeps an only administrator while others use their grove, and the owner', async () => {
+    await addMember({ username: 'nikos', password: 'temporary-1', ownGrove: true })
+    const { cookies } = await signIn('nikos', 'temporary-1')
+    await changePassword(cookies, 'temporary-1', 'nikos-own-pass')
+    await sync(cookies, [], 'nikos-grove')
+    await app.inject({
+      method: 'POST',
+      url: '/api/farms/nikos-grove/members',
+      cookies,
+      payload: { username: 'eleni', password: 'temporary-1', permissions: PRESETS.worker },
+    })
+    const list = await accounts()
+    const refused = await removeAccount(accountOf(list, 'nikos').userId)
+
+    expect(refused.statusCode).toBe(409)
+    expect(refused.json()).toEqual({ error: 'only-admin' })
+    expect((await removeAccount(accountOf(list, 'andreas').userId)).statusCode).toBe(403)
   })
 })

@@ -566,3 +566,4 @@ fieldset.plain:disabled .btn, fieldset.plain:disabled .input { opacity: 0.7; }
 .hand-over { margin: 10px 0; padding: 12px; border-radius: 12px; background: var(--olive-soft); }
 .hand-over p { margin: 6px 0 0; }
 .hand-over code { font-size: 1.05rem; font-weight: 600; }
+.type-name { display: block; margin: 12px 0 6px; font-weight: 600; }

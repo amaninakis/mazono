@@ -14,6 +14,7 @@ import { account } from '../sync/account'
 import AccountCard from '../ui/AccountCard.vue'
 import AppModal from '../ui/AppModal.vue'
 import { canDo, categoryName, chargeName, locationName, taskName, useFarm } from '../ui/farm'
+import ServerAccountsCard from '../ui/ServerAccountsCard.vue'
 import { showToast } from '../ui/toast'
 import ToggleSwitch from '../ui/ToggleSwitch.vue'
 import UsersCard from '../ui/UsersCard.vue'
@@ -259,6 +260,7 @@ const isAdmin = computed(() => farm.value.access.role === 'admin')
 
     <AccountCard v-if="account.mode === 'server' && account.user" />
     <UsersCard v-if="account.mode === 'server' && isAdmin" />
+    <ServerAccountsCard v-if="account.mode === 'server' && account.user?.isOwner" />
 
     <!-- The grove's settings: hidden, or shown read-only, for people without access to them. -->
     <section class="card">

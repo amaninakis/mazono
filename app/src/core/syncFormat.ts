@@ -74,6 +74,24 @@ export interface Member {
   mustChangePassword: boolean
 }
 
+/**
+ * An account as the installation owner sees it, to help people. Grove names only for groves
+ * the owner is in: the owner does not see other people's data.
+ */
+export interface ServerAccount {
+  userId: string
+  username: string
+  isOwner: boolean
+  mustChangePassword: boolean
+  /** Created to start their own grove, and has not set it up yet. */
+  waitingForGrove: boolean
+  createdAt: number
+  /** Last time one of their devices used the server; null if never signed in. */
+  lastActive: number | null
+  /** `admins`: how many administrators the grove has. */
+  groves: { farmId: string; role: Role; people: number; admins: number; name?: string }[]
+}
+
 /** The id a row is stored under: `farmId` for settings, `id` for everything else. */
 export function rowId(table: SyncTable, row: Record<string, unknown>): string {
   return String(table === 'settings' ? row.farmId : row.id)
