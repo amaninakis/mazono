@@ -1,7 +1,8 @@
 <script setup lang="ts">
+import type { FormValues } from '../core/drafts'
 import type { TransactionKind } from '../core/types'
 import { useTranslation } from 'i18next-vue'
-import { computed, ref, watch } from 'vue'
+import { computed, nextTick, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { seasonLabel, seasonOf, todayISO } from '../core/dates'
 import { formatMoney, formatNumber } from '../core/format'
@@ -17,6 +18,8 @@ import { stockLevels, trackedVintages } from '../core/oil'
 import { formatLocale } from '../i18n'
 import AppModal from '../ui/AppModal.vue'
 import DateField from '../ui/DateField.vue'
+import { useDraft } from '../ui/draft'
+import DraftNotice from '../ui/DraftNotice.vue'
 import { categoryName, locationName, useFarm } from '../ui/farm'
 import NameInput from '../ui/NameInput.vue'
 import NumberStepper from '../ui/NumberStepper.vue'
@@ -265,6 +268,70 @@ function sourceLabel(isoDate: { vintage: number; locationId: string; kg: number 
   return `${seasonLabel(isoDate.vintage)} · ${location ? locationName(translate, location) : '?'} (${fmt(isoDate.kg, 3)})`
 }
 
+/* ---------- unsaved work survives a call or a wrong tap ---------- */
+const draft = useDraft({
+  form: kind,
+  recordId: editing?.id,
+  values: () => ({
+    date: date.value,
+    party: party.value,
+    categoryId: categoryId.value,
+    amount: amount.value,
+    invoiceNo: invoiceNo.value,
+    notes: notes.value,
+    feeKind: feeKind.value,
+    feeValue: feeValue.value,
+    source: source.value,
+    kg: kg.value,
+    price: price.value,
+    acidity: acidity.value,
+  }),
+  restore: restoreValues,
+})
+
+async function restoreValues(values: FormValues) {
+  if (typeof values.date === 'string') {
+    date.value = values.date
+  }
+  await nextTick() // the oil on offer follows the date
+  if (typeof values.party === 'string') {
+    party.value = values.party
+  }
+  if (typeof values.categoryId === 'string') {
+    categoryId.value = values.categoryId
+    categoryChosen = true
+  }
+  if ('amount' in values) {
+    amount.value = values.amount as number | null
+  }
+  if (typeof values.invoiceNo === 'string') {
+    invoiceNo.value = values.invoiceNo
+  }
+  if (typeof values.notes === 'string') {
+    notes.value = values.notes
+  }
+  if (values.feeKind === 'percent' || values.feeKind === 'euro') {
+    feeKind.value = values.feeKind
+    feeChosen = true
+  }
+  if ('feeValue' in values) {
+    feeValue.value = values.feeValue as number | null
+    feeChosen = true
+  }
+  if (typeof values.source === 'string') {
+    source.value = values.source
+  }
+  if ('kg' in values) {
+    kg.value = values.kg as number | null
+  }
+  if ('price' in values) {
+    price.value = values.price as number | null
+  }
+  if ('acidity' in values) {
+    acidity.value = values.acidity as number | null
+  }
+}
+
 /* ---------- save ---------- */
 const { saving, once } = useSaving()
 
@@ -316,6 +383,7 @@ async function saveTransaction() {
     fieldId: editing?.fieldId, // no longer asked; kept on older entries
     notes: notes.value.trim() || undefined,
   })
+  draft.clear()
   showPeriodOf(date.value, translate('tx.saved'))
   void router.push('/money')
 }
@@ -333,6 +401,7 @@ async function remove() {
   }
   const repo = farm.value.repo
   await repo.softDelete('transactions', editing.id)
+  draft.clear()
   showToast({
     title: translate('tx.deleted'),
     action: {
@@ -349,6 +418,11 @@ async function remove() {
     <header class="page-head">
       <h1>{{ title }}</h1>
     </header>
+    <DraftNotice
+      v-if="draft.restoredAt.value"
+      :saved-at="draft.restoredAt.value"
+      @discard="draft.discard()"
+    />
 
     <section class="card">
       <div class="row-between">

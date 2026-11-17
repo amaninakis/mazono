@@ -593,3 +593,48 @@ fieldset.plain:disabled .btn, fieldset.plain:disabled .input { opacity: 0.7; }
 .journal-head { align-items: center; gap: 12px; }
 .journal-head h1 { margin: 0.25rem 0 0.75rem; }
 .block-top { display: flex; width: fit-content; margin-top: 8px; }
+.draft-notice { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin: 0 0 12px; padding: 4px 4px 4px 14px; border-radius: 12px; background: var(--olive-soft); font-size: 0.875rem; }
+.field-error { margin: 4px 0 0; color: var(--danger); font-size: 0.875rem; font-weight: 500; }
+.input[aria-invalid='true'] { border-color: var(--danger); }
+
+/* ---------- Computer and tablet (768px and wider) ----------
+   The bottom bar becomes a side menu; forms stay a readable column (640px), and the pages
+   with tables and long lists (Money, Oil, Reports, History) use the extra width. */
+@media (min-width: 768px) {
+  .shell { max-width: none; margin: 0; padding-left: 224px; }
+  .bottom-nav {
+    top: 0; bottom: 0; right: auto; width: 224px; max-width: none; margin: 0;
+    flex-direction: column; justify-content: flex-start; gap: 4px;
+    padding: 24px 12px; border-top: 0; border-right: 1px solid var(--line);
+  }
+  .bottom-nav a {
+    flex: none; flex-direction: row; justify-content: flex-start; gap: 12px;
+    min-height: var(--tap); padding: 0 12px; border-radius: 10px; font-size: 0.95rem;
+  }
+  .bottom-nav a > span:last-child { overflow: visible; white-space: normal; }
+  .bottom-nav .nav-icon { width: 24px; text-align: center; }
+  .bottom-nav a.active { background: var(--olive-soft); }
+  .bottom-nav a:hover { color: var(--ink); }
+
+  .page { max-width: 640px; margin: 0 auto; padding: 24px 24px 120px; }
+  .save-bar { left: 224px; bottom: 0; max-width: 640px; padding: 12px 24px; }
+  .toast { left: 236px; bottom: 96px; }
+  .modal-backdrop { align-items: center; }
+  .modal { border-radius: 18px; border-bottom: 1px solid var(--line); padding-bottom: 18px; max-width: 520px; }
+}
+
+@media (min-width: 1024px) {
+  /* Summary on the left, the long list or table on the right. */
+  .page.money, .page.oil, .page.journal {
+    max-width: 1040px; display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    grid-auto-flow: row dense; column-gap: 24px; align-items: start;
+  }
+  .page.money > *, .page.oil > *, .page.journal > * { grid-column: 1 / -1; }
+  .page.money > .card { grid-column: 1; }
+  .page.money > .money-list { grid-column: 2; grid-row: span 20; }
+  .page.oil > .oil-totals, .page.oil > .oil-fields { grid-column: 1; }
+  .page.oil > .oil-productions { grid-column: 2; grid-row: span 2; }
+  .page.journal > .calendar { grid-column: 1; grid-row: span 20; }
+  .page.journal > .calendar ~ * { grid-column: 2; }
+  .page.reports { max-width: 1040px; }
+}

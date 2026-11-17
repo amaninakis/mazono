@@ -280,7 +280,7 @@ async function removeAnyway() {
     >
 
     <!-- Season totals -->
-    <section v-if="totals.count" class="card">
+    <section v-if="totals.count" class="card oil-totals">
       <h2>{{ $t('oil.total') }} · {{ seasonLabel(season) }}</h2>
       <table class="kv">
         <tbody>
@@ -309,7 +309,7 @@ async function removeAnyway() {
     </section>
 
     <!-- Extractions -->
-    <section class="card">
+    <section class="card oil-productions">
       <h2>{{ $t('oil.extractions') }}</h2>
       <p v-if="!extractions.length" class="muted">{{ $t('oil.noExtractions') }}</p>
       <ul v-else class="list">
@@ -347,7 +347,7 @@ async function removeAnyway() {
     </section>
 
     <!-- Oil per field -->
-    <section v-if="perField.length" class="card">
+    <section v-if="perField.length" class="card oil-fields">
       <h2>{{ $t('oil.fieldsEstimate') }}</h2>
       <table class="kv">
         <tbody>
@@ -365,7 +365,7 @@ async function removeAnyway() {
     </section>
 
     <!-- Stock -->
-    <section class="card">
+    <section class="card oil-stock">
       <h2>{{ $t('oil.stock') }}</h2>
       <p v-if="!stockRows.length" class="muted">{{ $t('oil.noStock') }}</p>
       <div v-else class="table-wrap">

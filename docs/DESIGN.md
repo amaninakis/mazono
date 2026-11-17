@@ -80,6 +80,9 @@ The app is a TypeScript PWA with a local database on the device and a small sync
 - Touch targets are at least 48 px. Steppers must be usable with gloves.
 - Text is never below 12 px, and only three font weights are used (400, 500, 600); hierarchy comes from size.
 - Dialogs work by keyboard too: focus moves in and stays in, Escape closes, focus returns to what opened them.
+- **Drafts**: the Today, production and money forms keep what was typed but not saved on the device (`core/drafts.ts`, `ui/draft.ts`), only the values changed from how the form started. Coming back shows "Continuing your unsaved entry" with *Start over*; leaving shows a gentle note that it was kept; saving clears it. Drafts older than 7 days are dropped.
+- **Checking a box when you leave it** (forms with rules: account, new password, adding a person, dates): never while typing; the message goes as soon as it is corrected; saving checks every box and moves to the first problem (`ui/fieldChecks.ts`).
+- **Computer and tablet** (768 px and wider): the bottom bar becomes a side menu; forms stay a 640 px column; from 1024 px Money, Oil and History put the summary or calendar on the left and the list on the right.
 - Deleting work, a production, a move or a money entry is undone from the toast, not confirmed first (fast and forgiving). A question first only for what cannot be undone: deleting an account or a grove, removing a person, or a change that would leave oil missing.
 - Store quantities in base units (kg, trees, units) and format them only for display.
 - Every user-facing string goes through i18n, in both `en.json` and `el.json`.

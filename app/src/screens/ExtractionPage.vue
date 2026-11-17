@@ -1,8 +1,9 @@
 <script setup lang="ts">
+import type { FormValues } from '../core/drafts'
 import type { Shortfall } from '../core/oil'
 import type { Extraction, TaskEntry, UnitAmount } from '../core/types'
 import { useTranslation } from 'i18next-vue'
-import { computed, reactive, ref, watch } from 'vue'
+import { computed, nextTick, reactive, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { byNewest, parseISODate, seasonOf, todayISO } from '../core/dates'
 import { formatNumber, formatYield } from '../core/format'
@@ -20,6 +21,8 @@ import { unitLabel } from '../core/units'
 import { formatLocale } from '../i18n'
 import AppModal from '../ui/AppModal.vue'
 import DateField from '../ui/DateField.vue'
+import { useDraft } from '../ui/draft'
+import DraftNotice from '../ui/DraftNotice.vue'
 import { chargeName, locationName, useFarm } from '../ui/farm'
 import NumberStepper from '../ui/NumberStepper.vue'
 import { oilPeriod } from '../ui/periods'
@@ -99,20 +102,18 @@ for (const charge of editing?.charges ?? []) {
   charges[charge.chargeTypeId] = charge.kg
   manualCharge.add(charge.chargeTypeId)
 }
-watch(
-  [oilKg, chargeTypes],
-  () => {
-    for (const chargeType of chargeTypes.value) {
-      if (manualCharge.has(chargeType.id) || !chargeType.defaultPercent) {
-        continue
-      }
-      charges[chargeType.id] = oilKg.value
-        ? chargeFromPercent(chargeType.defaultPercent, oilKg.value)
-        : null
+/** Charges not typed by hand follow the oil, from each charge's usual %. */
+function fillCharges() {
+  for (const chargeType of chargeTypes.value) {
+    if (manualCharge.has(chargeType.id) || !chargeType.defaultPercent) {
+      continue
     }
-  },
-  { immediate: true },
-)
+    charges[chargeType.id] = oilKg.value
+      ? chargeFromPercent(chargeType.defaultPercent, oilKg.value)
+      : null
+  }
+}
+watch([oilKg, chargeTypes], fillCharges, { immediate: true })
 
 function setCharge(id: string, value: number | null) {
   charges[id] = value
@@ -217,6 +218,104 @@ watch(date, (next, before) => {
   rows.value = buildRows(next)
   rowsTouched = false
 })
+
+/* ---------- unsaved work survives a call or a wrong tap ---------- */
+const draft = useDraft({
+  form: 'extraction',
+  recordId: editing?.id,
+  values: () => ({
+    date: date.value,
+    millId: millId.value,
+    receiptNo: receiptNo.value,
+    oliveKg: oliveKg.value,
+    oilKg: oilKg.value,
+    acidity: acidity.value,
+    notes: notes.value,
+    // Only charges typed by hand; the others follow the oil.
+    charges: Object.fromEntries(
+      Object.entries(charges).filter(([id]) => manualCharge.has(id)),
+    ),
+    stored: { ...stored },
+    // Harvest days only when ticked or split by hand.
+    rows: rowsTouched
+      ? rows.value.map((row) => ({
+          entryId: row.entry.id,
+          selected: row.selected,
+          partial: row.partial,
+          take: row.take,
+        }))
+      : null,
+  }),
+  restore: restoreValues,
+})
+
+interface RowChoice {
+  entryId: string
+  selected: boolean
+  partial: boolean
+  take: UnitAmount[]
+}
+
+async function restoreValues(values: FormValues) {
+  if (typeof values.date === 'string') {
+    date.value = values.date
+  }
+  if (typeof values.millId === 'string') {
+    millId.value = values.millId
+  }
+  if (typeof values.receiptNo === 'string') {
+    receiptNo.value = values.receiptNo
+  }
+  if ('oliveKg' in values) {
+    oliveKg.value = values.oliveKg as number | null
+  }
+  if ('oilKg' in values) {
+    oilKg.value = values.oilKg as number | null
+  }
+  if ('acidity' in values) {
+    acidity.value = values.acidity as number | null
+  }
+  if (typeof values.notes === 'string') {
+    notes.value = values.notes
+  }
+  await nextTick() // harvest days follow the date, charges follow the oil
+  if (values.charges && typeof values.charges === 'object') {
+    const typed = values.charges as Record<string, number | null>
+    manualCharge.clear()
+
+    for (const id of Object.keys(charges)) {
+      charges[id] = null
+    }
+
+    for (const [id, kg] of Object.entries(typed)) {
+      setCharge(id, kg)
+    }
+    fillCharges()
+  }
+  if (values.stored && typeof values.stored === 'object') {
+    for (const id of Object.keys(stored)) {
+      Reflect.deleteProperty(stored, id)
+    }
+    Object.assign(stored, values.stored)
+  }
+  if ('rows' in values) {
+    restoreRows(values.rows as RowChoice[] | null)
+  }
+}
+
+function restoreRows(choices: RowChoice[] | null) {
+  rows.value = buildRows(date.value)
+  rowsTouched = choices != null
+
+  for (const choice of choices ?? []) {
+    const row = rows.value.find((entry) => entry.entry.id === choice.entryId)
+    if (row) {
+      row.selected = choice.selected
+      row.partial = choice.partial
+      row.take = choice.take
+    }
+  }
+}
 
 /** Copy of a list of unit amounts (so editing a row never changes the saved entry). */
 function copyUnits(quantities: UnitAmount[]) {
@@ -420,6 +519,7 @@ async function saveExtraction(confirmed = false) {
     allocations: allocations.value,
     notes: notes.value.trim() || undefined,
   })
+  draft.clear()
 
   const lines = [
     translate('extraction.summaryNet', { yield: yieldText.value, net: fmt(net.value) }),
@@ -452,6 +552,7 @@ async function remove(confirmed = false) {
   }
   const repo = farm.value.repo
   await repo.softDelete('extractions', editing.id)
+  draft.clear()
   showToast({
     title: translate('extraction.deleted'),
     action: {
@@ -468,6 +569,11 @@ async function remove(confirmed = false) {
     <header class="page-head">
       <h1>{{ editing ? $t('extraction.editTitle') : $t('extraction.title') }}</h1>
     </header>
+    <DraftNotice
+      v-if="draft.restoredAt.value"
+      :saved-at="draft.restoredAt.value"
+      @discard="draft.discard()"
+    />
 
     <!-- 1. Basics -->
     <section class="card">

@@ -609,5 +609,10 @@
     "saveAnyway": "Save anyway",
     "deleteAnyway": "Delete anyway",
     "noteTitle": "More oil was sold or moved out than there is:"
+  },
+  "draft": {
+    "restored": "Continuing your unsaved entry from {{when}}.",
+    "discard": "Start over",
+    "kept": "Your unsaved entry is kept. It will be here when you come back."
   }
 }
