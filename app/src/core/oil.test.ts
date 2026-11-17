@@ -7,9 +7,11 @@ import {
   chargeFromPercent,
   chargeShare,
   netOil,
+  newShortfalls,
   oilByEntry,
   previousExtractionDate,
   seasonTotals,
+  shortfalls,
   stockLevels,
   unitWeights,
 } from './oil'
@@ -232,5 +234,59 @@ describe('stock', () => {
       storedKg: 356,
       byCharge: { fee: 55 },
     })
+  })
+})
+
+describe('oil missing from stock', () => {
+  it('finds places holding less than nothing, ignoring a gram of rounding', () => {
+    expect(shortfalls({ 2025: { mill: -0.02, home: 0 }, 2024: { mill: -0.0004 } })).toEqual([
+      { vintage: 2025, locationId: 'mill', kg: 0.02 },
+    ])
+  })
+
+  it('reports what a change makes worse, not what was already short', () => {
+    const before = { 2025: { mill: 0.5, home: -1 } }
+
+    expect(newShortfalls(before, { 2025: { mill: -0.02, home: -1 } })).toEqual([
+      { vintage: 2025, locationId: 'mill', kg: 0.02 },
+    ])
+
+    expect(newShortfalls(before, { 2025: { mill: 0, home: -1.5 } })).toEqual([
+      { vintage: 2025, locationId: 'home', kg: 1.5 },
+    ])
+
+    expect(newShortfalls(before, { 2025: { mill: 0.1, home: -0.5 } })).toEqual([])
+  })
+
+  it('catches the sale entered before a production was corrected', () => {
+    const production = {
+      id: 'p1',
+      farmId: 'f',
+      updatedAt: 0,
+      date: '2025-11-30',
+      oliveKg: 1087,
+      oilKg: 264,
+      charges: [],
+      storage: [{ locationId: 'mill', kg: 28.81 }],
+      allocations: [],
+    }
+    const sale = {
+      id: 's1',
+      farmId: 'f',
+      updatedAt: 0,
+      date: '2026-07-01',
+      kind: 'sale' as const,
+      party: 'Buyer',
+      amount: 100,
+      kg: 28.81,
+      vintage: 2025,
+      locationId: 'mill',
+    }
+    const before = stockLevels([production], [], 3, [sale])
+    const corrected = { ...production, storage: [{ locationId: 'mill', kg: 28.79 }] }
+
+    expect(newShortfalls(before, stockLevels([corrected], [], 3, [sale]))).toEqual([
+      { vintage: 2025, locationId: 'mill', kg: 0.02 },
+    ])
   })
 })

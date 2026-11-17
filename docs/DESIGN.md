@@ -217,6 +217,7 @@ Here n is the number of units of type u in entry i, and w is that unit's weight.
 - **Extractions this season**: one row per mill visit (date, olives, oil, yield, charges with %, net, acidity, stored) with a totals row and a season selector.
 - **Oil stock**: rows = vintage (season), columns = location, cells = kg on hand. Tap a cell to see its movements.
 - Stock actions besides sales: **transfer** (e.g. mill → home) and **own use / gift**.
+- **Oil can never quietly go missing**: a sale, transfer or own use cannot take more than is on hand (the amount on hand is shown to the gram). Editing or deleting a production, or deleting a transfer, that would leave less oil than was already sold or moved out asks first ("Oil would be missing", with place, season and kg; *Save / Delete anyway* or *Cancel*), via `newShortfalls()`. A place that is short anyway shows in red with the exact amount (e.g. −0,02, never "−0") and the Oil page lists it with how to fix it. An existing sale can be saved again with the same or fewer kg. *(0.6.2)*
 
 ## Costs, sales and income — v0.3
 

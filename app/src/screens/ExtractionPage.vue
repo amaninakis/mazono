@@ -1,5 +1,6 @@
 <script setup lang="ts">
-import type { TaskEntry, UnitAmount } from '../core/types'
+import type { Shortfall } from '../core/oil'
+import type { Extraction, TaskEntry, UnitAmount } from '../core/types'
 import { useTranslation } from 'i18next-vue'
 import { computed, reactive, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
@@ -11,7 +12,9 @@ import {
   batchTrees,
   chargeFromPercent,
   chargeShare,
+  newShortfalls,
   previousExtractionDate,
+  stockLevels,
 } from '../core/oil'
 import { unitLabel } from '../core/units'
 import { formatLocale } from '../i18n'
@@ -21,6 +24,7 @@ import { chargeName, locationName, useFarm } from '../ui/farm'
 import NumberStepper from '../ui/NumberStepper.vue'
 import { oilPeriod } from '../ui/periods'
 import { useSaving } from '../ui/saving'
+import ShortfallModal from '../ui/ShortfallModal.vue'
 import { showToast } from '../ui/toast'
 
 const { t: translate } = useTranslation()
@@ -337,7 +341,33 @@ async function save() {
   await once(saveExtraction)
 }
 
-async function saveExtraction() {
+/* ---------- oil already sold or moved out ---------- */
+/** Places a change would leave short; shown before saving or deleting. */
+const missing = ref<Shortfall[]>([])
+const missingAction = ref<'save' | 'delete'>('save')
+
+function stockWith(extractions: Extraction[]) {
+  return stockLevels(
+    extractions,
+    farm.value.stockMovements,
+    farm.value.settings.seasonStartMonth,
+    farm.value.transactions,
+  )
+}
+
+/** What would be missing if the productions were these instead. */
+function missingWith(extractions: Extraction[]) {
+  return newShortfalls(stockWith(farm.value.extractions), stockWith(extractions))
+}
+
+async function goAhead() {
+  missing.value = []
+  await (missingAction.value === 'save'
+    ? once(async () => await saveExtraction(true))
+    : remove(true))
+}
+
+async function saveExtraction(confirmed = false) {
   if (!oliveKg.value || !oilKg.value) {
     error.value = translate('extraction.nothingToSave')
     return
@@ -356,6 +386,25 @@ async function saveExtraction() {
       kg: stored[location.id] ?? 0,
     })),
   ].filter((share) => share.kg > 0)
+  if (!confirmed) {
+    const draft: Extraction = {
+      id: editing?.id ?? 'draft',
+      farmId: farm.value.repo.farmId,
+      updatedAt: 0,
+      date: date.value,
+      oliveKg: oliveKg.value,
+      oilKg: oilKg.value,
+      charges: [],
+      storage,
+      allocations: [],
+    }
+    const others = farm.value.extractions.filter((x) => x.id !== editing?.id)
+    missing.value = missingWith([...others, draft])
+    if (missing.value.length > 0) {
+      missingAction.value = 'save'
+      return
+    }
+  }
   const saved = await farm.value.repo.saveExtraction({
     id: editing?.id,
     date: date.value,
@@ -390,9 +439,16 @@ async function saveExtraction() {
   void router.push('/oil')
 }
 
-async function remove() {
+async function remove(confirmed = false) {
   if (!editing) {
     return
+  }
+  if (!confirmed) {
+    missing.value = missingWith(farm.value.extractions.filter((x) => x.id !== editing.id))
+    if (missing.value.length > 0) {
+      missingAction.value = 'delete'
+      return
+    }
   }
   const repo = farm.value.repo
   await repo.softDelete('extractions', editing.id)
@@ -543,7 +599,7 @@ async function remove() {
     <section class="card">
       <label class="label" for="x-notes">{{ $t('common.notes') }}</label>
       <textarea id="x-notes" v-model="notes" class="input" rows="2"></textarea>
-      <button v-if="editing" type="button" class="btn ghost small danger" @click="remove">
+      <button v-if="editing" type="button" class="btn ghost small danger" @click="remove()">
         {{ $t('common.delete') }}
       </button>
     </section>
@@ -595,5 +651,14 @@ async function remove() {
         </button>
       </div>
     </AppModal>
+    <ShortfallModal
+      v-if="missing.length > 0"
+      :missing="missing"
+      :confirm-label="
+        missingAction === 'save' ? $t('shortfall.saveAnyway') : $t('shortfall.deleteAnyway')
+      "
+      @confirm="goAhead"
+      @close="missing = []"
+    />
   </main>
 </template>

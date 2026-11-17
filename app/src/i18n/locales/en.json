@@ -597,5 +597,15 @@
     "errorOnlyAdmin": "They are the only administrator of a grove other people use. Ask them to make someone else administrator first.",
     "admin": "Administrator",
     "user": "User"
+  },
+  "shortfall": {
+    "title": "Oil would be missing",
+    "help": "After this change, more oil would have been sold or moved out than there is:",
+    "line_one": "{{place}}, {{season}}: {{kg}} kg missing",
+    "line_other": "{{place}}, {{season}}: {{kg}} kg missing",
+    "fix": "Check the sale or transfer of that season and place, or the production's charges and storage, so the numbers match the receipts.",
+    "saveAnyway": "Save anyway",
+    "deleteAnyway": "Delete anyway",
+    "noteTitle": "More oil was sold or moved out than there is:"
   }
 }
