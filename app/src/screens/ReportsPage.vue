@@ -2,6 +2,7 @@
 import type { CsvValue, FieldSeasonCell } from '../core/reports'
 import { useTranslation } from 'i18next-vue'
 import { computed, ref } from 'vue'
+import { RouterLink } from 'vue-router'
 import { parseISODate, seasonLabel } from '../core/dates'
 import { formatMoney, formatNumber, formatYield } from '../core/format'
 import {
@@ -24,6 +25,8 @@ type YearMetric = 'olives' | 'oil' | 'net' | 'yield'
 
 const { t: translate } = useTranslation()
 const farm = useFarm()
+/** An empty report points to where its data comes from. */
+const canLogWork = computed(() => canDo(farm.value, 'work', 'change'))
 const startMonth = computed(() => farm.value.settings.seasonStartMonth)
 const REPORTS: ReportKey[] = ['fields', 'seasons', 'yield', 'money', 'records']
 const report = ref<ReportKey>('fields')
@@ -220,7 +223,7 @@ const seasonBars = computed(() =>
     return {
       label: season(row.season),
       value,
-      valueText: `${fmt(value, 0)} ${translate('common.kg')}`,
+      valueText: fmt(value, 0),
     }
   }),
 )
@@ -468,7 +471,12 @@ const visibleReports = computed(() =>
       <h2>{{ $t(`reports.title.${report}`) }}</h2>
       <p class="muted small">{{ $t(`reports.about.${report}`) }}</p>
 
-      <p v-if="!hasData" class="empty-note">{{ $t(`reports.empty.${report}`) }}</p>
+      <div v-if="!hasData" class="empty-note">
+        <p>{{ $t(`reports.empty.${report}`) }}</p>
+        <RouterLink v-if="canLogWork" to="/" class="btn small">
+          {{ $t('reports.logHarvest') }}
+        </RouterLink>
+      </div>
 
       <!-- 1. fields × seasons -->
       <template v-else-if="report === 'fields'">
@@ -531,7 +539,11 @@ const visibleReports = computed(() =>
             {{ $t(`reports.col.${metric}`) }}
           </button>
         </div>
-        <SeasonBars :bars="seasonBars" :title="$t(`reports.col.${yearMetric}`)" />
+        <SeasonBars
+          :bars="seasonBars"
+          :title="$t(`reports.col.${yearMetric}`)"
+          :unit="yearMetric === 'yield' ? undefined : $t('reports.inKg')"
+        />
         <div class="table-scroll">
           <table class="report-table">
             <thead>

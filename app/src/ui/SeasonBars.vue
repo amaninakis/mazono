@@ -5,6 +5,8 @@ import { computed } from 'vue'
 const props = defineProps<{
   bars: { label: string; value: number; valueText: string }[]
   title: string
+  /** Shown once above the chart (e.g. "in kg"), so the bar labels stay short enough to fit. */
+  unit?: string
 }>()
 
 const WIDTH = 340
@@ -44,6 +46,7 @@ const gridLines = computed(() =>
 
 <template>
   <figure class="chart">
+    <figcaption v-if="unit" class="chart-caption">{{ unit }}</figcaption>
     <svg :viewBox="`0 0 ${WIDTH} ${HEIGHT}`" role="img" :aria-label="title">
       <line
         v-for="y in gridLines"

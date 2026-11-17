@@ -153,6 +153,17 @@ function loggedBy(createdBy: string | undefined) {
 
 <template>
   <main class="page journal">
+    <div class="row-between journal-head">
+      <h1>{{ $t('nav.journal') }}</h1>
+      <button
+        type="button"
+        class="btn small"
+        :disabled="date === today && month === today.slice(0, 7)"
+        @click="setDate(today)"
+      >
+        {{ $t('journal.goToday') }}
+      </button>
+    </div>
     <section class="card calendar">
       <div class="row-between month-nav">
         <span>

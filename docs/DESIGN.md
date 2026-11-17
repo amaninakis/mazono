@@ -78,6 +78,9 @@ The app is a TypeScript PWA with a local database on the device and a small sync
 - All business logic (yield, allocation, stock, seasons) lives in `app/src/core/`, free of UI code, with unit tests.
 - No server-only features in the core flows. The app must work fully offline.
 - Touch targets are at least 48 px. Steppers must be usable with gloves.
+- Text is never below 12 px, and only three font weights are used (400, 500, 600); hierarchy comes from size.
+- Dialogs work by keyboard too: focus moves in and stays in, Escape closes, focus returns to what opened them.
+- Deleting work, a production, a move or a money entry is undone from the toast, not confirmed first (fast and forgiving). A question first only for what cannot be undone: deleting an account or a grove, removing a person, or a change that would leave oil missing.
 - Store quantities in base units (kg, trees, units) and format them only for display.
 - Every user-facing string goes through i18n, in both `en.json` and `el.json`.
 - Write for non-technical users: plain words, no jargon on the main screens, a default for every choice.

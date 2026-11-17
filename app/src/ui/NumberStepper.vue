@@ -123,6 +123,7 @@ function onBlur() {
     <input
       :id="id"
       class="step-input"
+      :aria-label="label"
       inputmode="decimal"
       placeholder="0"
       :value="text"
