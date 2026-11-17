@@ -36,8 +36,8 @@ const editing = route.params.id
 const kind: TransactionKind =
   editing?.kind ?? ((route.params.kind as TransactionKind) || 'expense')
 const startMonth = farm.value.settings.seasonStartMonth
-function fmt(value: number) {
-  return formatNumber(value, formatLocale.value, 1)
+function fmt(value: number, decimals = 1) {
+  return formatNumber(value, formatLocale.value, decimals)
 }
 
 const title = computed(() => {
@@ -262,7 +262,7 @@ function setFee(value: number | null) {
 
 function sourceLabel(isoDate: { vintage: number; locationId: string; kg: number }) {
   const location = farm.value.locations.find((x) => x.id === isoDate.locationId)
-  return `${seasonLabel(isoDate.vintage)} · ${location ? locationName(translate, location) : '?'} (${fmt(isoDate.kg)})`
+  return `${seasonLabel(isoDate.vintage)} · ${location ? locationName(translate, location) : '?'} (${fmt(isoDate.kg, 3)})`
 }
 
 /* ---------- save ---------- */
@@ -282,8 +282,13 @@ async function saveTransaction() {
 
       return
     }
-    if (!chosen.value.untracked && kg.value > available.value + 0.0001) {
-      error.value = translate('tx.tooMuch', { kg: fmt(available.value) })
+    // An existing sale may keep its kg from the same oil, so it can be corrected step by step.
+    const keepsOwnKg =
+      editing?.vintage === chosen.value.vintage &&
+      editing.locationId === chosen.value.locationId &&
+      kg.value <= (editing.kg ?? 0) + 0.0001
+    if (!chosen.value.untracked && kg.value > available.value + 0.0001 && !keepsOwnKg) {
+      error.value = translate('tx.tooMuch', { kg: fmt(available.value, 3) })
       return
     }
   } else if (!amount.value) {
@@ -405,7 +410,7 @@ async function remove() {
           :max="chosen?.untracked ? undefined : available"
         />
         <p v-if="!chosen?.untracked" class="hint">
-          {{ $t('tx.available', { kg: fmt(available) }) }}
+          {{ $t('tx.available', { kg: fmt(available, 3) }) }}
         </p>
         <label class="label" for="tx-price">{{ $t('tx.pricePerKg') }}</label>
         <NumberStepper

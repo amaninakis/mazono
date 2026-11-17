@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import type { Shortfall } from '../core/oil'
 import type { StockMovement, Transaction } from '../core/types'
 import { useTranslation } from 'i18next-vue'
 import { computed, ref } from 'vue'
@@ -10,8 +11,10 @@ import {
   chargesKg,
   isUntrackedSale,
   netOil,
+  newShortfalls,
   oilByEntry,
   seasonTotals,
+  shortfalls,
   stockLevels,
   trackedVintages,
   unitWeights,
@@ -19,6 +22,7 @@ import {
 import { formatLocale } from '../i18n'
 import { canDo, chargeName, locationName, useFarm } from '../ui/farm'
 import { oilPeriod } from '../ui/periods'
+import ShortfallModal from '../ui/ShortfallModal.vue'
 import StockMoveModal from '../ui/StockMoveModal.vue'
 import { showToast } from '../ui/toast'
 import YearPicker from '../ui/YearPicker.vue'
@@ -147,6 +151,29 @@ const stockTotal = computed(() =>
   stockRows.value.reduce((sum, stockRow) => sum + stockRow.total, 0),
 )
 
+/** Oil sold or moved out that was never there: shown so it can be corrected. */
+const missingNow = computed(() => shortfalls(stock.value))
+
+/** A stock figure: "–" when empty, and a shortage shown exactly (never as "-0"). */
+function stockText(kg: number | undefined) {
+  if (kg == null || Math.abs(kg) < 0.0005) {
+    return '–'
+  }
+
+  return kg < 0 ? `−${fmt(-kg, 3)}` : fmt(kg)
+}
+
+function missingLine(short: Shortfall) {
+  const location = farm.value.locations.find((entry) => entry.id === short.locationId)
+
+  return translate('shortfall.line', {
+    place: location ? locationName(translate, location) : '?',
+    season: seasonLabel(short.vintage),
+    kg: fmt(short.kg, 3),
+    count: short.kg,
+  })
+}
+
 const moveKind = ref<'transfer' | 'ownUse' | null>(null)
 const tracked = computed(() => trackedVintages(farm.value.extractions, startMonth.value))
 /** Recent stock movements, including oil sales (which are edited on the Money page). */
@@ -192,7 +219,25 @@ function moveLine(movement: StockMovement) {
       })
 }
 
-async function removeMove(movement: StockMovement) {
+/* ---------- oil already sold or moved out ---------- */
+/** What deleting a move would leave missing (e.g. oil sold from where it was moved to). */
+const missing = ref<Shortfall[]>([])
+const moveToRemove = ref<StockMovement | null>(null)
+
+async function removeMove(movement: StockMovement, confirmed = false) {
+  if (!confirmed) {
+    const after = stockLevels(
+      farm.value.extractions,
+      farm.value.stockMovements.filter((entry) => entry.id !== movement.id),
+      startMonth.value,
+      farm.value.transactions,
+    )
+    missing.value = newShortfalls(stock.value, after)
+    if (missing.value.length > 0) {
+      moveToRemove.value = movement
+      return
+    }
+  }
   const repo = farm.value.repo
   await repo.softDelete('stockMovements', movement.id)
   showToast({
@@ -207,6 +252,15 @@ async function removeMove(movement: StockMovement) {
 /** Read-only for people who may only see the Oil page. */
 const canEditOil = computed(() => canDo(farm.value, 'oil', 'change'))
 const canEditMoney = computed(() => canDo(farm.value, 'money', 'change'))
+
+async function removeAnyway() {
+  const movement = moveToRemove.value
+  missing.value = []
+  moveToRemove.value = null
+  if (movement) {
+    await removeMove(movement, true)
+  }
+}
 </script>
 
 <template>
@@ -326,11 +380,15 @@ const canEditMoney = computed(() => canDo(farm.value, 'money', 'change'))
           <tbody>
             <tr v-for="r in stockRows" :key="r.vintage">
               <th>{{ seasonLabel(r.vintage) }}</th>
-              <td v-for="l in usedLocations" :key="l.id">
-                {{ r.byLoc[l.id] ? fmt(r.byLoc[l.id]) : '–' }}
+              <td
+                v-for="l in usedLocations"
+                :key="l.id"
+                :class="{ short: (r.byLoc[l.id] ?? 0) < -0.0005 }"
+              >
+                {{ stockText(r.byLoc[l.id]) }}
               </td>
-              <td>
-                <strong>{{ fmt(r.total) }}</strong>
+              <td :class="{ short: r.total < -0.0005 }">
+                <strong>{{ stockText(r.total) }}</strong>
               </td>
             </tr>
           </tbody>
@@ -338,14 +396,23 @@ const canEditMoney = computed(() => canDo(farm.value, 'money', 'change'))
             <tr>
               <th>{{ $t('oil.total') }}</th>
               <td v-for="l in usedLocations" :key="l.id">
-                {{ fmt(stockRows.reduce((s, r) => s + (r.byLoc[l.id] ?? 0), 0)) }}
+                {{ stockText(stockRows.reduce((s, r) => s + (r.byLoc[l.id] ?? 0), 0)) }}
               </td>
               <td>
-                <strong>{{ fmt(stockTotal) }}</strong>
+                <strong>{{ stockText(stockTotal) }}</strong>
               </td>
             </tr>
           </tfoot>
         </table>
+      </div>
+      <div v-if="missingNow.length > 0" class="shortfall-note" role="note">
+        <strong>{{ $t('shortfall.noteTitle') }}</strong>
+        <ul class="shortfall-list">
+          <li v-for="short in missingNow" :key="`${short.vintage}-${short.locationId}`">
+            {{ missingLine(short) }}
+          </li>
+        </ul>
+        <p class="small">{{ $t('shortfall.fix') }}</p>
       </div>
       <div v-if="stockRows.length && canEditOil" class="actions wrap">
         <button type="button" class="btn small" @click="moveKind = 'transfer'">
@@ -385,5 +452,12 @@ const canEditMoney = computed(() => canDo(farm.value, 'money', 'change'))
     </section>
 
     <StockMoveModal v-if="moveKind" :kind="moveKind" :stock="stock" @close="moveKind = null" />
+    <ShortfallModal
+      v-if="missing.length > 0"
+      :missing="missing"
+      :confirm-label="$t('shortfall.deleteAnyway')"
+      @confirm="removeAnyway"
+      @close="missing = []"
+    />
   </main>
 </template>

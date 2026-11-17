@@ -58,8 +58,9 @@ watch(from, () => {
 })
 
 const max = computed(() => Math.max(available(from.value ?? ''), 0))
+/** Amounts of oil on hand are shown exactly, so the amount shown can be moved. */
 function fmt(value: number) {
-  return formatNumber(value, formatLocale.value, 1)
+  return formatNumber(value, formatLocale.value, 3)
 }
 
 const { saving, once } = useSaving()

@@ -282,6 +282,44 @@ export function stockLevels(
   return stock
 }
 
+/** Oil missing at a place: more was sold or moved out than came in. `kg` is how much. */
+export interface Shortfall {
+  vintage: number
+  locationId: string
+  kg: number
+}
+
+/** Below this a stock counts as empty, not as missing (weights are kept to the gram). */
+const EMPTY_KG = 0.0005
+
+/** Every place and season holding less than nothing, most missing first. */
+export function shortfalls(stock: Record<number, Record<string, number>>): Shortfall[] {
+  const found: Shortfall[] = []
+  for (const [vintage, byLocation] of Object.entries(stock)) {
+    for (const [locationId, kg] of Object.entries(byLocation)) {
+      if (kg < -EMPTY_KG) {
+        found.push({ vintage: Number(vintage), locationId, kg: -kg })
+      }
+    }
+  }
+
+  return found.sort((left, right) => right.kg - left.kg)
+}
+
+/**
+ * What a change would leave missing that was not missing before, e.g. editing a production
+ * after its oil was sold. Places already short only count if they get worse.
+ */
+export function newShortfalls(
+  before: Record<number, Record<string, number>>,
+  after: Record<number, Record<string, number>>,
+): Shortfall[] {
+  return shortfalls(after).filter(
+    (short) =>
+      -short.kg < Math.min(before[short.vintage]?.[short.locationId] ?? 0, 0) - EMPTY_KG,
+  )
+}
+
 /* ---------- season totals ---------- */
 
 export interface SeasonTotals {
