@@ -1,13 +1,16 @@
 <script setup lang="ts">
 import { useTranslation } from 'i18next-vue'
 import { computed, watch } from 'vue'
-import { RouterLink, RouterView, useRoute } from 'vue-router'
+import { RouterLink, RouterView, useRoute, useRouter } from 'vue-router'
+import { type Area, can, PRESETS } from './core/access'
+import { pickLanguage } from './core/locale'
 import { db } from './db/db'
 import { FarmRepo } from './db/repo'
-import { dateFormatPref, setLanguage } from './i18n'
+import { chosenLanguage, dateFormatPref, deviceLanguage, setLanguage } from './i18n'
 import AccountScreen from './screens/AccountScreen.vue'
+import NewPasswordScreen from './screens/NewPasswordScreen.vue'
 import SetupWizard from './screens/SetupWizard.vue'
-import { account, retryLoad } from './sync/account'
+import { accessTo, account, retryLoad, signOut } from './sync/account'
 import AppToast from './ui/AppToast.vue'
 import { type FarmData, provideFarm } from './ui/farm'
 import { useLiveQuery } from './ui/live'
@@ -15,6 +18,7 @@ import OilDrop from './ui/OilDrop.vue'
 
 const { t: translate } = useTranslation()
 const route = useRoute()
+const router = useRouter()
 
 function notDeleted<T extends { deletedAt?: number }>(rows: T[]) {
   return rows.filter((row) => !row.deletedAt)
@@ -82,12 +86,17 @@ const data = useLiveQuery(
 
 const repo = computed(() => (farmId.value ? new FarmRepo(farmId.value) : null))
 
-const farm = computed<FarmData>(() => ({ repo: repo.value!, ...data.value! }))
+const farm = computed<FarmData>(() => ({
+  repo: repo.value!,
+  ...data.value!,
+  access: accessTo(farmId.value) ?? { role: 'user', permissions: PRESETS.worker },
+}))
 provideFarm(farm)
 
+// The grove's language is only the starting point; a choice made on this phone wins.
 watch(
   () => data.value?.settings.language,
-  (lng) => lng && setLanguage(lng),
+  (lng) => setLanguage(pickLanguage(chosenLanguage(), lng, deviceLanguage())),
   { immediate: true },
 )
 
@@ -105,9 +114,17 @@ const state = computed(() => {
   if (account.mode === 'server' && !account.user) {
     return 'account'
   }
+  // A first sign-in with a temporary password: they choose their own first.
+  if (account.mode === 'server' && account.user?.mustChangePassword) {
+    return 'new-password'
+  }
   // …and their data has arrived (so the first-time setup is never shown by mistake).
   if (account.mode === 'server' && account.loading !== 'idle') {
     return 'loading-data'
+  }
+  // Signed in, but in no grove and not allowed to start one.
+  if (account.mode === 'server' && !farmId.value && !account.user?.mayCreateGrove) {
+    return 'no-access'
   }
   if (farmId.value === undefined || (farmId.value && data.value === undefined)) {
     return 'loading'
@@ -119,19 +136,69 @@ const state = computed(() => {
   return 'ready'
 })
 
-const nav = computed(() => [
-  { to: '/', icon: '✚', label: translate('nav.today'), exact: true },
-  { to: '/journal', icon: '📅', label: translate('nav.journal') },
-  { to: '/oil', icon: 'oil', label: translate('nav.oil') },
-  { to: '/money', icon: '€', label: translate('nav.money') },
-  { to: '/reports', icon: '📊', label: translate('nav.reports') },
-  { to: '/settings', icon: '⚙️', label: translate('nav.settings') },
-])
+/** Bottom bar: only the pages this person may use (Settings always, for their account). */
+interface NavItem {
+  to: string
+  icon: string
+  label: string
+  exact?: boolean
+  /** Needed to see the page in the bar (none: always there). */
+  area?: Area
+  level?: 'see' | 'change'
+}
+const NAV: NavItem[] = [
+  { to: '/', icon: '✚', label: 'nav.today', exact: true, area: 'work', level: 'change' },
+  { to: '/journal', icon: '📅', label: 'nav.journal', area: 'work', level: 'see' },
+  { to: '/oil', icon: 'oil', label: 'nav.oil', area: 'oil', level: 'see' },
+  { to: '/money', icon: '€', label: 'nav.money', area: 'money', level: 'see' },
+  { to: '/reports', icon: '📊', label: 'nav.reports', area: 'reports', level: 'see' },
+  { to: '/settings', icon: '⚙️', label: 'nav.settings' },
+]
+const nav = computed(() =>
+  NAV.filter((item) => !item.area || can(farm.value.access, item.area, item.level)).map(
+    (item) => ({ ...item, label: translate(item.label) }),
+  ),
+)
+
+/** Pages that need an area: opening one without access goes to the first page allowed. */
+const PAGE_ACCESS: { prefix: string; area: Area; level: 'see' | 'change' }[] = [
+  { prefix: '/entry/', area: 'work', level: 'change' },
+  { prefix: '/journal', area: 'work', level: 'see' },
+  { prefix: '/oil/', area: 'oil', level: 'change' },
+  { prefix: '/oil', area: 'oil', level: 'see' },
+  { prefix: '/money/', area: 'money', level: 'change' },
+  { prefix: '/money', area: 'money', level: 'see' },
+  { prefix: '/reports', area: 'reports', level: 'see' },
+]
+watch(
+  () => [route.path, state.value, farm.value.access] as const,
+  ([path, current]) => {
+    if (current !== 'ready') {
+      return
+    }
+    const rule =
+      path === '/'
+        ? { area: 'work' as Area, level: 'change' as const }
+        : PAGE_ACCESS.find((page) => path.startsWith(page.prefix))
+    if (rule && !can(farm.value.access, rule.area, rule.level)) {
+      void router.replace(nav.value[0]?.to ?? '/settings')
+    }
+  },
+  { immediate: true },
+)
 </script>
 
 <template>
   <div v-if="state === 'loading'" class="splash">{{ $t('common.loading') }}</div>
   <AccountScreen v-else-if="state === 'account'" />
+  <NewPasswordScreen v-else-if="state === 'new-password'" />
+  <main v-else-if="state === 'no-access'" class="setup loading-data">
+    <h1>{{ $t('account.noGroveTitle') }}</h1>
+    <p class="muted">{{ $t('account.noGroveHelp') }}</p>
+    <button type="button" class="btn ghost" @click="signOut()">
+      {{ $t('account.signOut') }}
+    </button>
+  </main>
   <main v-else-if="state === 'loading-data'" class="setup loading-data">
     <template v-if="account.loading === 'loading'">
       <div class="spinner" aria-hidden="true"></div>

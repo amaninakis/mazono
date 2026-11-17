@@ -9,13 +9,14 @@ import { unitWeights } from '../core/oil'
 import { parseDecimal } from '../core/progress'
 import { db } from '../db/db'
 import { importFarm } from '../db/repo'
-import { formatLocale, LANGUAGES, locale, setLanguage } from '../i18n'
+import { chooseLanguage, formatLocale, LANGUAGES, locale } from '../i18n'
 import { account } from '../sync/account'
 import AccountCard from '../ui/AccountCard.vue'
 import AppModal from '../ui/AppModal.vue'
-import { categoryName, chargeName, locationName, taskName, useFarm } from '../ui/farm'
+import { canDo, categoryName, chargeName, locationName, taskName, useFarm } from '../ui/farm'
 import { showToast } from '../ui/toast'
 import ToggleSwitch from '../ui/ToggleSwitch.vue'
+import UsersCard from '../ui/UsersCard.vue'
 
 const { t: translate } = useTranslation()
 const farm = useFarm()
@@ -147,11 +148,6 @@ function val(event: Event) {
   return (event.target as HTMLInputElement).value
 }
 
-function changeLang(language: Language) {
-  setLanguage(language)
-  void repo.value.updateSettings({ language })
-}
-
 async function addField() {
   if (!newField.value.name.trim()) {
     return
@@ -239,6 +235,20 @@ async function confirmImport() {
     showToast({ title: translate('settings.importFailed') })
   }
 }
+
+const canSeeSettings = computed(() => canDo(farm.value, 'settings'))
+const canEditSettings = computed(() => canDo(farm.value, 'settings', 'change'))
+
+function changeLang(language: Language) {
+  chooseLanguage(language)
+  if (canEditSettings.value) {
+    // Also the starting language for phones of this grove that have not chosen one.
+    void repo.value.updateSettings({ language })
+  }
+}
+
+/** Backups and people are for the grove's administrators. */
+const isAdmin = computed(() => farm.value.access.role === 'admin')
 </script>
 
 <template>
@@ -248,349 +258,269 @@ async function confirmImport() {
     </header>
 
     <AccountCard v-if="account.mode === 'server' && account.user" />
+    <UsersCard v-if="account.mode === 'server' && isAdmin" />
 
+    <!-- The grove's settings: hidden, or shown read-only, for people without access to them. -->
     <section class="card">
-      <h2>{{ $t('settings.general') }}</h2>
-      <label class="label" for="s-farm">{{ $t('settings.farmName') }}</label>
-      <input
-        id="s-farm"
-        class="input"
-        :value="farm.farmName"
-        @blur="(e) => val(e).trim() && db.farms.update(repo.farmId, { name: val(e).trim() })"
-      />
-      <span class="label">{{ $t('settings.language') }}</span>
-      <div class="chips">
+      <h2>{{ $t('settings.language') }}</h2>
+      <div class="chips" role="radiogroup" :aria-label="$t('settings.language')">
         <button
           v-for="l in LANGUAGES"
           :key="l.code"
           type="button"
+          role="radio"
           class="chip"
-          :class="[{ selected: settings.language === l.code }]"
+          :class="[{ selected: locale === l.code }]"
+          :aria-checked="locale === l.code"
           @click="changeLang(l.code)"
         >
           {{ l.label }}
         </button>
       </div>
-      <span class="label">{{ $t('settings.yieldFormat') }}</span>
-      <div class="chips">
-        <button
-          v-for="f in ['ratio', 'percent'] as const"
-          :key="f"
-          type="button"
-          class="chip"
-          :class="[{ selected: settings.yieldFormat === f }]"
-          @click="repo.updateSettings({ yieldFormat: f })"
-        >
-          {{ $t(f === 'ratio' ? 'settings.yieldRatio' : 'settings.yieldPercent') }}
-        </button>
-      </div>
-      <label class="label" for="s-dateformat">{{ $t('settings.dateFormat') }}</label>
-      <select
-        id="s-dateformat"
-        class="input select"
-        :value="settings.dateFormat ?? 'auto'"
-        @change="(e) => repo.updateSettings({ dateFormat: val(e) as DateFormat })"
-      >
-        <option v-for="o in formatOptions" :key="o.dateFormat" :value="o.dateFormat">
-          {{ $t(`settings.format_${o.dateFormat}`) }} ({{ o.example }})
-        </option>
-      </select>
-      <label class="label" for="s-season">{{ $t('settings.seasonStart') }}</label>
-      <select
-        id="s-season"
-        class="input select"
-        :value="settings.seasonStartMonth"
-        @change="(e) => repo.updateSettings({ seasonStartMonth: Number(val(e)) })"
-      >
-        <option v-for="m in months" :key="m.number" :value="m.number">{{ m.long }}</option>
-      </select>
-      <p class="muted small">{{ $t('settings.seasonStartHelp') }}</p>
+      <p class="hint">{{ $t('settings.languageHelp') }}</p>
     </section>
 
-    <section class="card">
-      <h2>{{ $t('settings.modules') }}</h2>
-      <ToggleSwitch
-        :model-value="settings.labourEnabled"
-        :label="$t('settings.labour')"
-        :help="$t('settings.labourHelp')"
-        @update:model-value="(v) => repo.updateSettings({ labourEnabled: v })"
-      />
-    </section>
-
-    <div class="row-end">
-      <ToggleSwitch v-model="showArchived" :label="$t('settings.showArchived')" />
-    </div>
-
-    <section id="fields" class="card">
-      <h2>{{ $t('settings.fields') }}</h2>
-      <ul class="list">
-        <li
-          v-for="f in fieldList"
-          :key="f.id"
-          class="field-row"
-          :class="[{ off: f.archived }]"
-        >
-          <input
-            class="input"
-            :aria-label="$t('common.name')"
-            :value="f.name"
-            @blur="
-              (e) => val(e).trim() && repo.update('fields', f.id, { name: val(e).trim() })
-            "
-          />
-          <input
-            class="input small"
-            inputmode="numeric"
-            :aria-label="$t('common.trees')"
-            :placeholder="$t('common.trees')"
-            :value="f.trees || ''"
-            @blur="
-              (e) =>
-                repo.update('fields', f.id, { trees: Math.round(parseDecimal(val(e)) ?? 0) })
-            "
-          />
-          <button
-            type="button"
-            class="btn ghost small"
-            @click="repo.update('fields', f.id, { archived: !f.archived })"
-          >
-            {{ f.archived ? $t('common.unarchive') : $t('common.archive') }}
-          </button>
-        </li>
-        <li class="field-row">
-          <input
-            v-model="newField.name"
-            class="input"
-            :placeholder="$t('setup.fieldName')"
-            :aria-label="$t('setup.fieldName')"
-            @keydown.enter="addField"
-          />
-          <input
-            v-model="newField.trees"
-            class="input small"
-            inputmode="numeric"
-            :placeholder="$t('common.trees')"
-            :aria-label="$t('common.trees')"
-            @keydown.enter="addField"
-          />
-          <button type="button" class="btn small" @click="addField">
-            {{ $t('common.add') }}
-          </button>
-        </li>
-      </ul>
-    </section>
-
-    <section class="card">
-      <h2>{{ $t('settings.units') }}</h2>
-      <p class="muted small">{{ $t('setup.unitsHelp') }}</p>
-      <ul class="list">
-        <li v-for="u in unitList" :key="u.id" class="unit-row" :class="[{ off: u.archived }]">
-          <input
-            class="input"
-            :aria-label="$t('common.name')"
-            :value="u.name"
-            @blur="(e) => val(e).trim() && repo.update('units', u.id, { name: val(e).trim() })"
-          />
-          <input
-            class="input"
-            :aria-label="$t('setup.pluralName')"
-            :placeholder="$t('setup.pluralName')"
-            :value="u.pluralName ?? ''"
-            @blur="
-              (e) => repo.update('units', u.id, { pluralName: val(e).trim() || undefined })
-            "
-          />
-          <input
-            class="input small"
-            inputmode="decimal"
-            :placeholder="$t('setup.approxKg')"
-            :aria-label="$t('setup.approxKg')"
-            :value="u.approxKg ?? ''"
-            @blur="
-              (e) =>
-                repo.update('units', u.id, { approxKg: parseDecimal(val(e)) ?? undefined })
-            "
-          />
-          <small v-if="weights[u.id]?.source === 'learned'" class="muted learned">
-            {{
-              $t('settings.learnedWeight', {
-                kg: formatNumber(weights[u.id].kg, formatLocale, 1),
-                count: weights[u.id].batches,
-              })
-            }}
-          </small>
-          <label class="radio">
-            <input
-              type="radio"
-              name="s-default-unit"
-              :checked="u.isDefault"
-              @change="repo.setDefaultUnit(u.id)"
-            />
-            <span>{{ $t('setup.default') }}</span>
-          </label>
-          <button
-            type="button"
-            class="btn ghost small"
-            :disabled="u.isDefault && !u.archived"
-            @click="repo.update('units', u.id, { archived: !u.archived })"
-          >
-            {{ u.archived ? $t('common.unarchive') : $t('common.archive') }}
-          </button>
-        </li>
-      </ul>
-      <div class="inline-add">
+    <fieldset v-if="canSeeSettings" class="plain" :disabled="!canEditSettings">
+      <section class="card">
+        <h2>{{ $t('settings.general') }}</h2>
+        <label class="label" for="s-farm">{{ $t('settings.farmName') }}</label>
         <input
-          v-model="newUnit"
+          id="s-farm"
           class="input"
-          :placeholder="$t('setup.unitName')"
-          @keydown.enter="addUnit"
+          :value="farm.farmName"
+          @blur="(e) => val(e).trim() && db.farms.update(repo.farmId, { name: val(e).trim() })"
         />
-        <button type="button" class="btn small" @click="addUnit">
-          {{ $t('common.add') }}
-        </button>
-      </div>
-    </section>
-
-    <section id="oil" class="card">
-      <h2>{{ $t('settings.oilSection') }}</h2>
-
-      <span class="label">{{ $t('settings.mills') }}</span>
-      <ul class="list">
-        <li v-for="m in millList" :key="m.id" class="field-row" :class="[{ off: m.archived }]">
-          <input
-            class="input"
-            :aria-label="$t('common.name')"
-            :value="m.name"
-            @blur="(e) => val(e).trim() && repo.update('mills', m.id, { name: val(e).trim() })"
-          />
+        <span class="label">{{ $t('settings.yieldFormat') }}</span>
+        <div class="chips">
           <button
+            v-for="f in ['ratio', 'percent'] as const"
+            :key="f"
             type="button"
-            class="btn ghost small"
-            @click="repo.update('mills', m.id, { archived: !m.archived })"
+            class="chip"
+            :class="[{ selected: settings.yieldFormat === f }]"
+            @click="repo.updateSettings({ yieldFormat: f })"
           >
-            {{ m.archived ? $t('common.unarchive') : $t('common.archive') }}
+            {{ $t(f === 'ratio' ? 'settings.yieldRatio' : 'settings.yieldPercent') }}
           </button>
-        </li>
-      </ul>
-      <div class="inline-add">
-        <input
-          v-model="newMill"
-          class="input"
-          :placeholder="$t('extraction.newMillName')"
-          @keydown.enter="addMill"
-        />
-        <button type="button" class="btn small" @click="addMill">
-          {{ $t('common.add') }}
-        </button>
-      </div>
-
-      <span class="label">{{ $t('settings.chargeTypes') }}</span>
-      <ul class="list">
-        <li
-          v-for="c in chargeList"
-          :key="c.id"
-          class="field-row"
-          :class="[{ off: c.archived }]"
+        </div>
+        <label class="label" for="s-dateformat">{{ $t('settings.dateFormat') }}</label>
+        <select
+          id="s-dateformat"
+          class="input select"
+          :value="settings.dateFormat ?? 'auto'"
+          @change="(e) => repo.updateSettings({ dateFormat: val(e) as DateFormat })"
         >
-          <input
-            :key="`${c.id}-${locale}`"
-            class="input"
-            :aria-label="$t('common.name')"
-            :value="chargeName($t, c)"
-            @blur="(e) => renameBuiltin('chargeTypes', c.id, chargeName($t, c), e)"
-          />
-          <input
-            class="input small"
-            inputmode="decimal"
-            :aria-label="$t('settings.defaultPercent')"
-            :placeholder="$t('settings.defaultPercent')"
-            :value="c.defaultPercent ?? ''"
-            @blur="
-              (e) =>
-                repo.update('chargeTypes', c.id, {
-                  defaultPercent: parseDecimal(val(e)) ?? undefined,
-                })
-            "
-          />
-          <span class="muted">%</span>
-          <button
-            type="button"
-            class="btn ghost small"
-            @click="repo.update('chargeTypes', c.id, { archived: !c.archived })"
-          >
-            {{ c.archived ? $t('common.unarchive') : $t('common.archive') }}
-          </button>
-        </li>
-      </ul>
-      <div class="inline-add">
-        <input
-          v-model="newChargeName"
-          class="input"
-          :placeholder="$t('extraction.newChargeName')"
-          @keydown.enter="addChargeType"
-        />
-        <button type="button" class="btn small" @click="addChargeType">
-          {{ $t('common.add') }}
-        </button>
-      </div>
-
-      <span class="label">{{ $t('settings.locations') }}</span>
-      <ul class="list">
-        <li
-          v-for="l in locationList"
-          :key="l.id"
-          class="field-row"
-          :class="[{ off: l.archived }]"
+          <option v-for="o in formatOptions" :key="o.dateFormat" :value="o.dateFormat">
+            {{ $t(`settings.format_${o.dateFormat}`) }} ({{ o.example }})
+          </option>
+        </select>
+        <label class="label" for="s-season">{{ $t('settings.seasonStart') }}</label>
+        <select
+          id="s-season"
+          class="input select"
+          :value="settings.seasonStartMonth"
+          @change="(e) => repo.updateSettings({ seasonStartMonth: Number(val(e)) })"
         >
-          <input
-            :key="`${l.id}-${locale}`"
-            class="input"
-            :aria-label="$t('common.name')"
-            :value="locationName($t, l)"
-            @blur="(e) => renameBuiltin('locations', l.id, locationName($t, l), e)"
-          />
-          <button
-            type="button"
-            class="btn ghost small"
-            @click="repo.update('locations', l.id, { archived: !l.archived })"
-          >
-            {{ l.archived ? $t('common.unarchive') : $t('common.archive') }}
-          </button>
-        </li>
-      </ul>
-      <div class="inline-add">
-        <input
-          v-model="newLocation"
-          class="input"
-          :placeholder="$t('settings.addLocation')"
-          @keydown.enter="addLocation"
-        />
-        <button type="button" class="btn small" @click="addLocation">
-          {{ $t('common.add') }}
-        </button>
-      </div>
-    </section>
+          <option v-for="m in months" :key="m.number" :value="m.number">{{ m.long }}</option>
+        </select>
+        <p class="muted small">{{ $t('settings.seasonStartHelp') }}</p>
+      </section>
 
-    <section id="money" class="card">
-      <h2>{{ $t('settings.finance') }}</h2>
-      <label class="label" for="s-tax">{{ $t('settings.taxPercent') }}</label>
-      <input
-        id="s-tax"
-        class="input small"
-        inputmode="decimal"
-        :value="settings.taxPercent ?? ''"
-        placeholder="%"
-        @blur="(e) => repo.updateSettings({ taxPercent: parseDecimal(val(e)) ?? undefined })"
-      />
-      <template v-for="kind in ['expense', 'income'] as const" :key="kind">
-        <span class="label">{{
-          kind === 'expense'
-            ? $t('settings.expenseCategories')
-            : $t('settings.incomeCategories')
-        }}</span>
+      <section class="card">
+        <h2>{{ $t('settings.modules') }}</h2>
+        <ToggleSwitch
+          :model-value="settings.labourEnabled"
+          :label="$t('settings.labour')"
+          :help="$t('settings.labourHelp')"
+          @update:model-value="(v) => repo.updateSettings({ labourEnabled: v })"
+        />
+      </section>
+
+      <div class="row-end">
+        <ToggleSwitch v-model="showArchived" :label="$t('settings.showArchived')" />
+      </div>
+
+      <section id="fields" class="card">
+        <h2>{{ $t('settings.fields') }}</h2>
         <ul class="list">
           <li
-            v-for="c in categoryList(kind)"
+            v-for="f in fieldList"
+            :key="f.id"
+            class="field-row"
+            :class="[{ off: f.archived }]"
+          >
+            <input
+              class="input"
+              :aria-label="$t('common.name')"
+              :value="f.name"
+              @blur="
+                (e) => val(e).trim() && repo.update('fields', f.id, { name: val(e).trim() })
+              "
+            />
+            <input
+              class="input small"
+              inputmode="numeric"
+              :aria-label="$t('common.trees')"
+              :placeholder="$t('common.trees')"
+              :value="f.trees || ''"
+              @blur="
+                (e) =>
+                  repo.update('fields', f.id, { trees: Math.round(parseDecimal(val(e)) ?? 0) })
+              "
+            />
+            <button
+              type="button"
+              class="btn ghost small"
+              @click="repo.update('fields', f.id, { archived: !f.archived })"
+            >
+              {{ f.archived ? $t('common.unarchive') : $t('common.archive') }}
+            </button>
+          </li>
+          <li class="field-row">
+            <input
+              v-model="newField.name"
+              class="input"
+              :placeholder="$t('setup.fieldName')"
+              :aria-label="$t('setup.fieldName')"
+              @keydown.enter="addField"
+            />
+            <input
+              v-model="newField.trees"
+              class="input small"
+              inputmode="numeric"
+              :placeholder="$t('common.trees')"
+              :aria-label="$t('common.trees')"
+              @keydown.enter="addField"
+            />
+            <button type="button" class="btn small" @click="addField">
+              {{ $t('common.add') }}
+            </button>
+          </li>
+        </ul>
+      </section>
+
+      <section class="card">
+        <h2>{{ $t('settings.units') }}</h2>
+        <p class="muted small">{{ $t('setup.unitsHelp') }}</p>
+        <ul class="list">
+          <li
+            v-for="u in unitList"
+            :key="u.id"
+            class="unit-row"
+            :class="[{ off: u.archived }]"
+          >
+            <input
+              class="input"
+              :aria-label="$t('common.name')"
+              :value="u.name"
+              @blur="
+                (e) => val(e).trim() && repo.update('units', u.id, { name: val(e).trim() })
+              "
+            />
+            <input
+              class="input"
+              :aria-label="$t('setup.pluralName')"
+              :placeholder="$t('setup.pluralName')"
+              :value="u.pluralName ?? ''"
+              @blur="
+                (e) => repo.update('units', u.id, { pluralName: val(e).trim() || undefined })
+              "
+            />
+            <input
+              class="input small"
+              inputmode="decimal"
+              :placeholder="$t('setup.approxKg')"
+              :aria-label="$t('setup.approxKg')"
+              :value="u.approxKg ?? ''"
+              @blur="
+                (e) =>
+                  repo.update('units', u.id, { approxKg: parseDecimal(val(e)) ?? undefined })
+              "
+            />
+            <small v-if="weights[u.id]?.source === 'learned'" class="muted learned">
+              {{
+                $t('settings.learnedWeight', {
+                  kg: formatNumber(weights[u.id].kg, formatLocale, 1),
+                  count: weights[u.id].batches,
+                })
+              }}
+            </small>
+            <label class="radio">
+              <input
+                type="radio"
+                name="s-default-unit"
+                :checked="u.isDefault"
+                @change="repo.setDefaultUnit(u.id)"
+              />
+              <span>{{ $t('setup.default') }}</span>
+            </label>
+            <button
+              type="button"
+              class="btn ghost small"
+              :disabled="u.isDefault && !u.archived"
+              @click="repo.update('units', u.id, { archived: !u.archived })"
+            >
+              {{ u.archived ? $t('common.unarchive') : $t('common.archive') }}
+            </button>
+          </li>
+        </ul>
+        <div class="inline-add">
+          <input
+            v-model="newUnit"
+            class="input"
+            :placeholder="$t('setup.unitName')"
+            @keydown.enter="addUnit"
+          />
+          <button type="button" class="btn small" @click="addUnit">
+            {{ $t('common.add') }}
+          </button>
+        </div>
+      </section>
+
+      <section id="oil" class="card">
+        <h2>{{ $t('settings.oilSection') }}</h2>
+
+        <span class="label">{{ $t('settings.mills') }}</span>
+        <ul class="list">
+          <li
+            v-for="m in millList"
+            :key="m.id"
+            class="field-row"
+            :class="[{ off: m.archived }]"
+          >
+            <input
+              class="input"
+              :aria-label="$t('common.name')"
+              :value="m.name"
+              @blur="
+                (e) => val(e).trim() && repo.update('mills', m.id, { name: val(e).trim() })
+              "
+            />
+            <button
+              type="button"
+              class="btn ghost small"
+              @click="repo.update('mills', m.id, { archived: !m.archived })"
+            >
+              {{ m.archived ? $t('common.unarchive') : $t('common.archive') }}
+            </button>
+          </li>
+        </ul>
+        <div class="inline-add">
+          <input
+            v-model="newMill"
+            class="input"
+            :placeholder="$t('extraction.newMillName')"
+            @keydown.enter="addMill"
+          />
+          <button type="button" class="btn small" @click="addMill">
+            {{ $t('common.add') }}
+          </button>
+        </div>
+
+        <span class="label">{{ $t('settings.chargeTypes') }}</span>
+        <ul class="list">
+          <li
+            v-for="c in chargeList"
             :key="c.id"
             class="field-row"
             :class="[{ off: c.archived }]"
@@ -599,13 +529,27 @@ async function confirmImport() {
               :key="`${c.id}-${locale}`"
               class="input"
               :aria-label="$t('common.name')"
-              :value="categoryName($t, c)"
-              @blur="(e) => renameBuiltin('categories', c.id, categoryName($t, c), e)"
+              :value="chargeName($t, c)"
+              @blur="(e) => renameBuiltin('chargeTypes', c.id, chargeName($t, c), e)"
             />
+            <input
+              class="input small"
+              inputmode="decimal"
+              :aria-label="$t('settings.defaultPercent')"
+              :placeholder="$t('settings.defaultPercent')"
+              :value="c.defaultPercent ?? ''"
+              @blur="
+                (e) =>
+                  repo.update('chargeTypes', c.id, {
+                    defaultPercent: parseDecimal(val(e)) ?? undefined,
+                  })
+              "
+            />
+            <span class="muted">%</span>
             <button
               type="button"
               class="btn ghost small"
-              @click="repo.update('categories', c.id, { archived: !c.archived })"
+              @click="repo.update('chargeTypes', c.id, { archived: !c.archived })"
             >
               {{ c.archived ? $t('common.unarchive') : $t('common.archive') }}
             </button>
@@ -613,100 +557,196 @@ async function confirmImport() {
         </ul>
         <div class="inline-add">
           <input
-            v-model="newCategory[kind]"
+            v-model="newChargeName"
             class="input"
-            :placeholder="$t('settings.addCategory')"
-            @keydown.enter="addCategory(kind)"
+            :placeholder="$t('extraction.newChargeName')"
+            @keydown.enter="addChargeType"
           />
-          <button type="button" class="btn small" @click="addCategory(kind)">
+          <button type="button" class="btn small" @click="addChargeType">
             {{ $t('common.add') }}
           </button>
         </div>
-      </template>
-    </section>
 
-    <section class="card">
-      <h2>{{ $t('settings.taskTypes') }}</h2>
-      <ul class="list task-types">
-        <li
-          v-for="x in typeList"
-          :key="x.id"
-          class="tt"
-          :class="[{ off: x.archived }]"
-          :style="{ '--c': x.color }"
-        >
-          <div class="tt-head">
-            <select
-              class="input select icon-select"
-              :aria-label="$t('settings.icon')"
-              :value="x.icon"
-              @change="(e) => repo.update('taskTypes', x.id, { icon: val(e) })"
-            >
-              <option v-for="i in [...new Set([x.icon, ...TASK_ICONS])]" :key="i">
-                {{ i }}
-              </option>
-            </select>
+        <span class="label">{{ $t('settings.locations') }}</span>
+        <ul class="list">
+          <li
+            v-for="l in locationList"
+            :key="l.id"
+            class="field-row"
+            :class="[{ off: l.archived }]"
+          >
             <input
-              :key="`${x.id}-${locale}`"
+              :key="`${l.id}-${locale}`"
               class="input"
               :aria-label="$t('common.name')"
-              :value="taskName($t, x)"
-              @blur="(e) => renameType(x, e)"
+              :value="locationName($t, l)"
+              @blur="(e) => renameBuiltin('locations', l.id, locationName($t, l), e)"
             />
             <button
               type="button"
               class="btn ghost small"
-              @click="repo.update('taskTypes', x.id, { archived: !x.archived })"
+              @click="repo.update('locations', l.id, { archived: !l.archived })"
             >
-              {{ x.archived ? $t('common.unarchive') : $t('common.archive') }}
+              {{ l.archived ? $t('common.unarchive') : $t('common.archive') }}
             </button>
-          </div>
-          <div class="swatches" role="radiogroup" :aria-label="$t('settings.color')">
-            <button
-              v-for="c in TASK_COLORS"
-              :key="c"
-              type="button"
-              role="radio"
-              :aria-checked="x.color === c"
-              :aria-label="c"
-              class="swatch"
-              :class="[{ selected: x.color === c }]"
-              :style="{ background: c }"
-              @click="repo.update('taskTypes', x.id, { color: c })"
-            ></button>
-          </div>
-          <select
-            v-if="!x.builtin"
-            class="input select"
-            :value="x.inputKind"
-            @change="(e) => repo.update('taskTypes', x.id, { inputKind: val(e) as InputKind })"
-          >
-            <option v-for="k in kinds" :key="k" :value="k">{{ $t(`inputKind.${k}`) }}</option>
-          </select>
-          <span class="label small">{{ $t('settings.activeMonths') }}</span>
-          <div class="months">
-            <button
-              v-for="m in months"
-              :key="m.number"
-              type="button"
-              :aria-pressed="x.activeMonths.includes(m.number)"
-              class="month"
-              :class="[{ on: x.activeMonths.includes(m.number) }]"
-              @click="toggleMonth(x, m.number)"
-            >
-              {{ m.short }}
-            </button>
-          </div>
-        </li>
-      </ul>
-      <button type="button" class="btn small" @click="addTaskType">
-        + {{ $t('settings.addTaskType') }}
-      </button>
-    </section>
+          </li>
+        </ul>
+        <div class="inline-add">
+          <input
+            v-model="newLocation"
+            class="input"
+            :placeholder="$t('settings.addLocation')"
+            @keydown.enter="addLocation"
+          />
+          <button type="button" class="btn small" @click="addLocation">
+            {{ $t('common.add') }}
+          </button>
+        </div>
+      </section>
 
-    <section class="card">
+      <section id="money" class="card">
+        <h2>{{ $t('settings.finance') }}</h2>
+        <label class="label" for="s-tax">{{ $t('settings.taxPercent') }}</label>
+        <input
+          id="s-tax"
+          class="input small"
+          inputmode="decimal"
+          :value="settings.taxPercent ?? ''"
+          placeholder="%"
+          @blur="(e) => repo.updateSettings({ taxPercent: parseDecimal(val(e)) ?? undefined })"
+        />
+        <template v-for="kind in ['expense', 'income'] as const" :key="kind">
+          <span class="label">{{
+            kind === 'expense'
+              ? $t('settings.expenseCategories')
+              : $t('settings.incomeCategories')
+          }}</span>
+          <ul class="list">
+            <li
+              v-for="c in categoryList(kind)"
+              :key="c.id"
+              class="field-row"
+              :class="[{ off: c.archived }]"
+            >
+              <input
+                :key="`${c.id}-${locale}`"
+                class="input"
+                :aria-label="$t('common.name')"
+                :value="categoryName($t, c)"
+                @blur="(e) => renameBuiltin('categories', c.id, categoryName($t, c), e)"
+              />
+              <button
+                type="button"
+                class="btn ghost small"
+                @click="repo.update('categories', c.id, { archived: !c.archived })"
+              >
+                {{ c.archived ? $t('common.unarchive') : $t('common.archive') }}
+              </button>
+            </li>
+          </ul>
+          <div class="inline-add">
+            <input
+              v-model="newCategory[kind]"
+              class="input"
+              :placeholder="$t('settings.addCategory')"
+              @keydown.enter="addCategory(kind)"
+            />
+            <button type="button" class="btn small" @click="addCategory(kind)">
+              {{ $t('common.add') }}
+            </button>
+          </div>
+        </template>
+      </section>
+
+      <section class="card">
+        <h2>{{ $t('settings.taskTypes') }}</h2>
+        <ul class="list task-types">
+          <li
+            v-for="x in typeList"
+            :key="x.id"
+            class="tt"
+            :class="[{ off: x.archived }]"
+            :style="{ '--c': x.color }"
+          >
+            <div class="tt-head">
+              <select
+                class="input select icon-select"
+                :aria-label="$t('settings.icon')"
+                :value="x.icon"
+                @change="(e) => repo.update('taskTypes', x.id, { icon: val(e) })"
+              >
+                <option v-for="i in [...new Set([x.icon, ...TASK_ICONS])]" :key="i">
+                  {{ i }}
+                </option>
+              </select>
+              <input
+                :key="`${x.id}-${locale}`"
+                class="input"
+                :aria-label="$t('common.name')"
+                :value="taskName($t, x)"
+                @blur="(e) => renameType(x, e)"
+              />
+              <button
+                type="button"
+                class="btn ghost small"
+                @click="repo.update('taskTypes', x.id, { archived: !x.archived })"
+              >
+                {{ x.archived ? $t('common.unarchive') : $t('common.archive') }}
+              </button>
+            </div>
+            <div class="swatches" role="radiogroup" :aria-label="$t('settings.color')">
+              <button
+                v-for="c in TASK_COLORS"
+                :key="c"
+                type="button"
+                role="radio"
+                :aria-checked="x.color === c"
+                :aria-label="c"
+                class="swatch"
+                :class="[{ selected: x.color === c }]"
+                :style="{ background: c }"
+                @click="repo.update('taskTypes', x.id, { color: c })"
+              ></button>
+            </div>
+            <select
+              v-if="!x.builtin"
+              class="input select"
+              :value="x.inputKind"
+              @change="(e) => repo.update('taskTypes', x.id, { inputKind: val(e) as InputKind })"
+            >
+              <option v-for="k in kinds" :key="k" :value="k">
+                {{ $t(`inputKind.${k}`) }}
+              </option>
+            </select>
+            <span class="label small">{{ $t('settings.activeMonths') }}</span>
+            <div class="months">
+              <button
+                v-for="m in months"
+                :key="m.number"
+                type="button"
+                :aria-pressed="x.activeMonths.includes(m.number)"
+                class="month"
+                :class="[{ on: x.activeMonths.includes(m.number) }]"
+                @click="toggleMonth(x, m.number)"
+              >
+                {{ m.short }}
+              </button>
+            </div>
+          </li>
+        </ul>
+        <button type="button" class="btn small" @click="addTaskType">
+          + {{ $t('settings.addTaskType') }}
+        </button>
+      </section>
+    </fieldset>
+
+    <section v-if="isAdmin" class="card">
       <h2>{{ $t('settings.data') }}</h2>
-      <p class="muted small">{{ $t('settings.storageNote') }}</p>
+      <p class="muted small">
+        {{
+          $t(account.mode === 'server' ? 'settings.storageNoteServer' : 'settings.storageNote')
+        }}
+      </p>
       <div class="actions wrap">
         <button type="button" class="btn" @click="exportData">
           {{ $t('settings.export') }}

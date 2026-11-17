@@ -13,7 +13,7 @@ import {
 } from '../core/reports'
 import { unitLabel } from '../core/units'
 import { formatLocale } from '../i18n'
-import { useFarm } from '../ui/farm'
+import { canDo, useFarm } from '../ui/farm'
 import RecordsBoard from '../ui/RecordsBoard.vue'
 import SeasonBars from '../ui/SeasonBars.vue'
 import YieldChart from '../ui/YieldChart.vue'
@@ -439,6 +439,11 @@ const hasData = computed(() => {
 
   return lookup[report.value]
 })
+
+/** The cost report needs access to money. */
+const visibleReports = computed(() =>
+  REPORTS.filter((key) => key !== 'money' || canDo(farm.value, 'money')),
+)
 </script>
 
 <template>
@@ -446,7 +451,7 @@ const hasData = computed(() => {
     <h1>{{ $t('nav.reports') }}</h1>
     <div class="chips report-tabs" role="tablist">
       <button
-        v-for="key in REPORTS"
+        v-for="key in visibleReports"
         :key="key"
         type="button"
         role="tab"

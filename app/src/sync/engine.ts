@@ -1,6 +1,8 @@
+import type { Access } from '../core/access'
 import type { SyncRecord, SyncRequest, SyncResponse, SyncTable } from '../core/syncFormat'
 import type { HarvestDB } from '../db/db'
 import Dexie from 'dexie'
+import { accessSignature, readableTables, writableTables } from '../core/access'
 import { rowId, SYNC_TABLES } from '../core/syncFormat'
 import { markRemote } from '../db/db'
 
@@ -108,12 +110,55 @@ export interface SyncResult {
   received: number
 }
 
+/**
+ * Keep this device within what the person may see and change in the grove: when their access
+ * changed, drop the rows they may no longer see and load the grove again from the start; and
+ * never send rows they may not change (their "not yet sent" mark is cleared instead).
+ */
+async function applyAccess(database: HarvestDB, farmId: string, access: Access) {
+  const signatureKey = `syncAccess:${farmId}`
+  const signature = accessSignature(access)
+  const before = (await database.meta.get(signatureKey))?.value
+  const readable = readableTables(access)
+  const writable = writableTables(access)
+  const tables = SYNC_TABLES.map((table) => database.table(table))
+  await database.transaction('rw', tables, async () => {
+    markRemote(Dexie.currentTransaction)
+
+    for (const table of SYNC_TABLES) {
+      if (table === 'farms' || table === 'settings') {
+        continue
+      }
+      const rows = database.table(table).where('farmId').equals(farmId)
+      if (!readable.has(table)) {
+        await rows.delete()
+      } else if (!writable.has(table)) {
+        await rows.modify((row: Row) => {
+          delete row._dirty
+        })
+      }
+    }
+  })
+  if (before !== signature) {
+    if (before !== undefined) {
+      await forgetSync(database, farmId) // load everything they may now see
+    }
+    await database.meta.put({ key: signatureKey, value: signature })
+  }
+
+  return writable
+}
+
 export async function syncFarm(
   database: HarvestDB,
   farmId: string,
   transport: SyncTransport,
+  access?: Access,
 ): Promise<SyncResult> {
-  const changes = await pendingChanges(database, farmId)
+  const writable = access ? await applyAccess(database, farmId, access) : undefined
+  const changes = (await pendingChanges(database, farmId)).filter(
+    (change) => !writable || writable.has(change.table),
+  )
   const sent = new Map(
     changes.map((change) => [`${change.table}:${change.id}`, change.updatedAt]),
   )

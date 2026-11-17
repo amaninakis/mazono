@@ -52,3 +52,25 @@ export function formatLocaleFor(
 
   return FORMATS[format][lang]
 }
+
+const LANGUAGE_CODES: readonly Language[] = ['en', 'el']
+
+function isLanguage(value: unknown): value is Language {
+  return typeof value === 'string' && (LANGUAGE_CODES as readonly string[]).includes(value)
+}
+
+/**
+ * The app language: what was chosen on this phone, else the grove's language (a starting
+ * point for a new phone), else the browser's.
+ */
+export function pickLanguage(
+  chosen: unknown,
+  grove: Language | undefined,
+  browser: Language,
+): Language {
+  if (isLanguage(chosen)) {
+    return chosen
+  }
+
+  return grove ?? browser
+}

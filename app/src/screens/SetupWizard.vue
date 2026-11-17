@@ -5,7 +5,7 @@ import { computed, ref } from 'vue'
 import { UNIT_PRESETS } from '../core/defaults'
 import { parseDecimal } from '../core/progress'
 import { createFarm, importFarm } from '../db/repo'
-import { LANGUAGES, setLanguage } from '../i18n'
+import { chooseLanguage, LANGUAGES } from '../i18n'
 
 interface UnitDraft {
   key: string
@@ -45,7 +45,7 @@ const selected = computed(() => units.value.filter((draft) => draft.selected))
 
 function chooseLang(language: Language) {
   lang.value = language
-  setLanguage(language)
+  chooseLanguage(language)
 }
 
 function toggleUnit(draft: UnitDraft) {

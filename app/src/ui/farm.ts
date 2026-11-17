@@ -1,4 +1,5 @@
 import type { TFunction } from 'i18next'
+import type { Access, Area } from '../core/access'
 import type {
   Category,
   ChargeType,
@@ -15,6 +16,7 @@ import type {
 } from '../core/types'
 import type { FarmRepo } from '../db/repo'
 import { type ComputedRef, inject, type InjectionKey, provide } from 'vue'
+import { can } from '../core/access'
 
 export interface FarmData {
   repo: FarmRepo
@@ -31,6 +33,15 @@ export interface FarmData {
   stockMovements: StockMovement[]
   categories: Category[]
   transactions: Transaction[]
+  /**
+   * What the signed-in person may see and change in this grove (everything without a server).
+   */
+  access: Access
+}
+
+/** May the person see (or, with "change", change) this area of the open grove? */
+export function canDo(farm: FarmData, area: Area, level: 'see' | 'change' = 'see'): boolean {
+  return can(farm.access, area, level)
 }
 
 const FARM_KEY: InjectionKey<ComputedRef<FarmData>> = Symbol('farm')

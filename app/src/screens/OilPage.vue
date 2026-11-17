@@ -17,7 +17,7 @@ import {
   unitWeights,
 } from '../core/oil'
 import { formatLocale } from '../i18n'
-import { chargeName, locationName, useFarm } from '../ui/farm'
+import { canDo, chargeName, locationName, useFarm } from '../ui/farm'
 import { oilPeriod } from '../ui/periods'
 import StockMoveModal from '../ui/StockMoveModal.vue'
 import { showToast } from '../ui/toast'
@@ -203,6 +203,10 @@ async function removeMove(movement: StockMovement) {
     },
   })
 }
+
+/** Read-only for people who may only see the Oil page. */
+const canEditOil = computed(() => canDo(farm.value, 'oil', 'change'))
+const canEditMoney = computed(() => canDo(farm.value, 'money', 'change'))
 </script>
 
 <template>
@@ -217,7 +221,7 @@ async function removeMove(movement: StockMovement) {
       />
     </header>
 
-    <RouterLink to="/oil/new" class="btn primary big block"
+    <RouterLink v-if="canEditOil" to="/oil/new" class="btn primary big block"
       >+ {{ $t('oil.newExtraction') }}</RouterLink
     >
 
@@ -256,7 +260,12 @@ async function removeMove(movement: StockMovement) {
       <p v-if="!extractions.length" class="muted">{{ $t('oil.noExtractions') }}</p>
       <ul v-else class="list">
         <li v-for="x in extractions" :key="x.id">
-          <button type="button" class="x-card" @click="router.push(`/oil/${x.id}`)">
+          <button
+            type="button"
+            class="x-card"
+            :class="{ readonly: !canEditOil }"
+            @click="canEditOil && router.push(`/oil/${x.id}`)"
+          >
             <strong
               >{{ day(x.date)
               }}<template v-if="millName(x.millId)">
@@ -338,7 +347,7 @@ async function removeMove(movement: StockMovement) {
           </tfoot>
         </table>
       </div>
-      <div v-if="stockRows.length" class="actions wrap">
+      <div v-if="stockRows.length && canEditOil" class="actions wrap">
         <button type="button" class="btn small" @click="moveKind = 'transfer'">
           ⇄ {{ $t('oil.transfer') }}
         </button>
@@ -354,12 +363,15 @@ async function removeMove(movement: StockMovement) {
               <small class="muted">{{ day(mv.date) }} · {{ seasonLabel(mv.vintage) }}</small
               ><br />
               <template v-if="mv.movement">{{ moveLine(mv.movement) }}</template>
-              <RouterLink v-else :to="`/money/${mv.sale!.id}`">
+              <RouterLink v-else-if="canEditMoney" :to="`/money/${mv.sale!.id}`">
                 {{ $t('oil.saleLine', { kg: fmt(mv.sale!.kg ?? 0), party: mv.sale!.party || '–' }) }}
               </RouterLink>
+              <template v-else>
+                {{ $t('oil.saleLine', { kg: fmt(mv.sale!.kg ?? 0), party: mv.sale!.party || '–' }) }}
+              </template>
             </span>
             <button
-              v-if="mv.movement"
+              v-if="mv.movement && canEditOil"
               type="button"
               class="icon-btn"
               :aria-label="$t('common.delete')"

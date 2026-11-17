@@ -15,7 +15,7 @@ import {
 } from '../core/money'
 import { isUntrackedSale, stockLevels, trackedVintages } from '../core/oil'
 import { formatLocale } from '../i18n'
-import { categoryName, locationName, useFarm } from '../ui/farm'
+import { canDo, categoryName, locationName, useFarm } from '../ui/farm'
 import OilDrop from '../ui/OilDrop.vue'
 import { moneyPeriod } from '../ui/periods'
 import YearPicker from '../ui/YearPicker.vue'
@@ -146,6 +146,10 @@ function detail(x: Transaction) {
 function icon(kind: TransactionKind) {
   return { sale: '', income: '＋', expense: '−' }[kind]
 }
+
+/** Read-only for people who may only see the Money page. */
+const canEditMoney = computed(() => canDo(farm.value, 'money', 'change'))
+const canEditSettings = computed(() => canDo(farm.value, 'settings', 'change'))
 </script>
 
 <template>
@@ -159,7 +163,7 @@ function icon(kind: TransactionKind) {
       <YearPicker v-model="shownYear" :years="years" :label="$t('money.year')" />
     </div>
 
-    <div class="add-row">
+    <div v-if="canEditMoney" class="add-row">
       <button type="button" class="btn small" @click="router.push('/money/new/expense')">
         − {{ $t('money.addExpense') }}
       </button>
@@ -231,7 +235,10 @@ function icon(kind: TransactionKind) {
           </tr>
         </tbody>
       </table>
-      <div v-if="anyStock && lastPrice && valueLocations.length > 1" class="value-places">
+      <div
+        v-if="anyStock && lastPrice && valueLocations.length > 1 && canEditSettings"
+        class="value-places"
+      >
         <span class="muted small">{{ $t('money.stockValueCounts') }}</span>
         <div class="chips tight">
           <button
@@ -299,8 +306,8 @@ function icon(kind: TransactionKind) {
           <button
             type="button"
             class="tx-row"
-            :class="[x.kind]"
-            @click="router.push(`/money/${x.id}`)"
+            :class="[x.kind, { readonly: !canEditMoney }]"
+            @click="canEditMoney && router.push(`/money/${x.id}`)"
           >
             <span class="tx-icon" aria-hidden="true">
               <OilDrop v-if="x.kind === 'sale'" />

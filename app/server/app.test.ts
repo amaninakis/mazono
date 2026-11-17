@@ -178,7 +178,7 @@ describe('sync', () => {
     expect(first.body.records.map((x) => x.id)).toEqual(['a', 'b'])
     const me = await app.inject({ url: '/api/me', cookies })
 
-    expect(me.json<AccountInfo>().farms).toEqual([{ id: 'f1', role: 'admin' }])
+    expect(me.json<AccountInfo>().farms).toMatchObject([{ id: 'f1', role: 'admin' }])
 
     const other = await sync(cookies, {
       farmId: 'f1',

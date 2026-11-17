@@ -11,6 +11,8 @@ export interface BaseRecord {
   farmId: string
   updatedAt: number // ms epoch of the last change; the newest change wins when syncing
   deletedAt?: number // soft delete, so deletions can sync
+  /** Who logged it (username), set by the server for work, productions, money and moves. */
+  createdBy?: string
 }
 
 export interface Farm {

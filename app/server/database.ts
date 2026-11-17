@@ -58,8 +58,18 @@ export function openDatabase(path: string): DatabaseSync {
     database.exec(statement)
   }
   database.prepare("INSERT OR IGNORE INTO meta (key, value) VALUES ('seq', '0')").run()
+  // v0.5b: per-member permissions, and users allowed to start their own grove.
+  addColumn(database, 'memberships', 'permissions', "TEXT NOT NULL DEFAULT '{}'")
+  addColumn(database, 'users', 'may_create_grove', 'INTEGER NOT NULL DEFAULT 0')
 
   return database
+}
+
+function addColumn(database: DatabaseSync, table: string, column: string, definition: string) {
+  const columns = database.prepare(`PRAGMA table_info(${table})`).all() as { name: string }[]
+  if (!columns.some((x) => x.name === column)) {
+    database.exec(`ALTER TABLE ${table} ADD COLUMN ${column} ${definition}`)
+  }
 }
 
 /** Next record sequence number (call inside a transaction). */

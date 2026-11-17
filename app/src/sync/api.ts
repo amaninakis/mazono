@@ -1,4 +1,5 @@
-import type { AccountInfo, SyncRequest, SyncResponse } from '../core/syncFormat'
+import type { Access, Permissions, Role } from '../core/access'
+import type { AccountInfo, Member, SyncRequest, SyncResponse } from '../core/syncFormat'
 
 /* Calls to the HarvestLog server. All requests go to the same address the app came from. */
 
@@ -101,4 +102,48 @@ export async function syncCall(request: SyncRequest) {
 /** Remove a grove that holds no data (refused with "not-empty" otherwise). */
 export async function removeFarm(farmId: string) {
   return await call<{ ok: boolean }>(`/api/farms/${encodeURIComponent(farmId)}/remove`, {})
+}
+
+/* ---------- people in a grove (administrators) ---------- */
+
+export interface NewMember {
+  username: string
+  password: string
+  role: Role
+  permissions: Permissions
+  /** Installation owner only: they start a grove of their own instead of joining this one. */
+  ownGrove?: boolean
+}
+
+export async function listMembers(farmId: string) {
+  return await call<Member[]>(`/api/farms/${encodeURIComponent(farmId)}/members`)
+}
+
+/** `existingAccount`: they already had an account, so their own password stays. */
+export async function addMember(farmId: string, member: NewMember) {
+  return await call<{ members: Member[]; existingAccount: boolean }>(
+    `/api/farms/${encodeURIComponent(farmId)}/members`,
+    member,
+  )
+}
+
+export async function updateMember(farmId: string, userId: string, access: Access) {
+  return await call<Member[]>(
+    `/api/farms/${encodeURIComponent(farmId)}/members/${encodeURIComponent(userId)}`,
+    access,
+  )
+}
+
+export async function resetMemberPassword(farmId: string, userId: string, password: string) {
+  return await call<Member[]>(
+    `/api/farms/${encodeURIComponent(farmId)}/members/${encodeURIComponent(userId)}/password`,
+    { password },
+  )
+}
+
+export async function removeMember(farmId: string, userId: string) {
+  return await call<Member[]>(
+    `/api/farms/${encodeURIComponent(farmId)}/members/${encodeURIComponent(userId)}/remove`,
+    {},
+  )
 }

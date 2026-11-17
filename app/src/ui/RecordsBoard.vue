@@ -7,7 +7,7 @@ import { formatMoney, formatNumber, formatYield } from '../core/format'
 import { farmRecords, milestones } from '../core/records'
 import { unitLabel } from '../core/units'
 import { formatLocale } from '../i18n'
-import { useFarm } from './farm'
+import { canDo, useFarm } from './farm'
 
 /** All-time records and milestone badges, like achievements in a game. */
 const { t: translate } = useTranslation()
@@ -125,27 +125,30 @@ const cards = computed<Card[]>(() => {
       value: `${fmt(best.lowestAcidity.acidity, 2)}%`,
       detail: day(best.lowestAcidity.date),
     },
-    best.bestPrice && {
-      key: 'bestPrice',
-      icon: '💶',
-      value: translate('reports.perKg', {
-        price: formatMoney(best.bestPrice.pricePerKg, formatLocale.value),
-      }),
-      detail: `${best.bestPrice.party} · ${day(best.bestPrice.date)}`,
-    },
+    canDo(farm.value, 'money') &&
+      best.bestPrice && {
+        key: 'bestPrice',
+        icon: '💶',
+        value: translate('reports.perKg', {
+          price: formatMoney(best.bestPrice.pricePerKg, formatLocale.value),
+        }),
+        detail: `${best.bestPrice.party} · ${day(best.bestPrice.date)}`,
+      },
   ]
 
   return list.filter((card): card is Card => !!card)
 })
 
-const totalLines = computed(() => [
-  { key: 'netOil', value: kg(totals.value.netOilKg) },
-  { key: 'olives', value: kg(totals.value.oliveKg) },
-  { key: 'productions', value: fmt(totals.value.productions) },
-  { key: 'harvestDays', value: fmt(totals.value.harvestDays) },
-  { key: 'trees', value: fmt(totals.value.treesHarvested) },
-  { key: 'sales', value: formatMoney(totals.value.salesAmount, formatLocale.value) },
-])
+const totalLines = computed(() =>
+  [
+    { key: 'netOil', value: kg(totals.value.netOilKg) },
+    { key: 'olives', value: kg(totals.value.oliveKg) },
+    { key: 'productions', value: fmt(totals.value.productions) },
+    { key: 'harvestDays', value: fmt(totals.value.harvestDays) },
+    { key: 'trees', value: fmt(totals.value.treesHarvested) },
+    { key: 'sales', value: formatMoney(totals.value.salesAmount, formatLocale.value) },
+  ].filter((line) => line.key !== 'sales' || canDo(farm.value, 'money')),
+)
 
 const BADGE_ICONS: Record<Milestone['kind'], string> = {
   oil: '🫒',
