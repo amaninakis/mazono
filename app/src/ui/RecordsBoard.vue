@@ -1,16 +1,22 @@
 <script setup lang="ts">
-import type { Milestone } from '../core/records'
+import type { Comparison } from '../core/comparisons'
 import { useTranslation } from 'i18next-vue'
-import { computed } from 'vue'
-import { parseISODate, seasonLabel } from '../core/dates'
+import { computed, reactive } from 'vue'
+import {
+  comparisons,
+  daySeed,
+  latestYearTotals,
+  METRES_BETWEEN_TREES,
+} from '../core/comparisons'
+import { parseISODate, seasonLabel, seasonOf, todayISO } from '../core/dates'
 import { formatMoney, formatNumber, formatYield } from '../core/format'
-import { farmRecords, milestones } from '../core/records'
+import { farmRecords } from '../core/records'
 import { unitLabel } from '../core/units'
 import { formatLocale } from '../i18n'
 import { canDo, useFarm } from './farm'
 
-/** All-time records and milestone badges, like achievements in a game. */
-const { t: translate } = useTranslation()
+/** All-time records, the farm's numbers put another way, and the totals. */
+const { t: translate, i18next } = useTranslation()
 const farm = useFarm()
 
 const result = computed(() =>
@@ -150,28 +156,123 @@ const totalLines = computed(() =>
   ].filter((line) => line.key !== 'sales' || canDo(farm.value, 'money')),
 )
 
-const BADGE_ICONS: Record<Milestone['kind'], string> = {
-  oil: '🫒',
-  harvestDays: '📅',
-  productions: '🏭',
-  years: '🎂',
+/* ---------- put another way ---------- */
+const harvestTypeIds = computed(
+  () =>
+    new Set(farm.value.taskTypes.filter((x) => x.inputKind === 'harvest').map((x) => x.id)),
+)
+const latestYear = computed(() =>
+  latestYearTotals(
+    farm.value.extractions,
+    farm.value.entries,
+    harvestTypeIds.value,
+    farm.value.settings.seasonStartMonth,
+  ),
+)
+/** "Show another" taps per card. */
+const turns = reactive<Record<string, number>>({})
+const seed = daySeed(new Date())
+const compareCards = computed(() =>
+  comparisons(
+    {
+      year: latestYear.value?.totals ?? { oliveKg: 0, netOilKg: 0, trees: 0 },
+      all: {
+        oliveKg: totals.value.oliveKg,
+        netOilKg: totals.value.netOilKg,
+        trees: totals.value.treesHarvested,
+      },
+    },
+    seed,
+    turns,
+  ),
+)
+
+const FRACTION_KEYS: Record<string, string> = {
+  '¼': 'quarter',
+  '⅓': 'third',
+  '½': 'half',
+  '⅔': 'twoThirds',
+  '¾': 'threeQuarters',
 }
-/** Reached milestones, then the next one of each kind (the rest stay hidden until then). */
-const badges = computed(() => {
-  const list = milestones(totals.value)
-  const reached = list.filter((x) => x.done)
-  const next = (['oil', 'harvestDays', 'productions', 'years'] as const)
-    .map((kind) => list.find((x) => x.kind === kind && !x.done))
-    .filter((x): x is Milestone => !!x)
 
-  return [...reached, ...next]
-})
+function when(card: Comparison) {
+  if (card.scope === 'all') {
+    return translate('compare.when.all')
+  }
+  const season = latestYear.value?.season ?? 0
+  const thisYear = seasonOf(todayISO(), farm.value.settings.seasonStartMonth)
 
-function badgeTitle(badge: Milestone) {
-  return translate(`records.badge.${badge.kind}`, {
-    count: badge.goal,
-    goal: fmt(badge.goal),
+  return season === thisYear
+    ? translate('compare.when.thisYear')
+    : translate('compare.when.year', { year: seasonLabel(season) })
+}
+
+/**
+ * "a bathtub" / "3 bathtubs". `after` is for "… for 3 donkeys": Greek then needs the
+ * accusative (για 3 γαϊδάρους), kept as oneTo / manyTo where it differs.
+ */
+function objectName(reference: string, count: number, after = false) {
+  const form = count === 1 ? 'one' : 'many'
+  const key = `compare.ref.${reference}.${form}`
+  const toKey = `${key}To`
+  const chosen = after && i18next.exists(toKey) ? toKey : key
+
+  return translate(chosen, { count: fmt(count, count % 1 ? 1 : 0) })
+}
+
+function thing(card: Comparison) {
+  const amount = card.amount
+  if (!card.reference || !amount) {
+    return ''
+  }
+  if (amount.kind === 'times') {
+    return objectName(card.reference, amount.count)
+  }
+  if (amount.kind === 'about') {
+    return translate('compare.about', {
+      thing: translate(`compare.ref.${card.reference}.one`),
+    })
+  }
+
+  return translate(`compare.fraction.${FRACTION_KEYS[amount.part]}`, {
+    of: translate(`compare.ref.${card.reference}.of`),
   })
+}
+
+function sentence(card: Comparison) {
+  const count = card.count ?? 0
+  if (card.measure === 'family' && count < 1) {
+    return translate('compare.say.familyMonths', {
+      when: when(card),
+      count: Math.max(Math.round(count * 12), 1),
+    })
+  }
+
+  return translate(`compare.say.${card.measure}`, {
+    when: when(card),
+    thing: thing(card),
+    count: fmt(count, count % 1 ? 1 : 0),
+  })
+}
+
+/** "18 litres more for 7 bathtubs." */
+function nextLine(card: Comparison) {
+  if (!card.next || !card.reference) {
+    return ''
+  }
+  const missing =
+    card.measure === 'treeLine'
+      ? Math.ceil(card.next.missing / METRES_BETWEEN_TREES)
+      : Math.ceil(card.next.missing)
+
+  return translate(`compare.next.${card.measure}`, {
+    missing: fmt(missing),
+    thing: objectName(card.reference, card.next.count, true),
+  })
+}
+
+function showAnother(card: Comparison) {
+  turns[card.id] = (turns[card.id] ?? 0) + 1
 }
 </script>
 
@@ -187,35 +288,39 @@ function badgeTitle(badge: Milestone) {
       </li>
     </ul>
 
-    <h3>{{ $t('records.badgesTitle') }}</h3>
-    <ul class="badge-list">
-      <li
-        v-for="badge in badges"
-        :key="`${badge.kind}${badge.goal}`"
-        class="badge"
-        :class="{ done: badge.done }"
-      >
-        <span class="badge-icon" aria-hidden="true">{{
-          badge.done ? BADGE_ICONS[badge.kind] : '🔒'
-        }}</span>
-        <span class="badge-text">
-          <strong>{{ badgeTitle(badge) }}</strong>
-          <span
-            v-if="!badge.done"
-            class="badge-bar"
-            role="progressbar"
-            :aria-valuenow="Math.round(badge.progress * 100)"
-            aria-valuemin="0"
-            aria-valuemax="100"
-          >
-            <span :style="{ width: `${Math.round(badge.progress * 100)}%` }"></span>
-          </span>
-        </span>
-        <span class="badge-state">{{
-          badge.done ? '✓' : `${Math.round(badge.progress * 100)}%`
-        }}</span>
-      </li>
-    </ul>
+    <template v-if="compareCards.length">
+      <h3>{{ $t('compare.title') }}</h3>
+      <ul class="compare-list">
+        <li v-for="card in compareCards" :key="card.id" class="compare-card">
+          <span class="compare-icon" aria-hidden="true">{{ card.icon }}</span>
+          <div class="compare-body">
+            <p class="compare-text">{{ sentence(card) }}</p>
+            <template v-if="card.next">
+              <span
+                class="badge-bar"
+                role="progressbar"
+                :aria-label="nextLine(card)"
+                :aria-valuenow="Math.round(card.next.progress * 100)"
+                aria-valuemin="0"
+                aria-valuemax="100"
+              >
+                <span :style="{ width: `${Math.round(card.next.progress * 100)}%` }"></span>
+              </span>
+              <small class="muted">{{ nextLine(card) }}</small>
+            </template>
+            <button
+              v-if="card.choices > 1"
+              type="button"
+              class="btn ghost small compare-another"
+              @click="showAnother(card)"
+            >
+              {{ $t('compare.another') }}
+            </button>
+          </div>
+        </li>
+      </ul>
+      <p class="muted small">{{ $t('compare.note') }}</p>
+    </template>
 
     <h3>{{ $t('records.totalsTitle') }}</h3>
     <dl class="lines">

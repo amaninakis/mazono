@@ -115,6 +115,7 @@ describe('allocation', () => {
 
   it('oil per entry and trees in the batch', () => {
     const x = extraction({
+      oliveKg: 500,
       oilKg: 100,
       charges: [{ chargeTypeId: 'fee', kg: 20 }],
       allocations: [
@@ -123,7 +124,11 @@ describe('allocation', () => {
       ],
     })
 
-    expect(oilByEntry(x, {})).toEqual({ e1: { oil: 50, net: 40 }, e2: { oil: 50, net: 40 } })
+    expect(oilByEntry(x, {})).toEqual({
+      e1: { oil: 50, net: 40, olives: 250 },
+      e2: { oil: 50, net: 40, olives: 250 },
+    })
+
     expect(batchTrees(x, [e1, entry('e2', 10, [['sack', 4]])])).toBeCloseTo(14 * (4 / 7) + 10)
   })
 

@@ -382,14 +382,14 @@
       "seasons": "Years side by side",
       "yield": "Yield through the year",
       "money": "Cost of your oil",
-      "records": "Records and milestones"
+      "records": "Records"
     },
     "about": {
       "fields": "How the fields performed each year. Darker cells mean more, so good and poor years stand out.",
       "seasons": "Each year’s totals. Choose what the chart shows.",
-      "yield": "Oil from each mill visit as a share of the olives, by date. Use it to see when the olives give the most oil.",
+      "yield": "The yield of each mill visit, by date. Use it to see when the olives give the most oil.",
       "money": "Expenses and income of each calendar year, set against the oil of the same year.",
-      "records": "Your all-time bests, and the milestones you have reached."
+      "records": "Your all-time bests, and your numbers put another way."
     },
     "empty": {
       "fields": "Log harvests (and mill extractions) to compare your fields.",
@@ -402,7 +402,8 @@
       "units": "Olives collected",
       "oil": "Oil",
       "unitsPerTree": "Olives per tree",
-      "oilPerTree": "Oil per tree"
+      "oilPerTree": "Oil per tree",
+      "yield": "Yield"
     },
     "field": "Field",
     "fieldsNote": "Oil per field is an estimate: each mill visit is split between the fields that went into it by the weight of their olives. “Per tree” uses the trees you entered as harvested, or all the field’s trees if you didn’t enter any. Tap a cell for details.",
@@ -434,11 +435,12 @@
     "unitCaption": "In {{unit}}",
     "unitCaptionPerTree": "In {{unit}} per tree",
     "inKg": "in kg",
-    "logHarvest": "Log a harvest"
+    "logHarvest": "Log a harvest",
+    "yieldCaptionRatio": "Yield: kg of olives for 1 kg of oil (estimate per field)",
+    "yieldCaptionPercent": "Yield: oil as a share of the olives (estimate per field)"
   },
   "records": {
     "recordsTitle": "Your records",
-    "badgesTitle": "Milestones",
     "totalsTitle": "All-time totals",
     "card": {
       "bestYear": "Best year for oil",
@@ -451,16 +453,6 @@
       "mostTreesDay": "Most trees in a day",
       "lowestAcidity": "Lowest acidity",
       "bestPrice": "Best sale price"
-    },
-    "badge": {
-      "oil_one": "{{goal}} kg of oil",
-      "oil_other": "{{goal}} kg of oil",
-      "harvestDays_one": "First harvest day",
-      "harvestDays_other": "{{goal}} harvest days",
-      "productions_one": "First production",
-      "productions_other": "{{goal}} productions",
-      "years_one": "First year",
-      "years_other": "{{goal}} years in the app"
     },
     "total": {
       "netOil": "Oil after charges",
@@ -632,5 +624,160 @@
     "restored": "Continuing your unsaved entry from {{when}}.",
     "discard": "Start over",
     "kept": "Your unsaved entry is kept. It will be here when you come back."
+  },
+  "compare": {
+    "title": "Put another way",
+    "another": "Show another",
+    "note": "Rough figures, to give you a picture. Family: about 12 kg of oil per person a year, as people eat in Greece. Salad: 2 tablespoons of oil. Trees in a row: 7 metres apart.",
+    "when": {
+      "thisYear": "this year",
+      "year": "in {{year}}",
+      "all": "over all these years"
+    },
+    "about": "about {{thing}}",
+    "fraction": {
+      "quarter": "a quarter of {{of}}",
+      "third": "a third of {{of}}",
+      "half": "half of {{of}}",
+      "twoThirds": "two thirds of {{of}}",
+      "threeQuarters": "three quarters of {{of}}"
+    },
+    "say": {
+      "oilVolume": "The oil you made {{when}} fills {{thing}}.",
+      "oilWeight": "The oil you made {{when}} weighs as much as {{thing}}.",
+      "oliveWeight": "The olives you picked {{when}} weigh as much as {{thing}}.",
+      "treeLine": "The trees you harvested {{when}}, lined up, stretch as far as {{thing}}.",
+      "family": "The oil you made {{when}} keeps a family of four in oil for {{count}} years.",
+      "familyMonths": "The oil you made {{when}} keeps a family of four in oil for {{count}} months.",
+      "salads": "The oil you made {{when}} is enough for about {{count}} Greek salads."
+    },
+    "next": {
+      "oilVolume": "{{missing}} litres more for {{thing}}.",
+      "oilWeight": "{{missing}} kg more oil for {{thing}}.",
+      "oliveWeight": "{{missing}} kg more olives for {{thing}}.",
+      "treeLine": "{{missing}} more trees for {{thing}}."
+    },
+    "ref": {
+      "bottle": {
+        "one": "a one-litre bottle",
+        "many": "{{count}} one-litre bottles",
+        "of": "a one-litre bottle"
+      },
+      "bucket": {
+        "one": "a bucket",
+        "many": "{{count}} buckets",
+        "of": "a bucket"
+      },
+      "carTank": {
+        "one": "a car's fuel tank",
+        "many": "{{count}} car fuel tanks",
+        "of": "a car's fuel tank"
+      },
+      "bathtub": {
+        "one": "a bathtub",
+        "many": "{{count}} bathtubs",
+        "of": "a bathtub"
+      },
+      "barrel": {
+        "one": "a wine barrel",
+        "many": "{{count}} wine barrels",
+        "of": "a wine barrel"
+      },
+      "waterTank": {
+        "one": "a one-tonne water tank",
+        "many": "{{count}} one-tonne water tanks",
+        "of": "a one-tonne water tank"
+      },
+      "tanker": {
+        "one": "a tanker truck",
+        "many": "{{count}} tanker trucks",
+        "of": "a tanker truck"
+      },
+      "homePool": {
+        "one": "a garden swimming pool",
+        "many": "{{count}} garden swimming pools",
+        "of": "a garden swimming pool"
+      },
+      "olympicPool": {
+        "one": "an Olympic pool",
+        "many": "{{count}} Olympic pools",
+        "of": "an Olympic pool"
+      },
+      "oilTin": {
+        "one": "a 17-kilo oil tin",
+        "many": "{{count}} 17-kilo oil tins",
+        "of": "a 17-kilo oil tin",
+        "oneTo": "a 17-kilo oil tin"
+      },
+      "person": {
+        "one": "a grown-up",
+        "many": "{{count}} grown-ups",
+        "of": "a grown-up",
+        "oneTo": "a grown-up",
+        "manyTo": "{{count}} grown-ups"
+      },
+      "donkey": {
+        "one": "a donkey",
+        "many": "{{count}} donkeys",
+        "of": "a donkey",
+        "oneTo": "a donkey",
+        "manyTo": "{{count}} donkeys"
+      },
+      "cow": {
+        "one": "a cow",
+        "many": "{{count}} cows",
+        "of": "a cow"
+      },
+      "car": {
+        "one": "a small car",
+        "many": "{{count}} small cars",
+        "of": "a small car"
+      },
+      "pickup": {
+        "one": "a farm pickup",
+        "many": "{{count}} farm pickups",
+        "of": "a farm pickup"
+      },
+      "elephant": {
+        "one": "an elephant",
+        "many": "{{count}} elephants",
+        "of": "an elephant",
+        "oneTo": "an elephant"
+      },
+      "truck": {
+        "one": "a big lorry",
+        "many": "{{count}} big lorries",
+        "of": "a big lorry"
+      },
+      "whale": {
+        "one": "a blue whale",
+        "many": "{{count}} blue whales",
+        "of": "a blue whale"
+      },
+      "parthenon": {
+        "one": "the Parthenon",
+        "many": "{{count}} Parthenons",
+        "of": "the Parthenon",
+        "oneTo": "the Parthenon"
+      },
+      "pitch": {
+        "one": "a football pitch",
+        "many": "{{count}} football pitches",
+        "of": "a football pitch"
+      },
+      "track": {
+        "one": "a lap of a running track",
+        "many": "{{count}} laps of a running track",
+        "of": "a lap of a running track",
+        "oneTo": "a lap of a running track",
+        "manyTo": "{{count}} laps of a running track"
+      },
+      "bridge": {
+        "one": "the Rio–Antirrio bridge",
+        "many": "{{count}} Rio–Antirrio bridges",
+        "of": "the Rio–Antirrio bridge",
+        "oneTo": "the Rio–Antirrio bridge"
+      }
+    }
   }
 }

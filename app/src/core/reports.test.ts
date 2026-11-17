@@ -97,6 +97,14 @@ describe('fieldSeasonReport', () => {
     expect(up[2026]).toMatchObject({ oilKg: 90, trees: 60 })
   })
 
+  it('gives each field its share of the olives too, so its yield can be shown', () => {
+    const up = report.rows.find((row) => row.field.id === 'up')!.cells
+
+    // 30 of the 40 sacks of the 1,600 kg production: 1,200 kg of olives for 240 kg of oil.
+    expect(up[2025].oliveKg).toBe(1200)
+    expect(up[2025].oilKg / up[2025].oliveKg).toBeCloseTo(0.2)
+  })
+
   it('uses harvested trees for "per tree", or the field size when none were entered', () => {
     const rows = Object.fromEntries(report.rows.map((row) => [row.field.id, row.cells]))
 

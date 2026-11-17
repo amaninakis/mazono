@@ -1,6 +1,6 @@
 import type { Extraction, Field, TaskEntry, Transaction, Unit } from './types'
 import { describe, expect, it } from 'vitest'
-import { farmRecords, milestones } from './records'
+import { farmRecords } from './records'
 
 const base = { farmId: 'f', updatedAt: 0 }
 const sack: Unit = { ...base, id: 'sack', name: 'Sack', isDefault: true, archived: false }
@@ -142,16 +142,5 @@ describe('farmRecords', () => {
 
     expect(empty.records).toEqual({})
     expect(empty.totals.netOilKg).toBe(0)
-  })
-})
-
-describe('milestones', () => {
-  it('marks reached goals and the progress to the next ones', () => {
-    const list = milestones(totals)
-    const oil = list.filter((x) => x.kind === 'oil')
-
-    expect(oil.map((x) => x.done)).toEqual([true, false, false, false, false])
-    expect(oil[1].progress).toBeCloseTo(398 / 500)
-    expect(list.find((x) => x.kind === 'years' && x.goal === 1)?.done).toBe(true)
   })
 })

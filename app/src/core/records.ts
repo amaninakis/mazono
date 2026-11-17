@@ -3,7 +3,7 @@ import { seasonOf } from './dates'
 import { netOil, unitWeights } from './oil'
 import { fieldSeasonReport, seasonHistory } from './reports'
 
-/* All-time records and milestones, for the Records report ("achievements"). */
+/* All-time records and totals, for the Records report. */
 
 function live<T extends { deletedAt?: number }>(rows: T[]) {
   return rows.filter((row) => !row.deletedAt)
@@ -214,46 +214,4 @@ export function farmRecords(input: RecordsInput): {
   }
 
   return { records, totals }
-}
-
-/* ---------- milestones ---------- */
-
-export type MilestoneKind = 'oil' | 'harvestDays' | 'years' | 'productions'
-
-export interface Milestone {
-  kind: MilestoneKind
-  goal: number
-  done: boolean
-  /** How far towards the goal (0–1). */
-  progress: number
-}
-
-/** The steps of each milestone, from the first small one up. */
-export const MILESTONE_GOALS: Record<MilestoneKind, number[]> = {
-  oil: [100, 500, 1000, 5000, 10_000],
-  harvestDays: [1, 10, 50, 100],
-  productions: [1, 10, 25, 50],
-  years: [1, 3, 5, 10],
-}
-
-/**
- * Every milestone with whether it is reached and how close the next ones are, e.g.
- * "first 1,000 kg of oil" or "10 harvest days".
- */
-export function milestones(totals: FarmTotals): Milestone[] {
-  const current: Record<MilestoneKind, number> = {
-    oil: totals.netOilKg,
-    harvestDays: totals.harvestDays,
-    productions: totals.productions,
-    years: totals.years,
-  }
-
-  return (Object.keys(MILESTONE_GOALS) as MilestoneKind[]).flatMap((kind) =>
-    MILESTONE_GOALS[kind].map((goal) => ({
-      kind,
-      goal,
-      done: current[kind] >= goal,
-      progress: Math.min(current[kind] / goal, 1),
-    })),
-  )
 }

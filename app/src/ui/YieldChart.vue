@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue'
+import { ratioTicks } from '../core/format'
 
 /**
  * Yield (oil ÷ olives) of each extraction against the day of the season, one line per season.
@@ -17,6 +18,8 @@ const props = defineProps<{
    * mid-month tick (dropped when the chart spans too long to fit them). */
   months: { day: number; label: string; minor?: boolean }[]
   formatValue: (value: number) => string
+  /** Lines at whole ratios (1/4, 1/5…) instead of whole percents, for the 1/x style. */
+  ratioAxis?: boolean
   title: string
 }>()
 
@@ -37,8 +40,16 @@ const dayRange = computed(() => {
 
   return [first, Math.max(last, first + 30)] as const
 })
-/** Value axis in whole percent steps, with some room above and below. */
+const ratioScale = computed(() => {
+  const values = allPoints.value.map((point) => point.value)
+  return ratioTicks(Math.min(...values), Math.max(...values))
+})
+
+/** Value axis in whole percent steps (or whole ratios), with some room above and below. */
 const valueRange = computed(() => {
+  if (props.ratioAxis) {
+    return ratioScale.value.range
+  }
   const values = allPoints.value.map((point) => point.value * 100)
   const low = Math.floor(Math.min(...values) - 1)
   const high = Math.ceil(Math.max(...values) + 1)
@@ -57,6 +68,9 @@ function yOf(value: number) {
 }
 
 const valueTicks = computed(() => {
+  if (props.ratioAxis) {
+    return ratioScale.value.ticks
+  }
   const [low, high] = valueRange.value
   const step = Math.max(Math.round(((high - low) * 100) / 3), 1) / 100
   const ticks: number[] = []

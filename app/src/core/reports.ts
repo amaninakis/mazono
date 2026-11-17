@@ -19,6 +19,10 @@ export interface FieldSeasonCell {
   /** Oil from this field's harvests, split from each extraction by olive weight (estimate). */
   oilKg: number
   netKg: number
+  /**
+   * Olives (kg) behind that oil: the same share of each extraction. Yield = oilKg ÷ oliveKg.
+   */
+  oliveKg: number
   /** Trees harvested (as entered), and harvested units per unit type. */
   trees: number
   units: Record<string, number>
@@ -52,7 +56,7 @@ export function fieldSeasonReport(
   function cell(fieldId: string, season: number) {
     const byField = cells.get(fieldId) ?? {}
     cells.set(fieldId, byField)
-    byField[season] ??= { oilKg: 0, netKg: 0, trees: 0, units: {}, perTreeOf: 0 }
+    byField[season] ??= { oilKg: 0, netKg: 0, oliveKg: 0, trees: 0, units: {}, perTreeOf: 0 }
 
     return byField[season]
   }
@@ -82,6 +86,7 @@ export function fieldSeasonReport(
       const target = cell(entry.fieldId, season)
       target.oilKg += oil.oil
       target.netKg += oil.net
+      target.oliveKg += oil.olives
     }
   }
 
@@ -97,6 +102,7 @@ export function fieldSeasonReport(
       seasons.add(Number(season))
       target.oilKg = round(target.oilKg, 1)
       target.netKg = round(target.netKg, 1)
+      target.oliveKg = round(target.oliveKg, 1)
       const harvested = field.trees > 0 ? Math.min(target.trees, field.trees) : target.trees
       target.perTreeOf = harvested || field.trees
     }

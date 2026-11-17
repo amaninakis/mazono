@@ -44,3 +44,33 @@ export function formatMoney(value: number, locale: string): string {
 
   return commaDecimal ? `${sign}${abs} €` : `${sign}€${abs}`
 }
+
+/**
+ * Value-axis lines for a yield chart shown as ratios (1/x): at whole ratios such as 1/4, 1/5
+ * and 1/6 (halves when the range is narrow), from low to high (yields as oil ÷ olives), with
+ * the axis widened to the nearest whole ratio on each side. At most `most` lines.
+ */
+export function ratioTicks(
+  low: number,
+  high: number,
+  most = 5,
+): { range: [number, number]; ticks: number[] } {
+  const top = Math.max(Math.floor(1 / high), 1) // smallest x: highest yield
+  const bottom = Math.ceil(1 / Math.max(low, 0.01)) // largest x: lowest yield
+  let xs: number[] = []
+  for (let x = top; x <= bottom; x++) {
+    xs.push(x)
+  }
+  if (xs.length < 3) {
+    xs = []
+
+    for (let x = top; x <= bottom + 1e-9; x += 0.5) {
+      xs.push(x)
+    }
+  }
+  const every = Math.ceil(xs.length / most)
+  const kept = xs.filter((_, i) => i % every === 0)
+  const ticks = kept.map((x) => 1 / x).sort((left, right) => left - right)
+
+  return { range: [1 / bottom, 1 / top], ticks }
+}
