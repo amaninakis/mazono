@@ -1,7 +1,8 @@
 <script setup lang="ts">
+import type { FormValues } from '../core/drafts'
 import type { InputKind, TaskEntry, UnitAmount } from '../core/types'
 import { useTranslation } from 'i18next-vue'
-import { computed, ref, watch } from 'vue'
+import { computed, nextTick, ref, watch } from 'vue'
 import { RouterLink, useRoute, useRouter } from 'vue-router'
 import { addDays, todayISO } from '../core/dates'
 import { AMOUNT_UNITS } from '../core/defaults'
@@ -18,6 +19,8 @@ import {
 import { unitLabel } from '../core/units'
 import { formatLocale } from '../i18n'
 import DateField from '../ui/DateField.vue'
+import { useDraft } from '../ui/draft'
+import DraftNotice from '../ui/DraftNotice.vue'
 import { canDo, taskName, useFarm } from '../ui/farm'
 import FieldPicker from '../ui/FieldPicker.vue'
 import NewTaskModal from '../ui/NewTaskModal.vue'
@@ -158,6 +161,76 @@ watch(trees, (value) => {
   }
 })
 
+/* ---------- unsaved work survives a call or a wrong tap ---------- */
+const draft = useDraft({
+  form: editing ? 'entry' : 'today',
+  recordId: editing?.id,
+  // Trees and "field finished" that the app filled in itself are left out (null).
+  values: () => ({
+    date: date.value,
+    typeId: typeId.value ?? null,
+    fieldId: fieldId.value ?? null,
+    trees: treesFollowField ? null : trees.value,
+    quantities: quantities.value,
+    product: product.value,
+    amount: amount.value,
+    amountUnit: amountUnit.value,
+    finished: autoFinished ? null : finished.value,
+    notes: notes.value,
+    workers: workers.value,
+    hours: hours.value,
+  }),
+  restore: restoreValues,
+})
+
+async function restoreValues(values: FormValues) {
+  if (typeof values.date === 'string') {
+    date.value = values.date
+  }
+  if ('typeId' in values) {
+    typeId.value = (values.typeId as string | null) ?? undefined
+  }
+  if ('fieldId' in values) {
+    fieldId.value = (values.fieldId as string | null) ?? undefined
+  }
+  await nextTick() // the trees box follows the field first
+  if ('trees' in values) {
+    if (values.trees == null) {
+      treesFollowField = true
+      fillTrees()
+    } else {
+      treesFollowField = false
+      trees.value = values.trees as number
+    }
+  }
+  if (Array.isArray(values.quantities)) {
+    quantities.value = values.quantities as UnitAmount[]
+  }
+  if (typeof values.product === 'string') {
+    product.value = values.product
+  }
+  if ('amount' in values) {
+    amount.value = values.amount as number | null
+  }
+  if (typeof values.amountUnit === 'string') {
+    amountUnit.value = values.amountUnit
+  }
+  if (typeof values.finished === 'boolean') {
+    finished.value = values.finished
+    autoFinished = false
+  }
+  if (typeof values.notes === 'string') {
+    notes.value = values.notes
+    showNotes.value = showNotes.value || values.notes !== ''
+  }
+  if ('workers' in values) {
+    workers.value = values.workers as number | null
+  }
+  if ('hours' in values) {
+    hours.value = values.hours as number | null
+  }
+}
+
 function setFinished(value: boolean) {
   finished.value = value
   autoFinished = false
@@ -278,6 +351,7 @@ async function saveEntry() {
     hours: labour ? (hours.value ?? undefined) : editing?.hours,
   })
 
+  draft.clear()
   if (editing) {
     showToast({ title: translate('today.updated') })
     void router.push({ path: '/journal', query: { date: date.value } })
@@ -304,6 +378,9 @@ async function saveEntry() {
     farm.value.taskTypes,
   )
   fieldId.value = defaultFieldId(after)
+  // The form is ready for the next entry: that is the new start, not a draft.
+  await nextTick()
+  draft.clear()
 }
 
 /** Task types whose trees count together with this one (all harvest tasks share a count). */
@@ -375,6 +452,11 @@ const canEditSettings = computed(() => canDo(farm.value, 'settings', 'change'))
     <header class="page-head">
       <h1>{{ editing ? $t('today.editTitle') : $t('today.title') }}</h1>
     </header>
+    <DraftNotice
+      v-if="draft.restoredAt.value"
+      :saved-at="draft.restoredAt.value"
+      @discard="draft.discard()"
+    />
 
     <div class="task-chips" role="tablist">
       <button
@@ -429,7 +511,7 @@ const canEditSettings = computed(() => canDo(farm.value, 'settings', 'change'))
       <span class="label">{{ $t('today.field') }}</span>
       <p v-if="progress.length === 0" class="muted">
         {{ $t('today.noFields') }}
-        <RouterLink to="/settings#fields" class="btn small block-top">{{
+        <RouterLink to="/settings/fields" class="btn small block-top">{{
           $t('today.addFields')
         }}</RouterLink>
       </p>

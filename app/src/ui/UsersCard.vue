@@ -17,6 +17,7 @@ import {
 } from '../sync/api'
 import AppModal from './AppModal.vue'
 import { useFarm } from './farm'
+import { useFieldChecks } from './fieldChecks'
 import PermissionsEditor from './PermissionsEditor.vue'
 
 /**
@@ -98,7 +99,22 @@ const ownGrove = ref(false)
 /** Shown after adding, so the admin can pass the details on. */
 const handOver = ref<{ username: string; password: string; ownGrove: boolean } | null>(null)
 
+const checks = useFieldChecks({
+  name: () =>
+    isValidUsername(newName.value.trim()) ? '' : translate('account.errorUsername'),
+  password: () =>
+    newPassword.value.length < MIN_PASSWORD_LENGTH
+      ? translate('account.errorShort', { count: MIN_PASSWORD_LENGTH })
+      : '',
+})
+
+function suggestPassword() {
+  newPassword.value = suggestTemporaryPassword()
+  checks.edit('password')
+}
+
 function startAdding() {
+  checks.reset()
   adding.value = true
   handOver.value = null
   newName.value = ''
@@ -111,12 +127,12 @@ function startAdding() {
 async function add() {
   error.value = ''
   const username = newName.value.trim()
-  if (!isValidUsername(username)) {
-    error.value = translate('account.errorUsername')
-    return
-  }
-  if (newPassword.value.length < MIN_PASSWORD_LENGTH) {
-    error.value = translate('account.errorShort', { count: MIN_PASSWORD_LENGTH })
+  const problem = checks.firstProblem()
+  if (problem) {
+    document
+      .getElementById(problem === 'name' ? 'new-user-name' : 'new-user-password')
+      ?.focus()
+
     return
   }
 
@@ -280,17 +296,24 @@ async function remove() {
 
     <p v-if="error" class="error" role="alert">{{ error }}</p>
 
-    <form v-if="adding" class="member-add" @submit.prevent="add">
+    <form v-if="adding" class="member-add" novalidate @submit.prevent="add">
       <label class="label" for="new-user-name">{{ $t('account.username') }}</label>
       <input
         id="new-user-name"
         v-model="newName"
+        :aria-invalid="!!checks.errors.name"
+        :aria-describedby="checks.errors.name ? 'new-user-name-error' : undefined"
         class="input"
         autocomplete="off"
         autocapitalize="none"
         spellcheck="false"
         required
+        @blur="checks.leave('name')"
+        @input="checks.edit('name')"
       />
+      <p v-if="checks.errors.name" id="new-user-name-error" class="field-error">
+        {{ checks.errors.name }}
+      </p>
       <label class="label" for="new-user-password">{{
         $t('account.temporaryPassword')
       }}</label>
@@ -298,20 +321,23 @@ async function remove() {
         <input
           id="new-user-password"
           v-model="newPassword"
+          :aria-invalid="!!checks.errors.password"
+          :aria-describedby="checks.errors.password ? 'new-user-password-error' : undefined"
           class="input"
           autocomplete="off"
           autocapitalize="none"
           spellcheck="false"
           required
+          @blur="checks.leave('password')"
+          @input="checks.edit('password')"
         />
-        <button
-          type="button"
-          class="btn ghost small"
-          @click="newPassword = suggestTemporaryPassword()"
-        >
+        <button type="button" class="btn ghost small" @click="suggestPassword">
           {{ $t('users.suggest') }}
         </button>
       </div>
+      <p v-if="checks.errors.password" id="new-user-password-error" class="field-error">
+        {{ checks.errors.password }}
+      </p>
       <p class="hint">{{ $t('users.temporaryHelp') }}</p>
 
       <label v-if="account.user?.isOwner" class="check">

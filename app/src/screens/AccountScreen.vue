@@ -5,6 +5,7 @@ import { isValidUsername, MIN_PASSWORD_LENGTH } from '../core/syncFormat'
 import { chooseLanguage, LANGUAGES } from '../i18n'
 import { account, createAdministrator, signIn } from '../sync/account'
 import { ApiError } from '../sync/api'
+import { useFieldChecks } from '../ui/fieldChecks'
 
 /**
  * Sign in, or (on a new server) create the administrator account. Browsers and phones can
@@ -19,6 +20,20 @@ const showPassword = ref(false)
 const busy = ref(false)
 const error = ref('')
 
+/** Only a new account has rules to check; signing in just tries the server. */
+const checks = useFieldChecks({
+  username: () =>
+    creating.value && !isValidUsername(username.value.trim())
+      ? translate('account.errorUsername')
+      : '',
+  password: () =>
+    creating.value && password.value.length < MIN_PASSWORD_LENGTH
+      ? translate('account.errorShort', { count: MIN_PASSWORD_LENGTH })
+      : '',
+  repeat: () =>
+    creating.value && repeat.value !== password.value ? translate('account.errorRepeat') : '',
+})
+
 const ERRORS: Record<string, string> = {
   'wrong-credentials': 'account.errorWrong',
   'too-many-tries': 'account.errorTooMany',
@@ -30,19 +45,10 @@ const ERRORS: Record<string, string> = {
 async function submit() {
   error.value = ''
   const name = username.value.trim()
-  if (creating.value) {
-    if (!isValidUsername(name)) {
-      error.value = translate('account.errorUsername')
-      return
-    }
-    if (password.value.length < MIN_PASSWORD_LENGTH) {
-      error.value = translate('account.errorShort', { count: MIN_PASSWORD_LENGTH })
-      return
-    }
-    if (password.value !== repeat.value) {
-      error.value = translate('account.errorRepeat')
-      return
-    }
+  const problem = checks.firstProblem()
+  if (problem) {
+    document.getElementById(`acc-${problem}`)?.focus()
+    return
   }
   busy.value = true
 
@@ -90,41 +96,62 @@ async function submit() {
     <h1>{{ creating ? $t('account.createTitle') : $t('account.signInTitle') }}</h1>
     <p class="muted">{{ creating ? $t('account.createHelp') : $t('account.signInHelp') }}</p>
 
-    <form class="card" @submit.prevent="submit">
+    <form class="card" novalidate @submit.prevent="submit">
       <label class="label" for="acc-username">{{ $t('account.username') }}</label>
       <input
         id="acc-username"
         v-model="username"
+        :aria-invalid="!!checks.errors.username"
+        :aria-describedby="checks.errors.username ? 'acc-username-error' : undefined"
         class="input"
         name="username"
         autocomplete="username"
         autocapitalize="none"
         spellcheck="false"
         required
+        @blur="checks.leave('username')"
+        @input="checks.edit('username')"
       />
+      <p v-if="checks.errors.username" id="acc-username-error" class="field-error">
+        {{ checks.errors.username }}
+      </p>
       <p v-if="creating" class="hint">{{ $t('account.usernameHelp') }}</p>
 
       <label class="label" for="acc-password">{{ $t('account.password') }}</label>
       <input
         id="acc-password"
         v-model="password"
+        :aria-invalid="!!checks.errors.password"
+        :aria-describedby="checks.errors.password ? 'acc-password-error' : undefined"
         class="input"
         name="password"
         :type="showPassword ? 'text' : 'password'"
         :autocomplete="creating ? 'new-password' : 'current-password'"
         required
+        @blur="checks.leave('password')"
+        @input="checks.edit('password')"
       />
+      <p v-if="checks.errors.password" id="acc-password-error" class="field-error">
+        {{ checks.errors.password }}
+      </p>
       <template v-if="creating">
         <label class="label" for="acc-repeat">{{ $t('account.repeat') }}</label>
         <input
           id="acc-repeat"
           v-model="repeat"
+          :aria-invalid="!!checks.errors.repeat"
+          :aria-describedby="checks.errors.repeat ? 'acc-repeat-error' : undefined"
           class="input"
           name="password-repeat"
           :type="showPassword ? 'text' : 'password'"
           autocomplete="new-password"
           required
+          @blur="checks.leave('repeat')"
+          @input="checks.edit('repeat')"
         />
+        <p v-if="checks.errors.repeat" id="acc-repeat-error" class="field-error">
+          {{ checks.errors.repeat }}
+        </p>
         <p class="hint">{{ $t('account.passwordHelp', { count: MIN_PASSWORD_LENGTH }) }}</p>
       </template>
       <label class="check">

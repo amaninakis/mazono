@@ -279,7 +279,7 @@ const canEditSettings = computed(() => canDo(farm.value, 'settings', 'change'))
       </table>
     </section>
 
-    <section class="card">
+    <section class="card money-list">
       <div class="chips tight filter-chips">
         <button
           v-for="f in ['all', 'expense', 'sale', 'income'] as const"

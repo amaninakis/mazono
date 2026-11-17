@@ -9,6 +9,7 @@ import {
   todayISO,
 } from '../core/dates'
 import { formatLocale } from '../i18n'
+import AppIcon from './AppIcon.vue'
 import CalendarPicker from './CalendarPicker.vue'
 
 /**
@@ -192,7 +193,7 @@ function onPick(isoDate: string) {
           :title="$t('common.openCalendar')"
           @click="toggleCalendar"
         >
-          <span aria-hidden="true">📅</span>
+          <AppIcon name="calendar" :size="20" />
         </button>
       </div>
       <button

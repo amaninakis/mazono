@@ -24,6 +24,7 @@ export const router = createRouter({
     // The old More menu: its two items are now in the bottom bar.
     { path: '/more', redirect: '/settings' },
     { path: '/settings', name: 'settings', component: SettingsPage },
+    { path: '/settings/:section', name: 'settings-section', component: SettingsPage },
     { path: '/:rest(.*)', redirect: '/' },
   ],
   scrollBehavior: (to) => (to.hash ? { el: to.hash } : { top: 0 }),

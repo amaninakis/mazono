@@ -20,6 +20,7 @@ import {
   unitWeights,
 } from '../core/oil'
 import { formatLocale } from '../i18n'
+import AppIcon from '../ui/AppIcon.vue'
 import { canDo, chargeName, locationName, useFarm } from '../ui/farm'
 import { oilPeriod } from '../ui/periods'
 import ShortfallModal from '../ui/ShortfallModal.vue'
@@ -280,7 +281,7 @@ async function removeAnyway() {
     >
 
     <!-- Season totals -->
-    <section v-if="totals.count" class="card">
+    <section v-if="totals.count" class="card oil-totals">
       <h2>{{ $t('oil.total') }} · {{ seasonLabel(season) }}</h2>
       <table class="kv">
         <tbody>
@@ -309,7 +310,7 @@ async function removeAnyway() {
     </section>
 
     <!-- Extractions -->
-    <section class="card">
+    <section class="card oil-productions">
       <h2>{{ $t('oil.extractions') }}</h2>
       <p v-if="!extractions.length" class="muted">{{ $t('oil.noExtractions') }}</p>
       <ul v-else class="list">
@@ -347,7 +348,7 @@ async function removeAnyway() {
     </section>
 
     <!-- Oil per field -->
-    <section v-if="perField.length" class="card">
+    <section v-if="perField.length" class="card oil-fields">
       <h2>{{ $t('oil.fieldsEstimate') }}</h2>
       <table class="kv">
         <tbody>
@@ -365,7 +366,7 @@ async function removeAnyway() {
     </section>
 
     <!-- Stock -->
-    <section class="card">
+    <section class="card oil-stock">
       <h2>{{ $t('oil.stock') }}</h2>
       <p v-if="!stockRows.length" class="muted">{{ $t('oil.noStock') }}</p>
       <div v-else class="table-wrap">
@@ -416,7 +417,7 @@ async function removeAnyway() {
       </div>
       <div v-if="stockRows.length && canEditOil" class="actions wrap">
         <button type="button" class="btn small" @click="moveKind = 'transfer'">
-          ⇄ {{ $t('oil.transfer') }}
+          <AppIcon name="transfer" :size="18" /> {{ $t('oil.transfer') }}
         </button>
         <button type="button" class="btn small" @click="moveKind = 'ownUse'">
           {{ $t('oil.ownUse') }}
@@ -449,7 +450,7 @@ async function removeAnyway() {
               :aria-label="$t('common.delete')"
               @click="removeMove(mv.movement)"
             >
-              🗑
+              <AppIcon name="trash" :size="20" />
             </button>
           </li>
         </ul>

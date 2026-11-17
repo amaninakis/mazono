@@ -8,6 +8,7 @@ import { formatNumber } from '../core/format'
 import { unitLabel } from '../core/units'
 import { formatLocale } from '../i18n'
 import { account } from '../sync/account'
+import AppIcon from '../ui/AppIcon.vue'
 import { canDo, taskName, useFarm } from '../ui/farm'
 import OilDrop from '../ui/OilDrop.vue'
 import { showToast } from '../ui/toast'
@@ -324,7 +325,7 @@ function loggedBy(createdBy: string | undefined) {
           :aria-label="$t('common.delete')"
           @click="remove(e)"
         >
-          🗑
+          <AppIcon name="trash" :size="20" />
         </button>
       </li>
       <li v-if="canEditWork">

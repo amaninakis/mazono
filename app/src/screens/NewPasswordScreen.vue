@@ -4,6 +4,7 @@ import { ref } from 'vue'
 import { MIN_PASSWORD_LENGTH } from '../core/syncFormat'
 import { account, changePassword } from '../sync/account'
 import { ApiError } from '../sync/api'
+import { useFieldChecks } from '../ui/fieldChecks'
 
 /** After signing in with a temporary password: choose your own before anything else. */
 const { t: translate } = useTranslation()
@@ -15,20 +16,28 @@ const show = ref(false)
 const busy = ref(false)
 const error = ref('')
 
+function temporaryPassword() {
+  // Read when needed: the screen can open a moment before the sign-in stores it.
+  return account.temporaryPassword || current.value
+}
+
+const checks = useFieldChecks({
+  next: () => {
+    if (next.value.length < MIN_PASSWORD_LENGTH) {
+      return translate('account.errorShort', { count: MIN_PASSWORD_LENGTH })
+    }
+
+    return next.value === temporaryPassword() ? translate('account.errorSameAsTemporary') : ''
+  },
+  repeat: () => (repeat.value === next.value ? '' : translate('account.errorRepeat')),
+})
+
 async function save() {
   error.value = ''
-  // Read when saving: the screen can open a moment before the sign-in stores it.
-  const temporary = account.temporaryPassword || current.value
-  if (next.value.length < MIN_PASSWORD_LENGTH) {
-    error.value = translate('account.errorShort', { count: MIN_PASSWORD_LENGTH })
-    return
-  }
-  if (next.value !== repeat.value) {
-    error.value = translate('account.errorRepeat')
-    return
-  }
-  if (next.value === temporary) {
-    error.value = translate('account.errorSameAsTemporary')
+  const temporary = temporaryPassword()
+  const problem = checks.firstProblem()
+  if (problem) {
+    document.getElementById(`np-${problem}`)?.focus()
     return
   }
   busy.value = true
@@ -50,7 +59,7 @@ async function save() {
   <main class="setup account-screen">
     <h1>{{ $t('account.newPasswordTitle') }}</h1>
     <p class="muted">{{ $t('account.newPasswordHelp') }}</p>
-    <form class="card" @submit.prevent="save">
+    <form class="card" novalidate @submit.prevent="save">
       <input name="username" autocomplete="username" :value="account.user?.username" hidden />
       <template v-if="!account.temporaryPassword">
         <label class="label" for="np-current">{{ $t('account.temporaryPassword') }}</label>
@@ -67,20 +76,34 @@ async function save() {
       <input
         id="np-next"
         v-model="next"
+        :aria-invalid="!!checks.errors.next"
+        :aria-describedby="checks.errors.next ? 'np-next-error' : undefined"
         class="input"
         :type="show ? 'text' : 'password'"
         autocomplete="new-password"
         required
+        @blur="checks.leave('next')"
+        @input="checks.edit('next')"
       />
+      <p v-if="checks.errors.next" id="np-next-error" class="field-error">
+        {{ checks.errors.next }}
+      </p>
       <label class="label" for="np-repeat">{{ $t('account.repeat') }}</label>
       <input
         id="np-repeat"
         v-model="repeat"
+        :aria-invalid="!!checks.errors.repeat"
+        :aria-describedby="checks.errors.repeat ? 'np-repeat-error' : undefined"
         class="input"
         :type="show ? 'text' : 'password'"
         autocomplete="new-password"
         required
+        @blur="checks.leave('repeat')"
+        @input="checks.edit('repeat')"
       />
+      <p v-if="checks.errors.repeat" id="np-repeat-error" class="field-error">
+        {{ checks.errors.repeat }}
+      </p>
       <p class="hint">{{ $t('account.passwordHelp', { count: MIN_PASSWORD_LENGTH }) }}</p>
       <label class="check">
         <input v-model="show" type="checkbox" />

@@ -1,7 +1,9 @@
 <script setup lang="ts">
 import type { DateFormat, InputKind, Language, TaskType } from '../core/types'
+import type { IconName } from '../ui/icons'
 import { useTranslation } from 'i18next-vue'
-import { computed, ref } from 'vue'
+import { computed, ref, watch } from 'vue'
+import { RouterLink, useRoute, useRouter } from 'vue-router'
 import { TASK_COLORS, TASK_ICONS } from '../core/defaults'
 import { formatNumber } from '../core/format'
 import { formatLocaleFor } from '../core/locale'
@@ -12,6 +14,7 @@ import { importFarm } from '../db/repo'
 import { chooseLanguage, formatLocale, LANGUAGES, locale } from '../i18n'
 import { account } from '../sync/account'
 import AccountCard from '../ui/AccountCard.vue'
+import AppIcon from '../ui/AppIcon.vue'
 import AppModal from '../ui/AppModal.vue'
 import { canDo, categoryName, chargeName, locationName, taskName, useFarm } from '../ui/farm'
 import ServerAccountsCard from '../ui/ServerAccountsCard.vue'
@@ -250,20 +253,147 @@ function changeLang(language: Language) {
 
 /** Backups and people are for the grove's administrators. */
 const isAdmin = computed(() => farm.value.access.role === 'admin')
+
+/* ---------- sections: a short list first, one section per page ---------- */
+const route = useRoute()
+const router = useRouter()
+const section = computed(() => (route.params.section as string | undefined) || undefined)
+
+type SectionKey =
+  'account' | 'people' | 'fields' | 'units' | 'oil' | 'money' | 'tasks' | 'general' | 'data'
+
+interface SectionItem {
+  key: SectionKey
+  icon: IconName
+  title: string
+  summary: string
+}
+
+/** Sections of the grove's own settings (need settings access). */
+const GROVE_SECTIONS: SectionKey[] = ['fields', 'units', 'oil', 'money', 'tasks', 'general']
+
+function activeCount(rows: { archived: boolean }[]) {
+  return rows.filter((row) => !row.archived).length
+}
+
+function count(key: string, value: number) {
+  return translate(key, { count: value })
+}
+
+const sections = computed<SectionItem[]>(() => {
+  const list: SectionItem[] = []
+  const server = account.mode === 'server'
+  if (server && account.user) {
+    list.push({
+      key: 'account',
+      icon: 'user',
+      title: translate('account.title'),
+      summary: account.user.username,
+    })
+  }
+  if (server && isAdmin.value) {
+    list.push({
+      key: 'people',
+      icon: 'users',
+      title: translate('users.title'),
+      summary: translate('settings.summary.people'),
+    })
+  }
+  if (canSeeSettings.value) {
+    const fields = farm.value.fields.filter((field) => !field.archived)
+    const trees = fields.reduce((sum, field) => sum + (field.trees ?? 0), 0)
+    const units = farm.value.units.filter((unit) => !unit.archived).map((unit) => unit.name)
+    list.push(
+      {
+        key: 'fields',
+        icon: 'fields',
+        title: translate('settings.fields'),
+        summary: `${count('settings.summary.fields', fields.length)} · ${count('settings.summary.trees', trees)}`,
+      },
+      {
+        key: 'units',
+        icon: 'sack',
+        title: translate('settings.units'),
+        summary: units.join(', '),
+      },
+      {
+        key: 'oil',
+        icon: 'oil',
+        title: translate('settings.oilSection'),
+        summary: [
+          count('settings.summary.mills', activeCount(farm.value.mills)),
+          count('settings.summary.charges', activeCount(farm.value.chargeTypes)),
+          count('settings.summary.locations', activeCount(farm.value.locations)),
+        ].join(' · '),
+      },
+      {
+        key: 'money',
+        icon: 'money',
+        title: translate('settings.finance'),
+        summary: count('settings.summary.categories', activeCount(farm.value.categories)),
+      },
+      {
+        key: 'tasks',
+        icon: 'tasks',
+        title: translate('settings.taskTypes'),
+        summary: farm.value.taskTypes
+          .filter((type) => !type.archived)
+          .sort((left, right) => left.order - right.order)
+          .map((type) => taskName(translate, type))
+          .join(', '),
+      },
+      {
+        key: 'general',
+        icon: 'settings',
+        title: translate('settings.general'),
+        summary: farm.value.farmName,
+      },
+    )
+  }
+  if (isAdmin.value) {
+    list.push({
+      key: 'data',
+      icon: 'backup',
+      title: translate('settings.data'),
+      summary: translate(
+        server && account.user?.isOwner
+          ? 'settings.summary.dataOwner'
+          : 'settings.summary.data',
+      ),
+    })
+  }
+
+  return list
+})
+
+const current = computed(() => sections.value.find((item) => item.key === section.value))
+const isGroveSection = computed(() => GROVE_SECTIONS.includes(section.value as SectionKey))
+
+// A section that is not there (old link, or no access to it): back to the list.
+watch(
+  [section, current],
+  ([key, item]) => {
+    if (key && !item) {
+      void router.replace('/settings')
+    }
+  },
+  { immediate: true },
+)
 </script>
 
 <template>
-  <main class="page settings">
+  <main class="page settings" :class="{ 'in-section': section }">
     <header class="page-head">
-      <h1>{{ $t('settings.title') }}</h1>
+      <RouterLink v-if="section" to="/settings" class="back-link">
+        <AppIcon name="chevronLeft" :size="20" />{{ $t('settings.title') }}
+      </RouterLink>
+      <h1>{{ current?.title ?? $t('settings.title') }}</h1>
     </header>
 
-    <AccountCard v-if="account.mode === 'server' && account.user" />
-    <UsersCard v-if="account.mode === 'server' && isAdmin" />
-    <ServerAccountsCard v-if="account.mode === 'server' && account.user?.isOwner" />
+    <AccountCard v-if="section === 'account' && account.mode === 'server' && account.user" />
+    <UsersCard v-if="section === 'people' && account.mode === 'server' && isAdmin" />
 
-    <!-- The grove's settings: hidden, or shown read-only, for people without access to them. -->
-    <section class="card">
+    <section v-if="!section" class="card">
       <h2>{{ $t('settings.language') }}</h2>
       <div class="chips" role="radiogroup" :aria-label="$t('settings.language')">
         <button
@@ -282,9 +412,30 @@ const isAdmin = computed(() => farm.value.access.role === 'admin')
       <p class="hint">{{ $t('settings.languageHelp') }}</p>
     </section>
 
-    <fieldset v-if="canSeeSettings" class="plain" :disabled="!canEditSettings">
-      <section class="card">
-        <h2>{{ $t('settings.general') }}</h2>
+    <nav class="settings-nav" :aria-label="$t('settings.sections')">
+      <RouterLink
+        v-for="item in sections"
+        :key="item.key"
+        :to="`/settings/${item.key}`"
+        class="settings-row"
+        :aria-current="section === item.key ? 'page' : undefined"
+      >
+        <span class="settings-icon"><AppIcon :name="item.icon" :size="20" /></span>
+        <span class="settings-text">
+          <span class="settings-name">{{ item.title }}</span>
+          <small class="muted">{{ item.summary }}</small>
+        </span>
+        <AppIcon name="chevronRight" :size="20" class="chevron" />
+      </RouterLink>
+    </nav>
+
+    <!-- The grove's settings: hidden, or shown read-only, for people without access to them. -->
+    <fieldset
+      v-if="canSeeSettings && isGroveSection"
+      class="plain"
+      :disabled="!canEditSettings"
+    >
+      <section v-if="section === 'general'" class="card">
         <label class="label" for="s-farm">{{ $t('settings.farmName') }}</label>
         <input
           id="s-farm"
@@ -323,12 +474,14 @@ const isAdmin = computed(() => farm.value.access.role === 'admin')
           :value="settings.seasonStartMonth"
           @change="(e) => repo.updateSettings({ seasonStartMonth: Number(val(e)) })"
         >
-          <option v-for="m in months" :key="m.number" :value="m.number">{{ m.long }}</option>
+          <option v-for="m in months" :key="m.number" :value="m.number">
+            {{ m.long }}
+          </option>
         </select>
         <p class="muted small">{{ $t('settings.seasonStartHelp') }}</p>
       </section>
 
-      <section class="card">
+      <section v-if="section === 'general'" class="card">
         <h2>{{ $t('settings.modules') }}</h2>
         <ToggleSwitch
           :model-value="settings.labourEnabled"
@@ -338,12 +491,11 @@ const isAdmin = computed(() => farm.value.access.role === 'admin')
         />
       </section>
 
-      <div class="row-end">
+      <div v-if="section !== 'general'" class="row-end">
         <ToggleSwitch v-model="showArchived" :label="$t('settings.showArchived')" />
       </div>
 
-      <section id="fields" class="card">
-        <h2>{{ $t('settings.fields') }}</h2>
+      <section v-if="section === 'fields'" id="fields" class="card">
         <ul class="list">
           <li
             v-for="f in fieldList"
@@ -367,15 +519,21 @@ const isAdmin = computed(() => farm.value.access.role === 'admin')
               :value="f.trees || ''"
               @blur="
                 (e) =>
-                  repo.update('fields', f.id, { trees: Math.round(parseDecimal(val(e)) ?? 0) })
+                  repo.update('fields', f.id, {
+                    trees: Math.round(parseDecimal(val(e)) ?? 0),
+                  })
               "
             />
             <button
               type="button"
-              class="btn ghost small"
+              class="btn ghost small archive-btn"
+              :aria-label="f.archived ? $t('common.unarchive') : $t('common.archive')"
               @click="repo.update('fields', f.id, { archived: !f.archived })"
             >
-              {{ f.archived ? $t('common.unarchive') : $t('common.archive') }}
+              <AppIcon :name="f.archived ? 'restore' : 'archive'" :size="20" />
+              <span class="wide-only">{{
+                f.archived ? $t('common.unarchive') : $t('common.archive')
+              }}</span>
             </button>
           </li>
           <li class="field-row">
@@ -401,8 +559,7 @@ const isAdmin = computed(() => farm.value.access.role === 'admin')
         </ul>
       </section>
 
-      <section class="card">
-        <h2>{{ $t('settings.units') }}</h2>
+      <section v-if="section === 'units'" class="card">
         <p class="muted small">{{ $t('setup.unitsHelp') }}</p>
         <ul class="list">
           <li
@@ -436,7 +593,9 @@ const isAdmin = computed(() => farm.value.access.role === 'admin')
               :value="u.approxKg ?? ''"
               @blur="
                 (e) =>
-                  repo.update('units', u.id, { approxKg: parseDecimal(val(e)) ?? undefined })
+                  repo.update('units', u.id, {
+                    approxKg: parseDecimal(val(e)) ?? undefined,
+                  })
               "
             />
             <small v-if="weights[u.id]?.source === 'learned'" class="muted learned">
@@ -458,11 +617,15 @@ const isAdmin = computed(() => farm.value.access.role === 'admin')
             </label>
             <button
               type="button"
-              class="btn ghost small"
+              class="btn ghost small archive-btn"
               :disabled="u.isDefault && !u.archived"
+              :aria-label="u.archived ? $t('common.unarchive') : $t('common.archive')"
               @click="repo.update('units', u.id, { archived: !u.archived })"
             >
-              {{ u.archived ? $t('common.unarchive') : $t('common.archive') }}
+              <AppIcon :name="u.archived ? 'restore' : 'archive'" :size="20" />
+              <span class="wide-only">{{
+                u.archived ? $t('common.unarchive') : $t('common.archive')
+              }}</span>
             </button>
           </li>
         </ul>
@@ -480,9 +643,7 @@ const isAdmin = computed(() => farm.value.access.role === 'admin')
         </div>
       </section>
 
-      <section id="oil" class="card">
-        <h2>{{ $t('settings.oilSection') }}</h2>
-
+      <section v-if="section === 'oil'" id="oil" class="card">
         <span class="label">{{ $t('settings.mills') }}</span>
         <ul class="list">
           <li
@@ -501,10 +662,14 @@ const isAdmin = computed(() => farm.value.access.role === 'admin')
             />
             <button
               type="button"
-              class="btn ghost small"
+              class="btn ghost small archive-btn"
+              :aria-label="m.archived ? $t('common.unarchive') : $t('common.archive')"
               @click="repo.update('mills', m.id, { archived: !m.archived })"
             >
-              {{ m.archived ? $t('common.unarchive') : $t('common.archive') }}
+              <AppIcon :name="m.archived ? 'restore' : 'archive'" :size="20" />
+              <span class="wide-only">{{
+                m.archived ? $t('common.unarchive') : $t('common.archive')
+              }}</span>
             </button>
           </li>
         </ul>
@@ -552,10 +717,14 @@ const isAdmin = computed(() => farm.value.access.role === 'admin')
             <span class="muted">%</span>
             <button
               type="button"
-              class="btn ghost small"
+              class="btn ghost small archive-btn"
+              :aria-label="c.archived ? $t('common.unarchive') : $t('common.archive')"
               @click="repo.update('chargeTypes', c.id, { archived: !c.archived })"
             >
-              {{ c.archived ? $t('common.unarchive') : $t('common.archive') }}
+              <AppIcon :name="c.archived ? 'restore' : 'archive'" :size="20" />
+              <span class="wide-only">{{
+                c.archived ? $t('common.unarchive') : $t('common.archive')
+              }}</span>
             </button>
           </li>
         </ul>
@@ -589,10 +758,14 @@ const isAdmin = computed(() => farm.value.access.role === 'admin')
             />
             <button
               type="button"
-              class="btn ghost small"
+              class="btn ghost small archive-btn"
+              :aria-label="l.archived ? $t('common.unarchive') : $t('common.archive')"
               @click="repo.update('locations', l.id, { archived: !l.archived })"
             >
-              {{ l.archived ? $t('common.unarchive') : $t('common.archive') }}
+              <AppIcon :name="l.archived ? 'restore' : 'archive'" :size="20" />
+              <span class="wide-only">{{
+                l.archived ? $t('common.unarchive') : $t('common.archive')
+              }}</span>
             </button>
           </li>
         </ul>
@@ -610,8 +783,7 @@ const isAdmin = computed(() => farm.value.access.role === 'admin')
         </div>
       </section>
 
-      <section id="money" class="card">
-        <h2>{{ $t('settings.finance') }}</h2>
+      <section v-if="section === 'money'" id="money" class="card">
         <label class="label" for="s-tax">{{ $t('settings.taxPercent') }}</label>
         <input
           id="s-tax"
@@ -643,10 +815,14 @@ const isAdmin = computed(() => farm.value.access.role === 'admin')
               />
               <button
                 type="button"
-                class="btn ghost small"
+                class="btn ghost small archive-btn"
+                :aria-label="c.archived ? $t('common.unarchive') : $t('common.archive')"
                 @click="repo.update('categories', c.id, { archived: !c.archived })"
               >
-                {{ c.archived ? $t('common.unarchive') : $t('common.archive') }}
+                <AppIcon :name="c.archived ? 'restore' : 'archive'" :size="20" />
+                <span class="wide-only">{{
+                  c.archived ? $t('common.unarchive') : $t('common.archive')
+                }}</span>
               </button>
             </li>
           </ul>
@@ -665,8 +841,7 @@ const isAdmin = computed(() => farm.value.access.role === 'admin')
         </template>
       </section>
 
-      <section class="card">
-        <h2>{{ $t('settings.taskTypes') }}</h2>
+      <section v-if="section === 'tasks'" class="card">
         <ul class="list task-types">
           <li
             v-for="x in typeList"
@@ -695,10 +870,14 @@ const isAdmin = computed(() => farm.value.access.role === 'admin')
               />
               <button
                 type="button"
-                class="btn ghost small"
+                class="btn ghost small archive-btn"
+                :aria-label="x.archived ? $t('common.unarchive') : $t('common.archive')"
                 @click="repo.update('taskTypes', x.id, { archived: !x.archived })"
               >
-                {{ x.archived ? $t('common.unarchive') : $t('common.archive') }}
+                <AppIcon :name="x.archived ? 'restore' : 'archive'" :size="20" />
+                <span class="wide-only">{{
+                  x.archived ? $t('common.unarchive') : $t('common.archive')
+                }}</span>
               </button>
             </div>
             <div class="swatches" role="radiogroup" :aria-label="$t('settings.color')">
@@ -747,8 +926,7 @@ const isAdmin = computed(() => farm.value.access.role === 'admin')
       </section>
     </fieldset>
 
-    <section v-if="isAdmin" class="card">
-      <h2>{{ $t('settings.data') }}</h2>
+    <section v-if="section === 'data' && isAdmin" class="card">
       <p class="muted small">
         {{
           $t(account.mode === 'server' ? 'settings.storageNoteServer' : 'settings.storageNote')
@@ -765,7 +943,11 @@ const isAdmin = computed(() => farm.value.access.role === 'admin')
       </div>
     </section>
 
-    <p class="muted small center">{{ $t('settings.version', { version }) }}</p>
+    <ServerAccountsCard
+      v-if="section === 'data' && account.mode === 'server' && account.user?.isOwner"
+    />
+
+    <p v-if="!section" class="muted small center">{{ $t('settings.version', { version }) }}</p>
 
     <AppModal
       v-if="pendingImport"
