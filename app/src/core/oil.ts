@@ -181,14 +181,15 @@ export function allocationShares(
 export function oilByEntry(
   x: Extraction,
   weights: Record<string, UnitWeight>,
-): Record<string, { oil: number; net: number }> {
+): Record<string, { oil: number; net: number; olives: number }> {
   const shares = allocationShares(x.allocations, weights)
   const net = netOil(x)
-  const out: Record<string, { oil: number; net: number }> = {}
+  const out: Record<string, { oil: number; net: number; olives: number }> = {}
   x.allocations.forEach((allocation, i) => {
-    const oil = (out[allocation.entryId] ??= { oil: 0, net: 0 })
+    const oil = (out[allocation.entryId] ??= { oil: 0, net: 0, olives: 0 })
     oil.oil += x.oilKg * shares[i]
     oil.net += net * shares[i]
+    oil.olives += x.oliveKg * shares[i]
   })
 
   return out

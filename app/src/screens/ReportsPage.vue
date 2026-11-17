@@ -21,7 +21,7 @@ import SeasonBars from '../ui/SeasonBars.vue'
 import YieldChart from '../ui/YieldChart.vue'
 
 type ReportKey = 'fields' | 'seasons' | 'yield' | 'money' | 'records'
-type FieldMetric = 'units' | 'oil' | 'unitsPerTree' | 'oilPerTree'
+type FieldMetric = 'units' | 'oil' | 'unitsPerTree' | 'oilPerTree' | 'yield'
 type YearMetric = 'olives' | 'oil' | 'net' | 'yield'
 
 const { t: translate } = useTranslation()
@@ -44,11 +44,9 @@ function yieldText(olives: number, oil: number) {
   return formatYield(olives, oil, farm.value.settings.yieldFormat, formatLocale.value)
 }
 
-function percent(value: number) {
-  return new Intl.NumberFormat(formatLocale.value, {
-    style: 'percent',
-    maximumFractionDigits: 0,
-  }).format(value)
+/** Yield chart values (oil ÷ olives) in the farm's chosen style: 1/4,3 or 23%. */
+function yieldAxis(value: number) {
+  return value > 0 ? yieldText(1, value) : '–'
 }
 
 function season(year: number) {
@@ -90,7 +88,7 @@ const fieldSeasons = computed(() => fieldReport.value.seasons.slice(-5))
 const fieldMetric = ref<FieldMetric>('units')
 /** Details of the cell the user tapped. */
 const cellInfo = ref('')
-const METRICS: FieldMetric[] = ['units', 'oil', 'unitsPerTree', 'oilPerTree']
+const METRICS: FieldMetric[] = ['units', 'oil', 'unitsPerTree', 'oilPerTree', 'yield']
 
 /** Number used for shading (and the CSV); null when it cannot be worked out. */
 function metricValue(cell: FieldSeasonCell | undefined, metric: FieldMetric): number | null {
@@ -99,6 +97,9 @@ function metricValue(cell: FieldSeasonCell | undefined, metric: FieldMetric): nu
   }
   if (metric === 'oil') {
     return cell.oilKg || null
+  }
+  if (metric === 'yield') {
+    return cell.oliveKg && cell.oilKg ? cell.oilKg / cell.oliveKg : null
   }
   if (metric === 'units') {
     return Object.values(cell.units).reduce((sum, amount) => sum + amount, 0) || null
@@ -126,6 +127,13 @@ const onlyUnit = computed(() => {
 })
 /** What the numbers in the table are, e.g. "In sacks per tree". */
 const unitCaption = computed(() => {
+  if (fieldMetric.value === 'yield') {
+    return translate(
+      farm.value.settings.yieldFormat === 'percent'
+        ? 'reports.yieldCaptionPercent'
+        : 'reports.yieldCaptionRatio',
+    )
+  }
   const unit = onlyUnit.value
   const unitsName = (
     unit ? (unit.pluralName ?? unit.name) : translate('reports.units')
@@ -146,6 +154,9 @@ function cellText(cell: FieldSeasonCell | undefined): string {
   }
   if (fieldMetric.value === 'oil') {
     return fmt(value, 0)
+  }
+  if (fieldMetric.value === 'yield') {
+    return yieldText(cell.oliveKg, cell.oilKg)
   }
   if (fieldMetric.value === 'oilPerTree') {
     return fmt(value, 1)
@@ -339,6 +350,8 @@ function exportCsv() {
         translate('oil.season'),
         translate('reports.oilKg'),
         translate('reports.netKg'),
+        translate('reports.olivesKg'),
+        translate('reports.col.yield'),
         translate('reports.treesCounted'),
         translate('reports.oilPerTree'),
         ...unitIds.map((id) => unitById(id)?.pluralName ?? unitById(id)?.name ?? '?'),
@@ -349,6 +362,8 @@ function exportCsv() {
           season(Number(year)),
           cell.oilKg,
           cell.netKg,
+          cell.oliveKg || null,
+          cell.oliveKg ? yieldText(cell.oliveKg, cell.oilKg) : null,
           cell.perTreeOf || null,
           metricValue(cell, 'oilPerTree'),
           ...unitIds.map((id) => cell.units[id] ?? null),
@@ -589,7 +604,8 @@ const visibleReports = computed(() =>
         <YieldChart
           :series="yieldSeries"
           :months="monthTicks"
-          :format-value="percent"
+          :format-value="yieldAxis"
+          :ratio-axis="farm.settings.yieldFormat === 'ratio'"
           :title="$t('reports.title.yield')"
         />
         <p class="muted small">{{ $t('reports.yieldNote') }}</p>

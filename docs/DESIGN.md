@@ -39,7 +39,7 @@ HarvestLog is a self-hosted, open-source app that replaces the yearly olive spre
 **Logging is never extra work.** The harvest is physically hard; the app must not add a chore on top of it. Recording a day takes a few taps with tired, dirty hands, and it should feel rewarding, almost like a game:
 
 - Visible progress: each field fills up as trees are harvested; the season total grows with every save.
-- Small rewards at the right moment: today's yield after saving, a short note when a field is finished, season milestones (first 1,000 kg of oil, best day so far).
+- Small rewards at the right moment: today's yield after saving, a short note when a field is finished, the season's numbers put another way ("this year's oil fills 6 bathtubs"), best day so far.
 - No guilt: no nagging, no broken streaks, no red warnings for missed days. Reminders are gentle and stop when asked.
 
 ## Background: how growers track this today
@@ -252,12 +252,15 @@ Totals per **calendar year**: income, expenses, net result, and the value of rem
 
 ## Reports — v0.4
 
-1. **Field × year comparison**: olives collected (units, the default), oil kg, olives per tree or oil per tree, by field and year, with a caption naming the unit ("In sacks per tree"). Shows alternate bearing at a glance.
+1. **Field × year comparison**: olives collected (units, the default), oil kg, olives per tree, oil per tree or yield (each field's share of the olives and oil of the productions it went into), by field and year, with a caption naming the unit ("In sacks per tree"). Shows alternate bearing at a glance.
 2. **Years side by side**: olives (καρπός), oil, oil after charges and yield per year in a table; chips choose which one the bar chart shows, and every bar carries its value.
-3. **Yield through the year**: yield of each extraction by date, for up to three years the user picks (more cannot be told apart reliably by colour), with date labels on the 1st and 15th of each month.
+3. **Yield through the year**: yield of each extraction by date (axis in the farm's yield style: 1/4, 1/5… or %), for up to three years the user picks (more cannot be told apart reliably by colour), with date labels on the 1st and 15th of each month.
 4. **Cost of your oil (per calendar year)**: income, expenses, net; cost per kg of net oil; break-even price. Money stays per calendar year and is set against the oil of the farming year with the same number: the 2026 costs of pruning, spraying and harvest produce the 2026 oil (including mill visits in January–February 2027). Cost per kg = expenses ÷ net oil; break-even price = (expenses − other income) ÷ net oil.
 
-5. **Records** (achievements): all-time bests (best year for oil and for yield, best field-year for oil per tree, field with the most oil, best and biggest production, biggest harvest day, most trees in a day, lowest acidity, best sale price), milestone badges (kg of oil, harvest days, productions, years) with progress to the next one, and lifetime totals. Logic in `core/records.ts`.
+5. **Records**: all-time bests (best year for oil and for yield, best field-year for oil per tree, field with the most oil, best and biggest production, biggest harvest day, most trees in a day, lowest acidity, best sale price), the numbers **put another way**, and lifetime totals. Logic in `core/records.ts` and `core/comparisons.ts`.
+   - *Put another way* replaces achievement badges, which did not suit growers. This year's and all years' oil, olives and trees are compared with everyday things (volume: bottle … Olympic pool; weight: 17-kilo oil tin, donkey, cow, small car, farm pickup, elephant, lorry, blue whale; length: Parthenon, football pitch, running track, Rio–Antirrio bridge), plus "oil for a family of four for N years" (about 12 kg per person a year in Greece) and "N village salads".
+   - Not a fixed list: for each number the objects that fit best are found (a few of them, not 0.0004 of a pool) and said the way people do ("6½ bathtubs", "about a cow", "¾ of a cow"). Which one shows changes daily and with *Show another*, never the same object twice on the screen. Each card says what comes next ("18 litres more for 7 bathtubs") with a bar from the last whole one.
+   - "This year" is the latest farming year with a production (until the first one, the year before, named).
 
 How they work:
 - All reports are on one Reports page (in the bottom bar), one tab each, with a short plain-words explanation and an empty-state hint.
