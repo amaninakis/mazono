@@ -9,7 +9,7 @@ import { unitWeights } from '../core/oil'
 import { parseDecimal } from '../core/progress'
 import { db } from '../db/db'
 import { importFarm } from '../db/repo'
-import { formatLocale, LANGUAGES, locale, setLanguage } from '../i18n'
+import { chooseLanguage, formatLocale, LANGUAGES, locale } from '../i18n'
 import { account } from '../sync/account'
 import AccountCard from '../ui/AccountCard.vue'
 import AppModal from '../ui/AppModal.vue'
@@ -148,11 +148,6 @@ function val(event: Event) {
   return (event.target as HTMLInputElement).value
 }
 
-function changeLang(language: Language) {
-  setLanguage(language)
-  void repo.value.updateSettings({ language })
-}
-
 async function addField() {
   if (!newField.value.name.trim()) {
     return
@@ -243,6 +238,15 @@ async function confirmImport() {
 
 const canSeeSettings = computed(() => canDo(farm.value, 'settings'))
 const canEditSettings = computed(() => canDo(farm.value, 'settings', 'change'))
+
+function changeLang(language: Language) {
+  chooseLanguage(language)
+  if (canEditSettings.value) {
+    // Also the starting language for phones of this grove that have not chosen one.
+    void repo.value.updateSettings({ language })
+  }
+}
+
 /** Backups and people are for the grove's administrators. */
 const isAdmin = computed(() => farm.value.access.role === 'admin')
 </script>
@@ -257,6 +261,25 @@ const isAdmin = computed(() => farm.value.access.role === 'admin')
     <UsersCard v-if="account.mode === 'server' && isAdmin" />
 
     <!-- The grove's settings: hidden, or shown read-only, for people without access to them. -->
+    <section class="card">
+      <h2>{{ $t('settings.language') }}</h2>
+      <div class="chips" role="radiogroup" :aria-label="$t('settings.language')">
+        <button
+          v-for="l in LANGUAGES"
+          :key="l.code"
+          type="button"
+          role="radio"
+          class="chip"
+          :class="[{ selected: locale === l.code }]"
+          :aria-checked="locale === l.code"
+          @click="changeLang(l.code)"
+        >
+          {{ l.label }}
+        </button>
+      </div>
+      <p class="hint">{{ $t('settings.languageHelp') }}</p>
+    </section>
+
     <fieldset v-if="canSeeSettings" class="plain" :disabled="!canEditSettings">
       <section class="card">
         <h2>{{ $t('settings.general') }}</h2>
@@ -267,19 +290,6 @@ const isAdmin = computed(() => farm.value.access.role === 'admin')
           :value="farm.farmName"
           @blur="(e) => val(e).trim() && db.farms.update(repo.farmId, { name: val(e).trim() })"
         />
-        <span class="label">{{ $t('settings.language') }}</span>
-        <div class="chips">
-          <button
-            v-for="l in LANGUAGES"
-            :key="l.code"
-            type="button"
-            class="chip"
-            :class="[{ selected: settings.language === l.code }]"
-            @click="changeLang(l.code)"
-          >
-            {{ l.label }}
-          </button>
-        </div>
         <span class="label">{{ $t('settings.yieldFormat') }}</span>
         <div class="chips">
           <button

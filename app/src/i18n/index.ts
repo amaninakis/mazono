@@ -1,7 +1,7 @@
 import type { DateFormat, Language } from '../core/types'
 import i18n from 'i18next'
 import { computed, ref } from 'vue'
-import { formatLocaleFor } from '../core/locale'
+import { formatLocaleFor, pickLanguage } from '../core/locale'
 import el from './locales/el.json'
 import en from './locales/en.json'
 
@@ -19,9 +19,20 @@ export function deviceLanguage(): Language {
   return nav.toLowerCase().startsWith('el') ? 'el' : 'en'
 }
 
+const CHOSEN_KEY = 'harvestlog.language'
+
+/** The language chosen on this phone, if any (kept when signing out). */
+export function chosenLanguage(): string | null {
+  try {
+    return localStorage.getItem(CHOSEN_KEY)
+  } catch {
+    return null // storage blocked (e.g. some private modes)
+  }
+}
+
 void i18n.init({
   resources: { en: { translation: en }, el: { translation: el } },
-  lng: deviceLanguage(),
+  lng: pickLanguage(chosenLanguage(), undefined, deviceLanguage()),
   fallbackLng: 'en',
   interpolation: { escapeValue: false },
 })
@@ -46,6 +57,16 @@ export const formatLocale = computed(() =>
 export function setLanguage(lng: Language) {
   void i18n.changeLanguage(lng)
   document.documentElement.lang = lng
+}
+
+/** Someone picked a language: use it and remember it on this phone. */
+export function chooseLanguage(lng: Language) {
+  try {
+    localStorage.setItem(CHOSEN_KEY, lng)
+  } catch {
+    // Not remembered, but still used until the app is closed.
+  }
+  setLanguage(lng)
 }
 
 export default i18n

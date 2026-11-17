@@ -153,6 +153,7 @@
     "title": "Settings",
     "general": "General",
     "language": "Language",
+    "languageHelp": "Only on this phone. Each person can choose their own.",
     "farmName": "Farm name",
     "yieldFormat": "Show oil yield as",
     "yieldRatio": "Ratio (1/4.3)",

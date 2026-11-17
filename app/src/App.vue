@@ -3,9 +3,10 @@ import { useTranslation } from 'i18next-vue'
 import { computed, watch } from 'vue'
 import { RouterLink, RouterView, useRoute, useRouter } from 'vue-router'
 import { type Area, can, PRESETS } from './core/access'
+import { pickLanguage } from './core/locale'
 import { db } from './db/db'
 import { FarmRepo } from './db/repo'
-import { dateFormatPref, setLanguage } from './i18n'
+import { chosenLanguage, dateFormatPref, deviceLanguage, setLanguage } from './i18n'
 import AccountScreen from './screens/AccountScreen.vue'
 import NewPasswordScreen from './screens/NewPasswordScreen.vue'
 import SetupWizard from './screens/SetupWizard.vue'
@@ -92,9 +93,10 @@ const farm = computed<FarmData>(() => ({
 }))
 provideFarm(farm)
 
+// The grove's language is only the starting point; a choice made on this phone wins.
 watch(
   () => data.value?.settings.language,
-  (lng) => lng && setLanguage(lng),
+  (lng) => setLanguage(pickLanguage(chosenLanguage(), lng, deviceLanguage())),
   { immediate: true },
 )
 

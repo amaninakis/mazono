@@ -1,9 +1,8 @@
 <script setup lang="ts">
-import type { Language } from '../core/types'
 import { useTranslation } from 'i18next-vue'
 import { computed, ref } from 'vue'
 import { isValidUsername, MIN_PASSWORD_LENGTH } from '../core/syncFormat'
-import { LANGUAGES, setLanguage } from '../i18n'
+import { chooseLanguage, LANGUAGES } from '../i18n'
 import { account, createAdministrator, signIn } from '../sync/account'
 import { ApiError } from '../sync/api'
 
@@ -26,10 +25,6 @@ const ERRORS: Record<string, string> = {
   'password-short': 'account.errorShort',
   'username': 'account.errorUsername',
   'already-set-up': 'account.errorAlreadySetUp',
-}
-
-function chooseLanguage(language: Language) {
-  setLanguage(language)
 }
 
 async function submit() {
