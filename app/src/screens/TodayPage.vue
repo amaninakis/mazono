@@ -429,7 +429,9 @@ const canEditSettings = computed(() => canDo(farm.value, 'settings', 'change'))
       <span class="label">{{ $t('today.field') }}</span>
       <p v-if="progress.length === 0" class="muted">
         {{ $t('today.noFields') }}
-        <RouterLink to="/settings#fields">{{ $t('today.addFields') }}</RouterLink>
+        <RouterLink to="/settings#fields" class="btn small block-top">{{
+          $t('today.addFields')
+        }}</RouterLink>
       </p>
       <FieldPicker v-else v-model="fieldId" :fields="sortForPicker(progress)" />
     </section>

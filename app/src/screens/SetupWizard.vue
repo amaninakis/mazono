@@ -163,6 +163,7 @@ async function restore(event: Event) {
         v-model="farmName"
         class="input"
         :placeholder="$t('setup.farmNamePlaceholder')"
+        :aria-label="$t('setup.farmNamePlaceholder')"
       />
       <div class="actions">
         <label class="btn ghost file-btn">
@@ -206,6 +207,7 @@ async function restore(event: Event) {
           v-model="customUnit"
           class="input"
           :placeholder="$t('setup.unitName')"
+          :aria-label="$t('setup.unitName')"
           @keydown.enter="addCustomUnit"
         />
         <button type="button" class="btn" @click="addCustomUnit">

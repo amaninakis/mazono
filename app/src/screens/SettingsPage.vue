@@ -471,6 +471,7 @@ const isAdmin = computed(() => farm.value.access.role === 'admin')
             v-model="newUnit"
             class="input"
             :placeholder="$t('setup.unitName')"
+            :aria-label="$t('setup.unitName')"
             @keydown.enter="addUnit"
           />
           <button type="button" class="btn small" @click="addUnit">
@@ -512,6 +513,7 @@ const isAdmin = computed(() => farm.value.access.role === 'admin')
             v-model="newMill"
             class="input"
             :placeholder="$t('extraction.newMillName')"
+            :aria-label="$t('extraction.newMillName')"
             @keydown.enter="addMill"
           />
           <button type="button" class="btn small" @click="addMill">
@@ -562,6 +564,7 @@ const isAdmin = computed(() => farm.value.access.role === 'admin')
             v-model="newChargeName"
             class="input"
             :placeholder="$t('extraction.newChargeName')"
+            :aria-label="$t('extraction.newChargeName')"
             @keydown.enter="addChargeType"
           />
           <button type="button" class="btn small" @click="addChargeType">
@@ -598,6 +601,7 @@ const isAdmin = computed(() => farm.value.access.role === 'admin')
             v-model="newLocation"
             class="input"
             :placeholder="$t('settings.addLocation')"
+            :aria-label="$t('settings.addLocation')"
             @keydown.enter="addLocation"
           />
           <button type="button" class="btn small" @click="addLocation">
@@ -651,6 +655,7 @@ const isAdmin = computed(() => farm.value.access.role === 'admin')
               v-model="newCategory[kind]"
               class="input"
               :placeholder="$t('settings.addCategory')"
+              :aria-label="$t('settings.addCategory')"
               @keydown.enter="addCategory(kind)"
             />
             <button type="button" class="btn small" @click="addCategory(kind)">
@@ -706,7 +711,7 @@ const isAdmin = computed(() => farm.value.access.role === 'admin')
                 :aria-label="c"
                 class="swatch"
                 :class="[{ selected: x.color === c }]"
-                :style="{ background: c }"
+                :style="{ backgroundColor: c }"
                 @click="repo.update('taskTypes', x.id, { color: c })"
               ></button>
             </div>

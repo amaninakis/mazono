@@ -430,8 +430,13 @@ async function removeAnyway() {
               <small class="muted">{{ day(mv.date) }} · {{ seasonLabel(mv.vintage) }}</small
               ><br />
               <template v-if="mv.movement">{{ moveLine(mv.movement) }}</template>
-              <RouterLink v-else-if="canEditMoney" :to="`/money/${mv.sale!.id}`">
+              <RouterLink
+                v-else-if="canEditMoney"
+                class="move-link"
+                :to="`/money/${mv.sale!.id}`"
+              >
                 {{ $t('oil.saleLine', { kg: fmt(mv.sale!.kg ?? 0), party: mv.sale!.party || '–' }) }}
+                <span aria-hidden="true" class="chevron">›</span>
               </RouterLink>
               <template v-else>
                 {{ $t('oil.saleLine', { kg: fmt(mv.sale!.kg ?? 0), party: mv.sale!.party || '–' }) }}
