@@ -511,7 +511,7 @@ const canEditSettings = computed(() => canDo(farm.value, 'settings', 'change'))
       <span class="label">{{ $t('today.field') }}</span>
       <p v-if="progress.length === 0" class="muted">
         {{ $t('today.noFields') }}
-        <RouterLink to="/settings#fields" class="btn small block-top">{{
+        <RouterLink to="/settings/fields" class="btn small block-top">{{
           $t('today.addFields')
         }}</RouterLink>
       </p>

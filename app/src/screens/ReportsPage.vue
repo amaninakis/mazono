@@ -14,6 +14,7 @@ import {
 } from '../core/reports'
 import { unitLabel } from '../core/units'
 import { formatLocale } from '../i18n'
+import AppIcon from '../ui/AppIcon.vue'
 import { canDo, useFarm } from '../ui/farm'
 import RecordsBoard from '../ui/RecordsBoard.vue'
 import SeasonBars from '../ui/SeasonBars.vue'
@@ -643,7 +644,7 @@ const visibleReports = computed(() =>
         class="btn ghost small"
         @click="exportCsv"
       >
-        ⬇ {{ $t('reports.csv') }}
+        <AppIcon name="download" :size="18" /> {{ $t('reports.csv') }}
       </button>
     </section>
   </main>

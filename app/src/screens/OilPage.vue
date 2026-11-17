@@ -20,6 +20,7 @@ import {
   unitWeights,
 } from '../core/oil'
 import { formatLocale } from '../i18n'
+import AppIcon from '../ui/AppIcon.vue'
 import { canDo, chargeName, locationName, useFarm } from '../ui/farm'
 import { oilPeriod } from '../ui/periods'
 import ShortfallModal from '../ui/ShortfallModal.vue'
@@ -416,7 +417,7 @@ async function removeAnyway() {
       </div>
       <div v-if="stockRows.length && canEditOil" class="actions wrap">
         <button type="button" class="btn small" @click="moveKind = 'transfer'">
-          ⇄ {{ $t('oil.transfer') }}
+          <AppIcon name="transfer" :size="18" /> {{ $t('oil.transfer') }}
         </button>
         <button type="button" class="btn small" @click="moveKind = 'ownUse'">
           {{ $t('oil.ownUse') }}
@@ -449,7 +450,7 @@ async function removeAnyway() {
               :aria-label="$t('common.delete')"
               @click="removeMove(mv.movement)"
             >
-              🗑
+              <AppIcon name="trash" :size="20" />
             </button>
           </li>
         </ul>

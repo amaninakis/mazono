@@ -199,7 +199,25 @@
     "expenseCategories": "Expense categories",
     "incomeCategories": "Income categories",
     "addCategory": "Add category",
-    "seasonStartHelp": "A year holds all the work that leads to its oil: from spring work to the end of the harvest and the last mill visit (until the end of February when it starts in March). Money is always counted per calendar year."
+    "seasonStartHelp": "A year holds all the work that leads to its oil: from spring work to the end of the harvest and the last mill visit (until the end of February when it starts in March). Money is always counted per calendar year.",
+    "sections": "Settings sections",
+    "summary": {
+      "people": "Who can see and change what",
+      "fields_one": "{{count}} field",
+      "fields_other": "{{count}} fields",
+      "trees_one": "{{count}} tree",
+      "trees_other": "{{count}} trees",
+      "mills_one": "{{count}} mill",
+      "mills_other": "{{count}} mills",
+      "charges_one": "{{count}} charge",
+      "charges_other": "{{count}} charges",
+      "locations_one": "{{count}} place",
+      "locations_other": "{{count}} places",
+      "categories_one": "{{count}} category",
+      "categories_other": "{{count}} categories",
+      "data": "Backup copy",
+      "dataOwner": "Backup copy, accounts on this server"
+    }
   },
   "chargeType": {
     "millFee": "Mill fee",

@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import type { IconName } from './ui/icons'
 import { useTranslation } from 'i18next-vue'
 import { computed, watch } from 'vue'
 import { RouterLink, RouterView, useRoute, useRouter } from 'vue-router'
@@ -11,10 +12,10 @@ import AccountScreen from './screens/AccountScreen.vue'
 import NewPasswordScreen from './screens/NewPasswordScreen.vue'
 import SetupWizard from './screens/SetupWizard.vue'
 import { accessTo, account, retryLoad, signOut } from './sync/account'
+import AppIcon from './ui/AppIcon.vue'
 import AppToast from './ui/AppToast.vue'
 import { type FarmData, provideFarm } from './ui/farm'
 import { useLiveQuery } from './ui/live'
-import OilDrop from './ui/OilDrop.vue'
 
 const { t: translate } = useTranslation()
 const route = useRoute()
@@ -139,7 +140,7 @@ const state = computed(() => {
 /** Bottom bar: only the pages this person may use (Settings always, for their account). */
 interface NavItem {
   to: string
-  icon: string
+  icon: IconName
   label: string
   exact?: boolean
   /** Needed to see the page in the bar (none: always there). */
@@ -147,12 +148,12 @@ interface NavItem {
   level?: 'see' | 'change'
 }
 const NAV: NavItem[] = [
-  { to: '/', icon: '✚', label: 'nav.today', exact: true, area: 'work', level: 'change' },
-  { to: '/journal', icon: '📅', label: 'nav.journal', area: 'work', level: 'see' },
+  { to: '/', icon: 'today', label: 'nav.today', exact: true, area: 'work', level: 'change' },
+  { to: '/journal', icon: 'history', label: 'nav.journal', area: 'work', level: 'see' },
   { to: '/oil', icon: 'oil', label: 'nav.oil', area: 'oil', level: 'see' },
-  { to: '/money', icon: '€', label: 'nav.money', area: 'money', level: 'see' },
-  { to: '/reports', icon: '📊', label: 'nav.reports', area: 'reports', level: 'see' },
-  { to: '/settings', icon: '⚙️', label: 'nav.settings' },
+  { to: '/money', icon: 'money', label: 'nav.money', area: 'money', level: 'see' },
+  { to: '/reports', icon: 'reports', label: 'nav.reports', area: 'reports', level: 'see' },
+  { to: '/settings', icon: 'settings', label: 'nav.settings' },
 ]
 const nav = computed(() =>
   NAV.filter((item) => !item.area || can(farm.value.access, item.area, item.level)).map(
@@ -224,8 +225,7 @@ watch(
         :class="{ active: item.exact ? route.path === '/' : route.path.startsWith(item.to) }"
       >
         <span class="nav-icon" aria-hidden="true">
-          <OilDrop v-if="item.icon === 'oil'" />
-          <template v-else>{{ item.icon }}</template>
+          <AppIcon :name="item.icon" :size="24" />
         </span>
         <span>{{ item.label }}</span>
       </RouterLink>
