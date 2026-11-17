@@ -562,7 +562,7 @@
     "ownGroveHelp": "They will set up a new grove of their own and will not see this one.",
     "newPassword": "New temporary password",
     "remove": "Remove from grove",
-    "removeHelp": "{{name}} will no longer see this grove. What they logged stays.",
+    "removeHelp": "{{name}} will no longer see this grove. If it was their only grove, their account is deleted and the username is free again. What they logged stays.",
     "handOverTitle": "Give these to {{name}}",
     "handOverName": "Username:",
     "handOverPassword": "Temporary password:",
@@ -575,5 +575,27 @@
     "errorAlreadyMember": "This person is already in the grove. Use Change next to their name.",
     "existingTitle": "{{name}} was added",
     "existingHelp": "They already had an account, so they keep their own password. They will see this grove the next time the app syncs."
+  },
+  "serverAccounts": {
+    "title": "Accounts on this server",
+    "help": "As the owner of this installation you can help anyone: give them a new temporary password or delete their account. You do not see what is in other people's groves.",
+    "onlyYou": "Nobody else has an account yet.",
+    "manage": "Help",
+    "lastActive": "last active {{date}}",
+    "neverSignedIn": "never signed in",
+    "waitingForGrove": "has not set up their grove yet",
+    "noGrove": "in no grove",
+    "inYourGrove": "{{role}} in your grove “{{name}}”",
+    "otherGrove_one": "{{role}} of their own grove (only them)",
+    "otherGrove_other": "{{role}} in a grove of {{count}} people",
+    "delete": "Delete account",
+    "deleteHelp": "Delete {{name}}'s account? They are signed out and the username can be used again. What they logged in shared groves stays.",
+    "deleteGroves_one": "Delete {{name}}'s account? Their grove, which nobody else uses, is deleted too, with everything in it. This cannot be undone (only from the server's daily backups).",
+    "deleteGroves_other": "Delete {{name}}'s account? {{count}} groves that nobody else uses are deleted too, with everything in them. This cannot be undone (only from the server's daily backups).",
+    "typeName": "To confirm, type {{name}}",
+    "resetHelp": "They are signed out on all devices and choose their own password at the next sign-in.",
+    "errorOnlyAdmin": "They are the only administrator of a grove other people use. Ask them to make someone else administrator first.",
+    "admin": "Administrator",
+    "user": "User"
   }
 }

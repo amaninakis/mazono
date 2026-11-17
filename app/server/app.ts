@@ -4,6 +4,7 @@ import type { Access, Role } from '../src/core/access.ts'
 import type {
   AccountInfo,
   Member,
+  ServerAccount,
   SyncRecord,
   SyncRequest,
   SyncResponse,
@@ -660,7 +661,10 @@ export async function buildServer(options: ServerOptions) {
     },
   )
 
-  /** Remove someone from the grove (their account stays, e.g. for other groves). */
+  /**
+   * Remove someone from the grove. If it was their last grove their account is deleted too;
+   * what they logged stays, with their name.
+   */
   app.post<{ Params: MemberParams }>(
     '/api/farms/:farmId/members/:userId/remove',
     (request, reply) => {
@@ -678,9 +682,15 @@ export async function buildServer(options: ServerOptions) {
       if (target.role === 'admin' && adminCount(farmId) <= 1) {
         return reply.code(409).send({ error: 'last-admin' })
       }
-      database
-        .prepare('DELETE FROM memberships WHERE user_id = ? AND farm_id = ?')
-        .run(userId, farmId)
+      inTransaction(database, () => {
+        database
+          .prepare('DELETE FROM memberships WHERE user_id = ? AND farm_id = ?')
+          .run(userId, farmId)
+        // Out of their last grove: the account goes too, so the username is free again.
+        if (groveCount(userId) === 0) {
+          deleteUser(userId)
+        }
+      })
 
       return reply.send(members(farmId))
     },
@@ -723,14 +733,179 @@ export async function buildServer(options: ServerOptions) {
     if (hasData) {
       return reply.code(409).send({ error: 'not-empty' })
     }
-    inTransaction(database, () => {
-      database.prepare('DELETE FROM records WHERE farm_id = ?').run(farmId)
-      database.prepare('DELETE FROM memberships WHERE farm_id = ?').run(farmId)
-      database.prepare('DELETE FROM farms WHERE id = ?').run(farmId)
-    })
+    inTransaction(database, () => deleteGrove(farmId))
 
     return reply.send({ ok: true })
   })
+
+  /* ---------- the installation owner: every account, to help people ---------- */
+
+  function groveCount(userId: string): number {
+    return (
+      database
+        .prepare('SELECT COUNT(*) AS count FROM memberships WHERE user_id = ?')
+        .get(userId) as { count: number }
+    ).count
+  }
+
+  function deleteUser(userId: string) {
+    database.prepare('DELETE FROM sessions WHERE user_id = ?').run(userId)
+    database.prepare('DELETE FROM memberships WHERE user_id = ?').run(userId)
+    database.prepare('DELETE FROM users WHERE id = ? AND is_owner = 0').run(userId)
+  }
+
+  function deleteGrove(farmId: string) {
+    database.prepare('DELETE FROM records WHERE farm_id = ?').run(farmId)
+    database.prepare('DELETE FROM memberships WHERE farm_id = ?').run(farmId)
+    database.prepare('DELETE FROM farms WHERE id = ?').run(farmId)
+  }
+
+  /** The signed-in installation owner, else a 401/403 reply. */
+  function installationOwner(request: FastifyRequest, reply: FastifyReply) {
+    const user = signedInUser(request, reply)
+    if (!user) {
+      return undefined
+    }
+    if (!user.is_owner) {
+      void reply.code(403).send({ error: 'not-allowed' })
+      return undefined
+    }
+
+    return user
+  }
+
+  function groveName(farmId: string): string | undefined {
+    const row = database
+      .prepare("SELECT data FROM records WHERE farm_id = ? AND tbl = 'farms' AND id = ?")
+      .get(farmId, farmId) as { data: string } | undefined
+
+    return row ? (JSON.parse(row.data) as { name?: string }).name : undefined
+  }
+
+  function serverAccounts(owner: UserRow): ServerAccount[] {
+    const users = database
+      .prepare(
+        `SELECT u.id, u.username, u.is_owner, u.must_change_password, u.may_create_grove,
+                u.created_at, (SELECT MAX(last_used) FROM sessions s WHERE s.user_id = u.id) AS last_active
+         FROM users u ORDER BY u.is_owner DESC, u.username COLLATE NOCASE`,
+      )
+      .all() as unknown as {
+      id: string
+      username: string
+      is_owner: number
+      must_change_password: number
+      may_create_grove: number
+      created_at: number
+      last_active: number | null
+    }[]
+    const groves = database
+      .prepare(
+        `SELECT m.user_id, m.farm_id, m.role,
+                (SELECT COUNT(*) FROM memberships p WHERE p.farm_id = m.farm_id) AS people,
+                (SELECT COUNT(*) FROM memberships a WHERE a.farm_id = m.farm_id AND a.role = 'admin') AS admins,
+                EXISTS (SELECT 1 FROM memberships o WHERE o.farm_id = m.farm_id AND o.user_id = ?) AS shared
+         FROM memberships m`,
+      )
+      .all(owner.id) as unknown as {
+      user_id: string
+      farm_id: string
+      role: Role
+      people: number
+      admins: number
+      shared: number
+    }[]
+
+    return users.map((user) => ({
+      userId: user.id,
+      username: user.username,
+      isOwner: !!user.is_owner,
+      mustChangePassword: !!user.must_change_password,
+      waitingForGrove: !!user.may_create_grove,
+      createdAt: user.created_at,
+      lastActive: user.last_active,
+      groves: groves
+        .filter((grove) => grove.user_id === user.id)
+        .map((grove) => ({
+          farmId: grove.farm_id,
+          role: grove.role,
+          people: grove.people,
+          admins: grove.admins,
+          ...(grove.shared ? { name: groveName(grove.farm_id) } : {}),
+        })),
+    }))
+  }
+
+  app.get('/api/accounts', (request, reply) => {
+    const owner = installationOwner(request, reply)
+    return owner ? reply.send(serverAccounts(owner)) : reply
+  })
+
+  /** The owner gives anyone a new temporary password; signs them out everywhere. */
+  app.post<{ Params: { userId: string } }>(
+    '/api/accounts/:userId/password',
+    async (request, reply) => {
+      const owner = installationOwner(request, reply)
+      if (!owner) {
+        return await reply
+      }
+      const { userId } = request.params
+      if (userId === owner.id) {
+        return await reply.code(403).send({ error: 'not-allowed' })
+      }
+      const { password } = (request.body ?? {}) as { password?: unknown }
+      if (typeof password !== 'string' || password.length < MIN_PASSWORD_LENGTH) {
+        return await reply.code(400).send({ error: 'password-short' })
+      }
+      const passwordHash = await hashPassword(password)
+      const changed = database
+        .prepare('UPDATE users SET password_hash = ?, must_change_password = 1 WHERE id = ?')
+        .run(passwordHash, userId)
+      if (!changed.changes) {
+        return await reply.code(404).send({ error: 'not-found' })
+      }
+      database.prepare('DELETE FROM sessions WHERE user_id = ?').run(userId)
+
+      return await reply.send(serverAccounts(owner))
+    },
+  )
+
+  /**
+   * The owner deletes an account. Groves where nobody else is left are deleted with all their
+   * data; an account that is the only administrator of a grove others still use is refused.
+   */
+  app.post<{ Params: { userId: string } }>(
+    '/api/accounts/:userId/remove',
+    (request, reply) => {
+      const owner = installationOwner(request, reply)
+      if (!owner) {
+        return reply
+      }
+      const { userId } = request.params
+      const account = serverAccounts(owner).find((entry) => entry.userId === userId)
+      if (!account) {
+        return reply.code(404).send({ error: 'not-found' })
+      }
+      if (account.isOwner) {
+        return reply.code(403).send({ error: 'not-allowed' })
+      }
+      const leftWithoutAdmin = account.groves.some(
+        (grove) => grove.role === 'admin' && grove.people > 1 && grove.admins <= 1,
+      )
+      if (leftWithoutAdmin) {
+        return reply.code(409).send({ error: 'only-admin' })
+      }
+      inTransaction(database, () => {
+        for (const grove of account.groves) {
+          if (grove.people <= 1) {
+            deleteGrove(grove.farmId)
+          }
+        }
+        deleteUser(userId)
+      })
+
+      return reply.send(serverAccounts(owner))
+    },
+  )
 
   app.all(
     '/api/*',

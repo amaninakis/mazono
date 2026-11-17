@@ -1,5 +1,11 @@
 import type { Access, Permissions, Role } from '../core/access'
-import type { AccountInfo, Member, SyncRequest, SyncResponse } from '../core/syncFormat'
+import type {
+  AccountInfo,
+  Member,
+  ServerAccount,
+  SyncRequest,
+  SyncResponse,
+} from '../core/syncFormat'
 
 /* Calls to the HarvestLog server. All requests go to the same address the app came from. */
 
@@ -146,4 +152,20 @@ export async function removeMember(farmId: string, userId: string) {
     `/api/farms/${encodeURIComponent(farmId)}/members/${encodeURIComponent(userId)}/remove`,
     {},
   )
+}
+
+/* ---------- every account, for the installation owner ---------- */
+
+export async function listAccounts() {
+  return await call<ServerAccount[]>('/api/accounts')
+}
+
+export async function resetAccountPassword(userId: string, password: string) {
+  return await call<ServerAccount[]>(`/api/accounts/${encodeURIComponent(userId)}/password`, {
+    password,
+  })
+}
+
+export async function removeAccount(userId: string) {
+  return await call<ServerAccount[]>(`/api/accounts/${encodeURIComponent(userId)}/remove`, {})
 }

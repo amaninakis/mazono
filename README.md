@@ -21,6 +21,8 @@ Available in **English** and **Ελληνικά**. Works offline on your phone a
 - The Journal shows **who logged** each entry. Give a new temporary password or remove someone
   at any time; what they logged stays.
 - The installation owner can also create someone who **starts their own grove**.
+- The owner sees **every account on the server** (without other people's data) and can give
+  anyone a new temporary password or delete an account.
 
 ### Server, sign-in and sync (v0.5a)
 
