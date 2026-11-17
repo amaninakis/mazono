@@ -15,8 +15,9 @@ COPY --from=build /src/app/package.json ./
 COPY --from=build /src/app/node_modules ./node_modules
 COPY --from=build /src/app/dist ./dist
 COPY --from=build /src/app/server ./server
-COPY --from=build /src/app/src/core/syncFormat.ts ./src/core/syncFormat.ts
-RUN rm -f server/*.test.ts && mkdir -p /data && chown node:node /data
+# Shared code the server imports (rules for access and the sync format)
+COPY --from=build /src/app/src/core ./src/core
+RUN rm -f server/*.test.ts src/core/*.test.ts && mkdir -p /data && chown node:node /data
 USER node
 VOLUME /data
 EXPOSE 8080
