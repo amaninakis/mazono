@@ -18,6 +18,7 @@ import AppIcon from '../ui/AppIcon.vue'
 import AppModal from '../ui/AppModal.vue'
 import { canDo, categoryName, chargeName, locationName, taskName, useFarm } from '../ui/farm'
 import ServerAccountsCard from '../ui/ServerAccountsCard.vue'
+import SettingInput from '../ui/SettingInput.vue'
 import { showToast } from '../ui/toast'
 import ToggleSwitch from '../ui/ToggleSwitch.vue'
 import UsersCard from '../ui/UsersCard.vue'
@@ -437,7 +438,7 @@ watch(
     >
       <section v-if="section === 'general'" class="card">
         <label class="label" for="s-farm">{{ $t('settings.farmName') }}</label>
-        <input
+        <SettingInput
           id="s-farm"
           class="input"
           :value="farm.farmName"
@@ -503,7 +504,7 @@ watch(
             class="field-row"
             :class="[{ off: f.archived }]"
           >
-            <input
+            <SettingInput
               class="input"
               :aria-label="$t('common.name')"
               :value="f.name"
@@ -511,7 +512,7 @@ watch(
                 (e) => val(e).trim() && repo.update('fields', f.id, { name: val(e).trim() })
               "
             />
-            <input
+            <SettingInput
               class="input small"
               inputmode="numeric"
               :aria-label="$t('common.trees')"
@@ -568,7 +569,7 @@ watch(
             class="unit-row"
             :class="[{ off: u.archived }]"
           >
-            <input
+            <SettingInput
               class="input"
               :aria-label="$t('common.name')"
               :value="u.name"
@@ -576,7 +577,7 @@ watch(
                 (e) => val(e).trim() && repo.update('units', u.id, { name: val(e).trim() })
               "
             />
-            <input
+            <SettingInput
               class="input"
               :aria-label="$t('setup.pluralName')"
               :placeholder="$t('setup.pluralName')"
@@ -585,7 +586,7 @@ watch(
                 (e) => repo.update('units', u.id, { pluralName: val(e).trim() || undefined })
               "
             />
-            <input
+            <SettingInput
               class="input small"
               inputmode="decimal"
               :placeholder="$t('setup.approxKg')"
@@ -652,7 +653,7 @@ watch(
             class="field-row"
             :class="[{ off: m.archived }]"
           >
-            <input
+            <SettingInput
               class="input"
               :aria-label="$t('common.name')"
               :value="m.name"
@@ -694,14 +695,14 @@ watch(
             class="field-row"
             :class="[{ off: c.archived }]"
           >
-            <input
+            <SettingInput
               :key="`${c.id}-${locale}`"
               class="input"
               :aria-label="$t('common.name')"
               :value="chargeName($t, c)"
               @blur="(e) => renameBuiltin('chargeTypes', c.id, chargeName($t, c), e)"
             />
-            <input
+            <SettingInput
               class="input small"
               inputmode="decimal"
               :aria-label="$t('settings.defaultPercent')"
@@ -749,7 +750,7 @@ watch(
             class="field-row"
             :class="[{ off: l.archived }]"
           >
-            <input
+            <SettingInput
               :key="`${l.id}-${locale}`"
               class="input"
               :aria-label="$t('common.name')"
@@ -785,7 +786,7 @@ watch(
 
       <section v-if="section === 'money'" id="money" class="card">
         <label class="label" for="s-tax">{{ $t('settings.taxPercent') }}</label>
-        <input
+        <SettingInput
           id="s-tax"
           class="input small"
           inputmode="decimal"
@@ -806,7 +807,7 @@ watch(
               class="field-row"
               :class="[{ off: c.archived }]"
             >
-              <input
+              <SettingInput
                 :key="`${c.id}-${locale}`"
                 class="input"
                 :aria-label="$t('common.name')"
@@ -861,7 +862,7 @@ watch(
                   {{ i }}
                 </option>
               </select>
-              <input
+              <SettingInput
                 :key="`${x.id}-${locale}`"
                 class="input"
                 :aria-label="$t('common.name')"
