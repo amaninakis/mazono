@@ -8,6 +8,7 @@ import { addDays, todayISO } from '../core/dates'
 import { AMOUNT_UNITS } from '../core/defaults'
 import { formatNumber } from '../core/format'
 import {
+  averageTreesPerDay,
   countedTogether,
   defaultFieldId,
   defaultTaskTypeId,
@@ -18,6 +19,7 @@ import {
 } from '../core/progress'
 import { unitLabel } from '../core/units'
 import { formatLocale } from '../i18n'
+import AppIcon from '../ui/AppIcon.vue'
 import DateField from '../ui/DateField.vue'
 import { useDraft } from '../ui/draft'
 import DraftNotice from '../ui/DraftNotice.vue'
@@ -142,8 +144,22 @@ watch([trees, () => current.value?.remaining], ([value, remaining]) => {
   }
 })
 
-// The trees box starts with all the trees still left in the chosen field (for tasks that count
-// trees). It follows the field, task and date until the user changes the number by hand.
+/** Trees a day of this work usually covers (0 before there is any day to go on). */
+const usualTrees = computed(() =>
+  typeId.value
+    ? averageTreesPerDay({
+        entries: farm.value.entries,
+        taskTypeIds: sharedTypeIds(typeId.value),
+        date: date.value,
+        seasonStartMonth: farm.value.settings.seasonStartMonth,
+        excludeId: editing?.id,
+      })
+    : 0,
+)
+
+// The trees box starts with the trees of a usual day of this work, but never more than the
+// trees still left in the field. It follows the field, task and date until the user changes
+// the number by hand.
 let treesFollowField = !editing
 let lastAutoTrees: number | null = null
 function fillTrees() {
@@ -151,10 +167,18 @@ function fillTrees() {
     return
   }
   const remaining = current.value?.remaining
-  lastAutoTrees = kind.value !== 'done' && remaining ? remaining : null
+  if (kind.value === 'done') {
+    lastAutoTrees = null
+  } else if (remaining == null) {
+    lastAutoTrees = usualTrees.value
+  } else {
+    lastAutoTrees = Math.min(usualTrees.value, remaining)
+  }
   trees.value = lastAutoTrees
 }
-watch([fieldId, typeId, () => current.value?.remaining], fillTrees, { immediate: true })
+watch([fieldId, typeId, () => current.value?.remaining, usualTrees], fillTrees, {
+  immediate: true,
+})
 watch(trees, (value) => {
   if (value !== lastAutoTrees) {
     treesFollowField = false
@@ -521,7 +545,19 @@ const canEditSettings = computed(() => canDo(farm.value, 'settings', 'change'))
     <template v-if="fieldId">
       <section v-if="kind !== 'done'" class="card">
         <label class="label" for="trees">{{ treesLabel }}</label>
-        <NumberStepper id="trees" v-model="trees" :label="treesLabel" :max="maxTrees" />
+        <div class="stepper-row">
+          <NumberStepper id="trees" v-model="trees" :label="treesLabel" :max="maxTrees" />
+          <button
+            v-if="(trees ?? 0) > 0"
+            type="button"
+            class="icon-btn clear-btn"
+            :aria-label="$t('today.clearTrees')"
+            :title="$t('today.clearTrees')"
+            @click="trees = 0"
+          >
+            <AppIcon name="clear" :size="20" />
+          </button>
+        </div>
         <p v-if="leftAfter != null && kind !== 'quantity'" class="hint">
           {{ $t('today.leftAfter', { left: leftAfter, field: current!.field.name }) }}
         </p>

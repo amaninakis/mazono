@@ -158,7 +158,7 @@ Users join farms through a membership with a role; one person can belong to seve
 ## Today screen (home) — v0.1
 
 
-The trees box starts with all the trees still left in the chosen field for that task (if the field has a tree count), and follows the field, task and date until the user changes the number.
+The trees box starts with the trees of a usual day of that work: the average trees per work day for the task (tasks counted together count together, and a day's fields add up), from this farming year's days, or all earlier years' before the first one, and 0 with no days at all. It is never more than the trees still left in the chosen field (if the field has a tree count). It follows the field, task and date until the user changes the number. A × button beside the box (shown above 0) sets it to 0 without opening the keyboard.
 The app opens here. Everything for one entry sits on a single scrollable page with a sticky **Save** button.
 
 **Shared top area**

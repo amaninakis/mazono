@@ -123,7 +123,8 @@
     "moreFields": "More fields",
     "prevFields": "Previous fields",
     "swipeForMore": "{{count}} fields · swipe for more ›",
-    "allFieldsCount": "{{count}} fields"
+    "allFieldsCount": "{{count}} fields",
+    "clearTrees": "Clear trees"
   },
   "inputKind": {
     "harvest": "Trees and collected units",
