@@ -632,7 +632,10 @@
     "when": {
       "thisYear": "this year",
       "year": "in {{year}}",
-      "all": "over all these years"
+      "all": "over all these years",
+      "bestYear": "in your best year ({{year}})",
+      "biggestProduction": "in your biggest pressing ({{date}})",
+      "busiestDay": "on your busiest day ({{date}})"
     },
     "about": "about {{thing}}",
     "fraction": {
@@ -649,7 +652,12 @@
       "treeLine": "The trees you harvested {{when}}, lined up, stretch as far as {{thing}}.",
       "family": "The oil you made {{when}} keeps a family of four in oil for {{count}} years.",
       "familyMonths": "The oil you made {{when}} keeps a family of four in oil for {{count}} months.",
-      "salads": "The oil you made {{when}} is enough for about {{count}} Greek salads."
+      "salads": "The oil you made {{when}} is enough for about {{count}} Greek salads.",
+      "oilPerTree": "On average, each of your trees filled {{thing}} with oil {{when}}.",
+      "oilPerTreeAll": "On average, each of your trees fills {{thing}} with oil a year.",
+      "olivesPerLitre": "It took about {{count}} kg of olives to make a litre of oil {{when}}.",
+      "olivesPerLitreAll": "On average, a litre of your oil takes about {{count}} kg of olives.",
+      "treeLineFarm": "Your {{trees}} trees, lined up, stretch as far as {{thing}}."
     },
     "next": {
       "oilVolume": "{{missing}} litres more for {{thing}}.",
