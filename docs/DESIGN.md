@@ -32,6 +32,7 @@ HarvestLog is a self-hosted, open-source app that replaces the yearly olive spre
 **Users are not technical.** Many growers are not tech-savvy. Using the app must need nothing beyond general familiarity with phone apps:
 
 - Plain words in the grower's language, no technical terms on the main screens.
+- Say **ελαιόλαδο** / **olive oil** in every text (genitive *ελαιολάδου*; with a possessive *το ελαιόλαδό σας*). The one exception is the short label under the drop icon in the bottom menu: **Λάδι** / **Oil**.
 - Every setting has a sensible default; nothing is required except what the task needs.
 - Self-hosting is done once by a helper (family member, cooperative, technician). The grower only opens a link and adds it to the home screen, with a short in-app guide for that step.
 - Mistakes are easy to undo; nothing is lost by tapping the wrong button.

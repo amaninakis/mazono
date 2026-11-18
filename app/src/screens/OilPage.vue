@@ -267,7 +267,7 @@ async function removeAnyway() {
 <template>
   <main class="page oil">
     <header class="page-head row-between">
-      <h1>{{ $t('nav.oil') }}</h1>
+      <h1>{{ $t('oil.title') }}</h1>
       <YearPicker
         v-model="season"
         :years="seasons"
