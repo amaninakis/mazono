@@ -21,6 +21,45 @@ export function countedTogether(taskType: TaskType, taskTypes: TaskType[]): stri
   return ids.includes(taskType.id) ? ids : [...ids, taskType.id]
 }
 
+/**
+ * Trees a day of this work usually covers, for the trees box to start from. Trees of all
+ * fields on the same day add up (a day is one day's work). This farming year's days count
+ * when there are any; before the first one, all earlier years'. No days at all: 0.
+ */
+export function averageTreesPerDay(input: {
+  entries: TaskEntry[]
+  taskTypeIds: string[]
+  date: ISODate
+  seasonStartMonth?: number
+  /** Leave out the entry being edited. */
+  excludeId?: string
+}): number {
+  const startMonth = input.seasonStartMonth ?? 3
+  const season = seasonOf(input.date, startMonth)
+  const types = new Set(input.taskTypeIds)
+  const thisYear = new Map<ISODate, number>()
+  const allYears = new Map<ISODate, number>()
+  for (const entry of live(input.entries)) {
+    if (entry.id === input.excludeId || !types.has(entry.taskTypeId) || !(entry.trees! > 0)) {
+      continue
+    }
+    allYears.set(entry.date, (allYears.get(entry.date) ?? 0) + entry.trees!)
+    if (seasonOf(entry.date, startMonth) === season) {
+      thisYear.set(entry.date, (thisYear.get(entry.date) ?? 0) + entry.trees!)
+    }
+  }
+  const days = thisYear.size > 0 ? thisYear : allYears
+  if (days.size === 0) {
+    return 0
+  }
+  let total = 0
+  for (const trees of days.values()) {
+    total += trees
+  }
+
+  return Math.round(total / days.size)
+}
+
 export interface FieldProgress {
   field: Field
   done: number // trees logged this season for the task

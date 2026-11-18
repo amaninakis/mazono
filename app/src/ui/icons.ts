@@ -7,6 +7,7 @@ export type IconName =
   | 'reports'
   | 'settings'
   | 'calendar'
+  | 'clear'
   | 'trash'
   | 'transfer'
   | 'chevronLeft'
@@ -49,6 +50,7 @@ export const ICONS: Record<IconName, string[]> = {
     'M8 3v4',
     'M3 10h18',
   ],
+  clear: ['M6 6l12 12', 'M18 6L6 18'],
   trash: ['M4 7h16', 'M9 7V4h6v3', 'M6 7l1 13h10l1-13'],
   transfer: ['M4 8h15', 'M16 5l3 3-3 3', 'M20 16H5', 'M8 13l-3 3 3 3'],
   chevronLeft: ['M15 6l-6 6 6 6'],

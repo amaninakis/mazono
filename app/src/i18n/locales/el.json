@@ -123,7 +123,8 @@
     "moreFields": "Περισσότερα χωράφια",
     "prevFields": "Προηγούμενα χωράφια",
     "swipeForMore": "{{count}} χωράφια · σύρετε για περισσότερα ›",
-    "allFieldsCount": "{{count}} χωράφια"
+    "allFieldsCount": "{{count}} χωράφια",
+    "clearTrees": "Μηδενισμός δέντρων"
   },
   "inputKind": {
     "harvest": "Δέντρα και μονάδες που μαζέψατε",

@@ -286,6 +286,8 @@ button, input, select, textarea { font: inherit; color: inherit; }
 .unit-qty .qty-top { display: flex; gap: 8px; align-items: center; }
 .unit-qty .qty-top .select { flex: 1; min-width: 0; }
 .unit-qty .stepper { max-width: none; }
+.stepper-row { display: flex; align-items: stretch; gap: 8px; }
+.stepper-row .clear-btn { width: var(--tap); min-width: var(--tap); height: auto; min-height: var(--tap); border: 1px solid var(--line); border-radius: 12px; }
 .stepper .step-input + .step-btn { border-radius: 0 12px 12px 0; }
 
 /* Extraction form */
