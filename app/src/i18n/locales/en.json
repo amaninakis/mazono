@@ -371,6 +371,7 @@
   },
   "reports": {
     "tab": {
+      "year": "This year",
       "fields": "Fields",
       "seasons": "Years",
       "yield": "Yield",
@@ -382,21 +383,24 @@
       "seasons": "Years side by side",
       "yield": "Yield through the year",
       "money": "Cost of your oil",
-      "records": "Records"
+      "records": "Records",
+      "year": "This year"
     },
     "about": {
       "fields": "How the fields performed each year. Darker cells mean more, so good and poor years stand out.",
       "seasons": "Each year’s totals. Choose what the chart shows.",
       "yield": "The yield of each mill visit, by date. Use it to see when the olives give the most oil.",
       "money": "Expenses and income of each calendar year, set against the oil of the same year.",
-      "records": "Your all-time bests, and your numbers put another way."
+      "records": "Your all-time bests, and your numbers put another way.",
+      "year": "How the year is going so far, and how it compares with other years."
     },
     "empty": {
       "fields": "Log harvests (and mill extractions) to compare your fields.",
       "seasons": "Add a mill extraction to see the year’s totals.",
       "yield": "Add mill extractions with olive and oil kg to see the yield.",
       "money": "Add expenses or sales, or a mill extraction, to see the cost of your oil.",
-      "records": "Log harvests and productions to start setting records."
+      "records": "Log harvests and productions to start setting records.",
+      "year": "Nothing logged this year yet. Log some work or a production to see how the year is going."
     },
     "metric": {
       "units": "Olives collected",
@@ -437,7 +441,43 @@
     "inKg": "in kg",
     "logHarvest": "Log a harvest",
     "yieldCaptionRatio": "Yield: kg of olives for 1 kg of oil (estimate per field)",
-    "yieldCaptionPercent": "Yield: oil as a share of the olives (estimate per field)"
+    "yieldCaptionPercent": "Yield: oil as a share of the olives (estimate per field)",
+    "year": {
+      "season": "Year {{season}}",
+      "collected": "Collected",
+      "harvestDays_one": "in {{count}} harvest day",
+      "harvestDays_other": "in {{count}} harvest days",
+      "olives": "Olives",
+      "productions_one": "weighed at the mill, {{count}} production",
+      "productions_other": "weighed at the mill, {{count}} productions",
+      "oil": "Oil",
+      "afterCharges": "{{kg}} after mill charges",
+      "perHarvestDay": "Per harvest day",
+      "perHarvestDayNote": "on average",
+      "treesHarvested": "Trees harvested",
+      "treesOf": "{{harvested}} of the {{total}} trees in your fields",
+      "noTreeCounts": "Add how many trees each field has (Settings) to see how far you are.",
+      "trees_one": "{{shown}} tree",
+      "trees_other": "{{shown}} trees",
+      "perDayTitle": "Trees per work day",
+      "perDayValue": "{{trees}} a day",
+      "daysCount_one": "{{trees}} in {{count}} day",
+      "daysCount_other": "{{trees}} in {{count}} days",
+      "chartTitle": "How the year is coming along",
+      "show": "What the chart shows",
+      "compareWith": "Compare with",
+      "average": "Average",
+      "thisYear": "This year",
+      "nothingYet": "Nothing yet for this, this year or in other years.",
+      "when": {
+        "lastYear": "last year",
+        "year": "in {{year}}",
+        "average": "on average"
+      },
+      "byNow": "By today: this year {{now}}, {{when}} {{then}}.",
+      "change": "({{change}})",
+      "wholeYear": "The whole year, {{when}}: {{total}}."
+    }
   },
   "records": {
     "recordsTitle": "Your records",

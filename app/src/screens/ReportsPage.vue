@@ -3,7 +3,7 @@ import type { CsvValue, FieldSeasonCell } from '../core/reports'
 import { useTranslation } from 'i18next-vue'
 import { computed, ref } from 'vue'
 import { RouterLink } from 'vue-router'
-import { parseISODate, seasonLabel } from '../core/dates'
+import { parseISODate, seasonLabel, seasonOf, todayISO } from '../core/dates'
 import { formatMoney, formatNumber, formatYield } from '../core/format'
 import {
   fieldSeasonReport,
@@ -16,11 +16,13 @@ import { unitLabel } from '../core/units'
 import { formatLocale } from '../i18n'
 import AppIcon from '../ui/AppIcon.vue'
 import { canDo, useFarm } from '../ui/farm'
+import { seasonMonthTicks } from '../ui/monthTicks'
 import RecordsBoard from '../ui/RecordsBoard.vue'
 import SeasonBars from '../ui/SeasonBars.vue'
+import YearReport from '../ui/YearReport.vue'
 import YieldChart from '../ui/YieldChart.vue'
 
-type ReportKey = 'fields' | 'seasons' | 'yield' | 'money' | 'records'
+type ReportKey = 'year' | 'fields' | 'seasons' | 'yield' | 'money' | 'records'
 type FieldMetric = 'units' | 'oil' | 'unitsPerTree' | 'oilPerTree' | 'yield'
 type YearMetric = 'olives' | 'oil' | 'net' | 'yield'
 
@@ -29,8 +31,8 @@ const farm = useFarm()
 /** An empty report points to where its data comes from. */
 const canLogWork = computed(() => canDo(farm.value, 'work', 'change'))
 const startMonth = computed(() => farm.value.settings.seasonStartMonth)
-const REPORTS: ReportKey[] = ['fields', 'seasons', 'yield', 'money', 'records']
-const report = ref<ReportKey>('fields')
+const REPORTS: ReportKey[] = ['year', 'fields', 'seasons', 'yield', 'money', 'records']
+const report = ref<ReportKey>('year')
 
 function fmt(value: number, decimals = 1) {
   return formatNumber(value, formatLocale.value, decimals)
@@ -295,26 +297,7 @@ const yieldSeries = computed(() =>
 /**
  * Date ticks on the 1st and 15th of each month, counted in days from the start of the year.
  */
-const monthTicks = computed(() => {
-  const start = new Date(2001, startMonth.value - 1, 1)
-  const format = new Intl.DateTimeFormat(formatLocale.value, {
-    day: 'numeric',
-    month: 'short',
-  })
-  const ticks: { day: number; label: string; minor: boolean }[] = []
-  for (let i = 0; i < 12; i++) {
-    for (const dayOfMonth of [1, 15]) {
-      const tick = new Date(2001, startMonth.value - 1 + i, dayOfMonth)
-      ticks.push({
-        day: Math.round((tick.getTime() - start.getTime()) / 86_400_000),
-        label: format.format(tick),
-        minor: dayOfMonth === 15,
-      })
-    }
-  }
-
-  return ticks
-})
+const monthTicks = computed(() => seasonMonthTicks(startMonth.value, formatLocale.value))
 
 /* ---------- 4. money ---------- */
 const economics = computed(() =>
@@ -447,8 +430,19 @@ function exportCsv() {
   }
 }
 
+/** Anything logged in the current farming year. */
+const hasThisYear = computed(() => {
+  const current = seasonOf(todayISO(), startMonth.value)
+  function inYear(row: { date: string; deletedAt?: number }) {
+    return !row.deletedAt && seasonOf(row.date, startMonth.value) === current
+  }
+
+  return farm.value.entries.some(inYear) || farm.value.extractions.some(inYear)
+})
+
 const hasData = computed(() => {
   const lookup: Record<ReportKey, boolean> = {
+    year: hasThisYear.value,
     fields: fieldReport.value.rows.length > 0,
     seasons: history.value.length > 0,
     yield: yieldSeasons.value.length > 0,
@@ -611,6 +605,9 @@ const visibleReports = computed(() =>
         <p class="muted small">{{ $t('reports.yieldNote') }}</p>
       </template>
 
+      <!-- 0. this year -->
+      <YearReport v-else-if="report === 'year'" />
+
       <!-- 5. records -->
       <RecordsBoard v-else-if="report === 'records'" />
 
@@ -655,7 +652,7 @@ const visibleReports = computed(() =>
       </template>
 
       <button
-        v-if="hasData && report !== 'records'"
+        v-if="hasData && report !== 'records' && report !== 'year'"
         type="button"
         class="btn ghost small"
         @click="exportCsv"
