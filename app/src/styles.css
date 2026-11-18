@@ -533,6 +533,7 @@ button, input, select, textarea { font: inherit; color: inherit; }
 .year-picker .icon-btn:disabled { opacity: 0.3; }
 .value-places { display: flex; flex-direction: column; gap: 4px; margin-top: 8px; }
 .unit-caption { margin: 2px 0 6px; font-size: 0.875rem; font-weight: 600; color: var(--ink); }
+.heat-table thead tr:first-child th.unit-over-years { white-space: normal; text-align: right; color: var(--ink); font-size: 0.875rem; font-weight: 600; padding-bottom: 0; }
 .report-table thead th { white-space: normal; vertical-align: bottom; }
 .reports .chip:disabled { opacity: 0.4; }
 

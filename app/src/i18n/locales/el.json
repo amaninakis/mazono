@@ -441,8 +441,7 @@
     "unitCaptionPerTree": "Σε {{unit}} ανά δέντρο",
     "inKg": "σε κιλά",
     "logHarvest": "Καταγραφή μαζέματος",
-    "yieldCaptionRatio": "Απόδοση: κιλά ελιές για 1 κιλό λάδι (εκτίμηση ανά χωράφι)",
-    "yieldCaptionPercent": "Απόδοση: το λάδι ως ποσοστό του καρπού (εκτίμηση ανά χωράφι)",
+    "yieldCaption": "Απόδοση",
     "year": {
       "season": "Χρονιά {{season}}",
       "collected": "Μαζέψατε",

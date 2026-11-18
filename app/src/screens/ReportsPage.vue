@@ -130,11 +130,7 @@ const onlyUnit = computed(() => {
 /** What the numbers in the table are, e.g. "In sacks per tree". */
 const unitCaption = computed(() => {
   if (fieldMetric.value === 'yield') {
-    return translate(
-      farm.value.settings.yieldFormat === 'percent'
-        ? 'reports.yieldCaptionPercent'
-        : 'reports.yieldCaptionRatio',
-    )
+    return translate('reports.yieldCaption')
   }
   const unit = onlyUnit.value
   const unitsName = (
@@ -502,10 +498,19 @@ const visibleReports = computed(() =>
             {{ $t(`reports.metric.${metric}`) }}
           </button>
         </div>
-        <p class="unit-caption">{{ unitCaption }}</p>
         <div class="table-scroll">
           <table class="heat-table">
             <thead>
+              <!-- The unit sits on the right, over the years; a long one runs on to the left. -->
+              <tr>
+                <th
+                  :colspan="fieldSeasons.length + 1"
+                  scope="colgroup"
+                  class="unit-caption unit-over-years"
+                >
+                  {{ unitCaption }}
+                </th>
+              </tr>
               <tr>
                 <th scope="col">{{ $t('reports.field') }}</th>
                 <th v-for="year in fieldSeasons" :key="year" scope="col">
