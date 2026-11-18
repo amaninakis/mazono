@@ -1,8 +1,28 @@
+import type { Comparison, ComparisonInput } from './comparisons'
 import { describe, expect, it } from 'vitest'
-import { amountOf, comparisons, daySeed, latestYearTotals, roundNicely } from './comparisons'
+import {
+  amountOf,
+  comparisons,
+  daySeed,
+  dealFacts,
+  latestYearTotals,
+  perTreeTotals,
+  roundNicely,
+  SLOTS,
+} from './comparisons'
 
 const year = { oliveKg: 4400, netOilKg: 880, trees: 180 }
 const all = { oliveKg: 30_000, netOilKg: 6000, trees: 1200 }
+const input: ComparisonInput = {
+  latest: { season: 2026, totals: year },
+  all,
+  bestYear: { season: 2024, netOilKg: 1500 },
+  biggestProduction: { date: '2025-12-02', oilKg: 420 },
+  busiestDay: { date: '2025-11-20', trees: 38 },
+  farmTrees: 640,
+  perTree: { netOilKg: 5000, trees: 1100 },
+}
+const SHORT = new Set(['year'])
 
 describe('comparisons', () => {
   it('says amounts the way people do', () => {
@@ -14,74 +34,248 @@ describe('comparisons', () => {
     expect(roundNicely(1234)).toBe(1200)
   })
 
-  it('picks objects that fit the number, never the same one twice', () => {
-    const cards = comparisons({ year, all }, 0)
-    const objects = cards.flatMap((card) => (card.reference ? [card.reference] : []))
+  it('shows four facts: two about the year, two long-term', () => {
+    for (let seed = 0; seed < 30; seed++) {
+      const cards = comparisons(input, seed)
 
-    expect(new Set(objects).size).toBe(objects.length)
+      expect(cards.map((card) => card.slot)).toEqual(SLOTS)
+      expect(cards.slice(0, 2).every((card) => SHORT.has(card.scope))).toBe(true)
+      expect(cards.slice(2).every((card) => !SHORT.has(card.scope))).toBe(true)
+    }
+  })
 
-    for (const card of cards) {
-      if (card.amount?.kind === 'times') {
-        expect(card.amount.count).toBeLessThanOrEqual(60)
+  it('pairs two facts about different things', () => {
+    for (let seed = 0; seed < 30; seed++) {
+      const [first, second, third, fourth] = comparisons(input, seed)
+
+      expect(first.id).not.toBe(second.id)
+      expect(third.id).not.toBe(fourth.id)
+      // Each pool has oil, olives, trees and averages: a pair never starts on the same topic.
+      expect(topicOf(first)).not.toBe(topicOf(second))
+      expect(topicOf(third)).not.toBe(topicOf(fourth))
+    }
+  })
+
+  it('uses per-tree, per-litre, tree-count and record facts', () => {
+    const seen = new Set<string>()
+    for (let seed = 0; seed < 5; seed++) {
+      for (let turn = 0; turn < 12; turn++) {
+        for (const card of comparisons(input, seed, {
+          short0: turn,
+          short1: turn,
+          long0: turn,
+          long1: turn,
+        })) {
+          seen.add(card.id)
+        }
       }
     }
-    // 880 kg of oil is about 960 litres: no Olympic pools for that.
-    expect(cards.find((card) => card.id === 'oilVolume:year')?.reference).not.toBe(
-      'olympicPool',
-    )
+
+    for (const id of [
+      'oilPerTree:year',
+      'olivesPerLitre:year',
+      'oilPerTree:all',
+      'olivesPerLitre:all',
+      'oilVolume:bestYear',
+      'oilWeight:biggestProduction',
+      'treeLine:busiestDay',
+      'treeLine:farm',
+      'family:year',
+      'oliveWeight:all',
+    ]) {
+      expect(seen).toContain(id)
+    }
   })
 
-  it('changes from day to day and with "show another"', () => {
-    const today = comparisons({ year, all }, 0)
-    const another = comparisons({ year, all }, 0, { 'oliveWeight:year': 1 })
-    const tomorrow = comparisons({ year, all }, 1)
-
-    expect(another[0].reference).not.toBe(today[0].reference)
-    expect(tomorrow.map((card) => card.reference)).not.toEqual(
-      today.map((card) => card.reference),
-    )
+  it('"show another" changes only its own card', () => {
+    const today = comparisons(input, 3)
+    for (const slot of SLOTS) {
+      const another = comparisons(input, 3, { [slot]: 1 })
+      for (const [i, card] of another.entries()) {
+        if (card.slot === slot) {
+          expect(`${card.id}/${card.reference}`).not.toBe(
+            `${today[i].id}/${today[i].reference}`,
+          )
+        } else {
+          expect(card).toEqual(today[i])
+        }
+      }
+    }
   })
 
-  it('says what comes next', () => {
-    const card = comparisons({ year, all }, 0).find((each) => each.id === 'oilVolume:year')!
+  it('changes from day to day', () => {
+    const days = new Set(
+      Array.from({ length: 7 }, (_, day) =>
+        comparisons(input, day)
+          .map((card) => card.id)
+          .join(),
+      ),
+    )
+
+    expect(days.size).toBeGreaterThan(1)
+  })
+
+  it('picks objects that fit the number', () => {
+    for (let turn = 0; turn < 12; turn++) {
+      for (const card of comparisons(input, 0, { short0: turn, short1: turn })) {
+        if (card.amount?.kind === 'times') {
+          expect(card.amount.count).toBeLessThanOrEqual(60)
+        }
+        // 880 kg of oil is about 960 litres: no Olympic pools for that.
+        if (card.id === 'oilVolume:year') {
+          expect(card.reference).not.toBe('olympicPool')
+        }
+      }
+    }
+  })
+
+  it('takes the long-term oil per tree only from years with tree counts', () => {
+    // 5,000 kg ÷ 0.916 ≈ 5,459 L over 1,100 trees ≈ 5 L a tree, not all 6,000 kg.
+    const card = allCards(input).find((each) => each.id === 'oilPerTree:all')!
+
+    expect(card.reference).toBe('bottle')
+    expect(card.amount).toEqual({ kind: 'times', count: 5 })
+    expect(
+      allCards({ ...input, perTree: undefined }).some((each) => each.id === 'oilPerTree:all'),
+    ).toBe(false)
+  })
+
+  it('works out oil per tree and olives per litre', () => {
+    const cards = allCards(input)
+    // 880 kg ÷ 0.916 ≈ 961 L over 180 trees ≈ 5.3 L a tree: about 5½ bottles.
+    const perTree = cards.find((card) => card.id === 'oilPerTree:year')!
+
+    expect(perTree.reference).toBe('bottle')
+    expect(perTree.amount).toEqual({ kind: 'times', count: 5.5 })
+    expect(perTree.next).toBeUndefined()
+    // 4,400 kg of olives for 961 L: about 4.6 kg a litre.
+    expect(cards.find((card) => card.id === 'olivesPerLitre:year')?.count).toBe(4.6)
+    expect(cards.find((card) => card.id === 'family:year')?.count).toBe(18.5)
+  })
+
+  it('says what comes next for totals', () => {
+    const card = allCards(input).find((each) => each.id === 'oilVolume:year')!
 
     expect(card.next!.missing).toBeGreaterThan(0)
     expect(card.next!.progress).toBeGreaterThan(0)
     expect(card.next!.progress).toBeLessThan(1)
+    // Records and the farm's trees don't grow: no "… more for …".
+    expect(allCards(input).find((each) => each.scope === 'busiestDay')?.next).toBeUndefined()
   })
 
   it('measures progress from the last whole one, not from zero', () => {
-    // 5,500 L of oil ≈ 6.0 one-tonne tanks: just started on the 7th.
-    const cards = comparisons({ year, all: { ...all, netOilKg: 5500 } }, 0)
-    const tanks = cards.find((card) => card.reference === 'waterTank')
-    if (tanks?.next) {
-      expect(tanks.next.progress).toBeLessThan(0.1)
+    // 5,500 kg of oil ≈ 6.0 one-tonne tanks: just started on the 7th.
+    const cards = allCards({ ...input, all: { ...all, netOilKg: 5500 } })
+    for (const card of cards) {
+      if (card.id === 'oilVolume:all' && card.reference === 'waterTank' && card.next) {
+        expect(card.next.progress).toBeLessThan(0.1)
+      }
     }
   })
 
   it('never offers as "next" the number the card already shows', () => {
     // 5,490 kg of oil is 21.96 donkeys: the card says 22, so next is 23.
-    const cards = comparisons({ year, all: { ...all, netOilKg: 5490 } }, 0)
-    for (const card of cards) {
-      if (card.amount?.kind === 'times') {
-        expect(card.next!.count).toBeGreaterThan(card.amount.count)
+    for (const card of allCards({ ...input, all: { ...all, netOilKg: 5490 } })) {
+      if (card.amount?.kind === 'times' && card.next) {
+        expect(card.next.count).toBeGreaterThan(card.amount.count)
       }
     }
   })
 
-  it('counts years of oil for a family, and leaves out what is still zero', () => {
-    const cards = comparisons({ year: { oliveKg: 0, netOilKg: 0, trees: 0 }, all }, 0)
+  it('does not repeat the year as "all years" when there is only one year', () => {
+    const cards = allCards({
+      latest: { season: 2026, totals: year },
+      all: year,
+      biggestProduction: { date: '2026-11-02', oilKg: 420 },
+      busiestDay: { date: '2026-11-05', trees: 38 },
+      bestYear: { season: 2026, netOilKg: 880 },
+      farmTrees: 640,
+    })
 
-    expect(cards.some((card) => card.scope === 'year')).toBe(false)
-    expect(
-      comparisons({ year, all }, 0).find((card) => card.measure === 'family')?.count,
-    ).toBe(18.5) // 880 kg ÷ (4 people × 12 kg a year)
+    expect(cards.some((card) => card.scope === 'all' || card.scope === 'bestYear')).toBe(false)
+
+    expect(cards.filter((card) => card.slot.startsWith('long')).length).toBeGreaterThan(0)
+  })
+
+  it('leaves out what is still zero', () => {
+    const cards = comparisons({ all: { oliveKg: 0, netOilKg: 0, trees: 0 }, farmTrees: 0 }, 0)
+
+    expect(cards).toEqual([])
   })
 
   it('changes once a day', () => {
     expect(daySeed(new Date('2026-11-17T08:00:00Z'))).toBe(
       daySeed(new Date('2026-11-17T20:00:00Z')),
     )
+  })
+})
+
+describe('dealFacts', () => {
+  it('starts the two places on different topics', () => {
+    const facts = [
+      { measure: 'oilVolume' as const },
+      { measure: 'oilWeight' as const },
+      { measure: 'family' as const },
+      { measure: 'treeLine' as const },
+    ]
+
+    for (let seed = 0; seed < 20; seed++) {
+      const [first, second] = dealFacts(facts, seed)
+
+      expect(first.length + second.length).toBe(4)
+      expect(first[0].measure === 'treeLine' || second[0].measure === 'treeLine').toBe(true)
+    }
+  })
+})
+
+/** Every card the four places go through. */
+function allCards(source: ComparisonInput) {
+  const cards = []
+  for (let turn = 0; turn < 12; turn++) {
+    cards.push(
+      ...comparisons(source, 0, { short0: turn, short1: turn, long0: turn, long1: turn }),
+    )
+  }
+
+  return cards
+}
+
+function topicOf(card: Comparison) {
+  const topics: Record<string, string> = {
+    oilVolume: 'oil',
+    oilWeight: 'oil',
+    family: 'oil',
+    salads: 'oil',
+    oliveWeight: 'olives',
+    treeLine: 'trees',
+    oilPerTree: 'average',
+    olivesPerLitre: 'average',
+  }
+
+  return topics[card.measure]
+}
+
+describe('perTreeTotals', () => {
+  const base = { farmId: 'f', updatedAt: 0, charges: [], storage: [], allocations: [] }
+  const harvest = { farmId: 'f', updatedAt: 0, fieldId: 'x', fieldFinished: false }
+
+  it('leaves out years whose oil has no tree counts', () => {
+    const result = perTreeTotals(
+      [
+        { ...base, id: 'a', date: '2019-11-20', oliveKg: 5000, oilKg: 1000 }, // no trees logged
+        { ...base, id: 'b', date: '2025-11-20', oliveKg: 1000, oilKg: 200 },
+        { ...base, id: 'c', date: '2026-11-15', oliveKg: 500, oilKg: 100 },
+      ],
+      [
+        { ...harvest, id: 'e', date: '2025-11-10', taskTypeId: 'h', trees: 40 },
+        { ...harvest, id: 'f', date: '2026-11-10', taskTypeId: 'h', trees: 20 },
+        { ...harvest, id: 'g', date: '2026-11-11', taskTypeId: 'prune', trees: 90 },
+        { ...harvest, id: 'h', date: '2024-11-11', taskTypeId: 'h', trees: 30 }, // no oil
+      ],
+      new Set(['h']),
+    )
+
+    expect(result).toEqual({ netOilKg: 300, trees: 60 })
   })
 })
 

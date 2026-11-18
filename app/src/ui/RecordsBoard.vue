@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { Comparison } from '../core/comparisons'
+import type { Comparison, Slot } from '../core/comparisons'
 import { useTranslation } from 'i18next-vue'
 import { computed, reactive } from 'vue'
 import {
@@ -7,6 +7,7 @@ import {
   daySeed,
   latestYearTotals,
   METRES_BETWEEN_TREES,
+  perTreeTotals,
 } from '../core/comparisons'
 import { parseISODate, seasonLabel, seasonOf, todayISO } from '../core/dates'
 import { formatMoney, formatNumber, formatYield } from '../core/format'
@@ -169,23 +170,40 @@ const latestYear = computed(() =>
     farm.value.settings.seasonStartMonth,
   ),
 )
-/** "Show another" taps per card. */
-const turns = reactive<Record<string, number>>({})
+/** "Show another" taps per place on screen. */
+const turns = reactive<Partial<Record<Slot, number>>>({})
 const seed = daySeed(new Date())
-const compareCards = computed(() =>
-  comparisons(
+const compareCards = computed(() => {
+  const best = records.value
+
+  return comparisons(
     {
-      year: latestYear.value?.totals ?? { oliveKg: 0, netOilKg: 0, trees: 0 },
+      latest: latestYear.value,
       all: {
         oliveKg: totals.value.oliveKg,
         netOilKg: totals.value.netOilKg,
         trees: totals.value.treesHarvested,
       },
+      bestYear: best.bestYear && {
+        season: best.bestYear.year,
+        netOilKg: best.bestYear.netKg,
+      },
+      biggestProduction: best.biggestProduction,
+      busiestDay: best.mostTreesDay,
+      perTree: perTreeTotals(
+        farm.value.extractions,
+        farm.value.entries,
+        harvestTypeIds.value,
+        farm.value.settings.seasonStartMonth,
+      ),
+      farmTrees: farm.value.fields
+        .filter((field) => !field.archived)
+        .reduce((sum, field) => sum + (field.trees || 0), 0),
     },
     seed,
     turns,
-  ),
-)
+  )
+})
 
 const FRACTION_KEYS: Record<string, string> = {
   '¼': 'quarter',
@@ -196,15 +214,18 @@ const FRACTION_KEYS: Record<string, string> = {
 }
 
 function when(card: Comparison) {
-  if (card.scope === 'all') {
-    return translate('compare.when.all')
-  }
-  const season = latestYear.value?.season ?? 0
-  const thisYear = seasonOf(todayISO(), farm.value.settings.seasonStartMonth)
+  if (card.scope === 'year') {
+    const thisYear = seasonOf(todayISO(), farm.value.settings.seasonStartMonth)
 
-  return season === thisYear
-    ? translate('compare.when.thisYear')
-    : translate('compare.when.year', { year: seasonLabel(season) })
+    return card.season === thisYear
+      ? translate('compare.when.thisYear')
+      : translate('compare.when.year', { year: seasonLabel(card.season ?? 0) })
+  }
+
+  return translate(`compare.when.${card.scope}`, {
+    year: seasonLabel(card.season ?? 0),
+    date: card.date ? day(card.date) : '',
+  })
 }
 
 /**
@@ -239,6 +260,13 @@ function thing(card: Comparison) {
   })
 }
 
+/** Sentences that read differently for all years or for the farm's trees. */
+const SENTENCE_KEYS: Partial<Record<string, string>> = {
+  'oilPerTree:all': 'oilPerTreeAll',
+  'olivesPerLitre:all': 'olivesPerLitreAll',
+  'treeLine:farm': 'treeLineFarm',
+}
+
 function sentence(card: Comparison) {
   const count = card.count ?? 0
   if (card.measure === 'family' && count < 1) {
@@ -248,10 +276,11 @@ function sentence(card: Comparison) {
     })
   }
 
-  return translate(`compare.say.${card.measure}`, {
+  return translate(`compare.say.${SENTENCE_KEYS[card.id] ?? card.measure}`, {
     when: when(card),
     thing: thing(card),
     count: fmt(count, count % 1 ? 1 : 0),
+    trees: fmt(card.trees ?? 0),
   })
 }
 
@@ -272,7 +301,7 @@ function nextLine(card: Comparison) {
 }
 
 function showAnother(card: Comparison) {
-  turns[card.id] = (turns[card.id] ?? 0) + 1
+  turns[card.slot] = (turns[card.slot] ?? 0) + 1
 }
 </script>
 
@@ -291,7 +320,7 @@ function showAnother(card: Comparison) {
     <template v-if="compareCards.length">
       <h3>{{ $t('compare.title') }}</h3>
       <ul class="compare-list">
-        <li v-for="card in compareCards" :key="card.id" class="compare-card">
+        <li v-for="card in compareCards" :key="card.slot" class="compare-card">
           <span class="compare-icon" aria-hidden="true">{{ card.icon }}</span>
           <div class="compare-body">
             <p class="compare-text">{{ sentence(card) }}</p>
@@ -309,7 +338,7 @@ function showAnother(card: Comparison) {
               <small class="muted">{{ nextLine(card) }}</small>
             </template>
             <button
-              v-if="card.choices > 1"
+              v-if="card.more"
               type="button"
               class="btn ghost small compare-another"
               @click="showAnother(card)"
