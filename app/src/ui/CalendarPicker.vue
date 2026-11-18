@@ -2,6 +2,7 @@
 import { computed, onBeforeUnmount, onMounted, ref, useTemplateRef } from 'vue'
 import { monthGrid, todayISO } from '../core/dates'
 import { formatLocale } from '../i18n'
+import MonthYearNav from './MonthYearNav.vue'
 
 /**
  * Month calendar that opens under a date box. The current date is selected, days after `max`
@@ -91,47 +92,12 @@ onBeforeUnmount(() => {
 
 <template>
   <div ref="panel" class="calendar-pop" role="dialog" :aria-label="title">
-    <div class="row-between month-nav">
-      <span>
-        <button
-          type="button"
-          class="icon-btn"
-          :aria-label="$t('journal.prevYear')"
-          @click="shiftMonth(-12)"
-        >
-          «
-        </button>
-        <button
-          type="button"
-          class="icon-btn"
-          :aria-label="$t('journal.prevMonth')"
-          @click="shiftMonth(-1)"
-        >
-          ‹
-        </button>
-      </span>
-      <strong class="cap">{{ title }}</strong>
-      <span>
-        <button
-          type="button"
-          class="icon-btn"
-          :aria-label="$t('journal.nextMonth')"
-          :disabled="!canGoForward"
-          @click="shiftMonth(1)"
-        >
-          ›
-        </button>
-        <button
-          type="button"
-          class="icon-btn"
-          :aria-label="$t('journal.nextYear')"
-          :disabled="!canGoForward"
-          @click="shiftMonth(12)"
-        >
-          »
-        </button>
-      </span>
-    </div>
+    <MonthYearNav
+      :year="shown[0]"
+      :month="shown[1]"
+      :forward-disabled="!canGoForward"
+      @shift="shiftMonth"
+    />
     <div class="cal-grid">
       <span v-for="(weekday, i) in weekdays" :key="`w${i}`" class="cal-wd">{{ weekday }}</span>
       <template v-for="(day, i) in grid" :key="day ?? `x${i}`">
