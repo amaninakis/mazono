@@ -10,6 +10,7 @@ import { formatLocale } from '../i18n'
 import { account } from '../sync/account'
 import AppIcon from '../ui/AppIcon.vue'
 import { canDo, taskName, useFarm } from '../ui/farm'
+import MonthYearNav from '../ui/MonthYearNav.vue'
 import OilDrop from '../ui/OilDrop.vue'
 import { showToast } from '../ui/toast'
 
@@ -54,11 +55,6 @@ const weekdays = computed(() =>
     new Intl.DateTimeFormat(formatLocale.value, { weekday: 'narrow' }).format(
       new Date(2024, 0, 1 + i),
     ),
-  ),
-)
-const monthTitle = computed(() =>
-  new Intl.DateTimeFormat(formatLocale.value, { month: 'long', year: 'numeric' }).format(
-    new Date(ym.value[0], ym.value[1] - 1, 1),
   ),
 )
 const dayTitle = computed(() =>
@@ -166,45 +162,7 @@ function loggedBy(createdBy: string | undefined) {
       </button>
     </div>
     <section class="card calendar">
-      <div class="row-between month-nav">
-        <span>
-          <button
-            type="button"
-            class="icon-btn"
-            :aria-label="$t('journal.prevYear')"
-            @click="shiftMonth(-12)"
-          >
-            «
-          </button>
-          <button
-            type="button"
-            class="icon-btn"
-            :aria-label="$t('journal.prevMonth')"
-            @click="shiftMonth(-1)"
-          >
-            ‹
-          </button>
-        </span>
-        <strong class="cap">{{ monthTitle }}</strong>
-        <span>
-          <button
-            type="button"
-            class="icon-btn"
-            :aria-label="$t('journal.nextMonth')"
-            @click="shiftMonth(1)"
-          >
-            ›
-          </button>
-          <button
-            type="button"
-            class="icon-btn"
-            :aria-label="$t('journal.nextYear')"
-            @click="shiftMonth(12)"
-          >
-            »
-          </button>
-        </span>
-      </div>
+      <MonthYearNav :year="ym[0]" :month="ym[1]" @shift="shiftMonth" />
       <div class="cal-grid">
         <span v-for="(w, i) in weekdays" :key="`w${i}`" class="cal-wd">{{ w }}</span>
         <template v-for="(d, i) in grid" :key="d ?? `x${i}`">

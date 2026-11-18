@@ -13,7 +13,7 @@ import {
 /**
  * Field chooser. Up to four fields show as a plain 2-column grid. With more, the fields sit
  * in two rows that scroll sideways: the next column peeks in at the edge, with a fade and an
- * arrow button, so it is clear there are more.
+ * arrow button, so it is clear there are more. The chosen field stays in the middle.
  */
 const props = defineProps<{ fields: FieldProgress[] }>()
 const model = defineModel<string | undefined>({ required: true })
@@ -39,29 +39,29 @@ function page(dir: 1 | -1) {
   }
 }
 
-/** Keep the chosen field in view (e.g. the default field may be in a later column). */
-function showSelected() {
-  const el = strip.value?.querySelector<HTMLElement>('.field-chip.selected')
-  if (!el || !strip.value) {
+/**
+ * Put the chosen field's column in the middle, so it is never half under an arrow or the fade.
+ * In the first or last column the strip simply stops at its edge, where there is no arrow.
+ */
+function showSelected(behavior: ScrollBehavior) {
+  const element = strip.value
+  const chip = element?.querySelector<HTMLElement>('.field-chip.selected')
+  if (!element || !chip) {
     return
   }
-  const element = strip.value
-  const left = el.offsetLeft - element.offsetLeft
-  if (
-    left < element.scrollLeft ||
-    left + el.offsetWidth > element.scrollLeft + element.clientWidth
-  ) {
-    element.scrollTo({ left: Math.max(left - 8, 0) })
-  }
+  const middle = chip.offsetLeft - element.offsetLeft + chip.offsetWidth / 2
+  const largest = element.scrollWidth - element.clientWidth
+  const left = Math.min(Math.max(middle - element.clientWidth / 2, 0), largest)
+  element.scrollTo({ left, behavior })
   update()
 }
 
 onMounted(() => {
-  void nextTick(showSelected)
+  void nextTick(() => showSelected('auto'))
   window.addEventListener('resize', update)
 })
 onBeforeUnmount(() => window.removeEventListener('resize', update))
-watch(model, () => void nextTick(showSelected))
+watch(model, () => void nextTick(() => showSelected('smooth')))
 watch(
   () => props.fields.length,
   () => void nextTick(update),
