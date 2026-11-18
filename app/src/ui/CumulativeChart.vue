@@ -2,10 +2,8 @@
 import { computed, ref } from 'vue'
 
 /**
- * Running totals through the farming year (units, oil or trees), one line per year, drawn
- * as steps: the total stays flat between days and rises on the days something was added.
- * This year runs up to today; a year it is compared with runs to the end, so its final
- * total is easy to read. Tapping a point shows it.
+ * Running totals through the farming year (units, oil or trees), one line per year joining
+ * the days something was added. This year runs on, flat, to today. Tapping a point shows it.
  */
 interface Point {
   day: number
@@ -92,17 +90,19 @@ const monthTicks = computed(() => {
   return inRange.length > 7 ? inRange.filter((month) => !month.minor) : inRange
 })
 
-/** Where a line stops: today for this year, the end of the chart for a year compared with. */
+/**
+ * Where a line stops: today for this year (flat since the last entry), else its last point.
+ */
 function endOf(line: (typeof props.series)[number]) {
-  return line.until ?? dayRange.value[1]
+  return Math.max(line.until ?? 0, line.points.at(-1)!.day)
 }
 
-function stepPath(line: (typeof props.series)[number]) {
-  const parts = [`M${xOf(line.points[0].day)},${yOf(0)}`]
-  for (const point of line.points) {
-    parts.push(`H${xOf(point.day)}`, `V${yOf(point.value)}`)
-  }
-  parts.push(`H${xOf(Math.max(endOf(line), line.points.at(-1)!.day))}`)
+/** Straight lines from point to point. */
+function linePath(line: (typeof props.series)[number]) {
+  const parts = line.points.map(
+    (point, i) => `${i ? 'L' : 'M'}${xOf(point.day)},${yOf(point.value)}`,
+  )
+  parts.push(`L${xOf(endOf(line))},${yOf(line.points.at(-1)!.value)}`)
 
   return parts.join(' ')
 }
@@ -172,7 +172,7 @@ const tooltip = computed(() => {
         :key="line.key"
         :class="[colourOf(line.slot), { dashed: line.dashed }]"
       >
-        <path class="chart-line" :d="stepPath(line)" />
+        <path class="chart-line" :d="linePath(line)" />
         <template v-if="!line.dashed">
           <circle
             v-for="point in line.points"
@@ -183,11 +183,7 @@ const tooltip = computed(() => {
             r="3"
           />
         </template>
-        <text
-          class="chart-label"
-          :x="xOf(Math.max(endOf(line), line.points.at(-1)!.day)) + 6"
-          :y="labelY[i]"
-        >
+        <text class="chart-label" :x="xOf(endOf(line)) + 6" :y="labelY[i]">
           {{ line.label }}
         </text>
         <circle

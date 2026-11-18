@@ -476,7 +476,19 @@
       },
       "byNow": "By today: this year {{now}}, {{when}} {{then}}.",
       "change": "({{change}})",
-      "wholeYear": "The whole year, {{when}}: {{total}}."
+      "wholeYear": "The whole year, {{when}}: {{total}}.",
+      "olivesTitle": "Olives in kg",
+      "weighedAndEstimated": "{{weighed}} weighed + about {{estimated}} not weighed yet",
+      "weighInUnits": "weighed for {{units}}",
+      "weighInNoUnits": "weighed without harvest days ticked",
+      "notWeighed": "Not weighed yet: {{units}}",
+      "perUnit": "{{kg}} per {{unit}}",
+      "from": {
+        "thisYear": "at {{perUnit}}, from this year's weigh-ins",
+        "earlier": "at {{perUnit}}, from other years' weigh-ins",
+        "user": "at {{perUnit}}, as set in Settings"
+      },
+      "unknownWeight": "We don't know yet what {{units}} weigh. The first weigh-in will tell, or set roughly how many kg they are in Settings."
     }
   },
   "records": {

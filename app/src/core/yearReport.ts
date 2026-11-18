@@ -7,9 +7,9 @@
  * from the start of the farming year so different years can be drawn on one axis.
  */
 
-import type { Extraction, Field, ISODate, TaskEntry, TaskType } from './types'
+import type { Extraction, Field, ISODate, TaskEntry, TaskType, Unit } from './types'
 import { seasonOf, seasonRange } from './dates'
-import { netOil } from './oil'
+import { batchUnits, netOil, unitWeights } from './oil'
 
 /** What the chart adds up: one harvest unit (e.g. sacks), oil (kg) or trees harvested. */
 export type CumulativeMetric =
@@ -230,4 +230,165 @@ export function averageCurve(curves: CurvePoint[][]): CurvePoint[] {
     day,
     value: curves.reduce((sum, curve) => sum + valueOnDay(curve, day), 0) / curves.length,
   }))
+}
+
+/** One weigh-in at the mill this year, with what went into it. */
+export interface WeighIn {
+  extractionId: string
+  date: ISODate
+  oliveKg: number
+  /** Units of the harvest days ticked for this production; empty when none were. */
+  units: Record<string, number>
+  /** Kg per unit, when the olives were all in one kind of unit. */
+  kgPerUnit?: { unitId: string; kg: number }
+}
+
+/** Units harvested but not yet weighed, and what they are estimated to weigh. */
+export interface PendingOlives {
+  unitId: string
+  amount: number
+  kgPerUnit: number
+  /** Where the kg per unit comes from: this year's weigh-ins, earlier years, or Settings. */
+  source: 'thisYear' | 'earlier' | 'user'
+  kg: number
+}
+
+export interface OliveEstimate {
+  weighedKg: number
+  estimatedKg: number
+  totalKg: number
+  weighIns: WeighIn[]
+  pending: PendingOlives[]
+  /** Not yet weighed, with no way yet to tell their weight (no weigh-in, no estimate). */
+  unknown: Record<string, number>
+}
+
+/**
+ * Olives of the year in kg: the mill weights of this year's productions, plus an estimate for
+ * the units harvested but not yet taken to the mill. Each weigh-in gives the exact kg per
+ * unit of the harvest days that went into it, and those (this year's first, then earlier
+ * years', then the user's guess) estimate what is still to be weighed. A production entered
+ * without ticking its harvest days still counts: it is taken to cover as many of the waiting
+ * units as its weight allows, so the same olives are not counted twice.
+ */
+export function oliveEstimate(input: {
+  season: number
+  entries: TaskEntry[]
+  extractions: Extraction[]
+  units: Unit[]
+  harvestTypeIds: Set<string>
+  seasonStartMonth?: number
+}): OliveEstimate {
+  const startMonth = input.seasonStartMonth ?? 3
+  function inSeason(date: ISODate) {
+    return seasonOf(date, startMonth) === input.season
+  }
+
+  const harvested: Record<string, number> = {}
+  const harvestIds = new Set<string>()
+  for (const entry of live(input.entries)) {
+    if (input.harvestTypeIds.has(entry.taskTypeId) && inSeason(entry.date)) {
+      harvestIds.add(entry.id)
+
+      for (const quantity of entry.quantities ?? []) {
+        harvested[quantity.unitId] = (harvested[quantity.unitId] ?? 0) + quantity.amount
+      }
+    }
+  }
+
+  const weighIns: WeighIn[] = []
+  const allocated: Record<string, number> = {}
+  const thisYear: Record<string, { kg: number; units: number }> = {}
+  let unlinkedKg = 0
+  for (const extraction of live(input.extractions)
+    .filter((each) => inSeason(each.date))
+    .sort((left, right) => left.date.localeCompare(right.date))) {
+    const units = Object.fromEntries(
+      Object.entries(batchUnits(extraction)).filter(([, amount]) => amount > 0),
+    )
+    const unitIds = Object.keys(units)
+    const weighIn: WeighIn = {
+      extractionId: extraction.id,
+      date: extraction.date,
+      oliveKg: extraction.oliveKg,
+      units,
+    }
+    if (unitIds.length === 0) {
+      unlinkedKg += extraction.oliveKg
+    }
+
+    // Only this year's harvest days are subtracted (a production can take older ones too).
+    for (const allocation of extraction.allocations) {
+      if (harvestIds.has(allocation.entryId)) {
+        for (const quantity of allocation.quantities) {
+          allocated[quantity.unitId] = (allocated[quantity.unitId] ?? 0) + quantity.amount
+        }
+      }
+    }
+    if (unitIds.length === 1 && extraction.oliveKg > 0) {
+      const [unitId] = unitIds
+      weighIn.kgPerUnit = { unitId, kg: extraction.oliveKg / units[unitId] }
+      const sum = (thisYear[unitId] ??= { kg: 0, units: 0 })
+      sum.kg += extraction.oliveKg
+      sum.units += units[unitId]
+    }
+    weighIns.push(weighIn)
+  }
+
+  const earlier = unitWeights(input.units, input.extractions)
+  const pending: PendingOlives[] = []
+  const unknown: Record<string, number> = {}
+  for (const [unitId, amount] of Object.entries(harvested)) {
+    const waiting = amount - (allocated[unitId] ?? 0)
+    if (waiting <= 1e-9) {
+      continue
+    }
+    const known = thisYear[unitId]
+    const weight = earlier[unitId]
+    if (known && known.units > 0) {
+      pending.push(waitingOf(unitId, waiting, known.kg / known.units, 'thisYear'))
+    } else if (weight) {
+      pending.push(
+        waitingOf(
+          unitId,
+          waiting,
+          weight.kg,
+          weight.source === 'learned' ? 'earlier' : 'user',
+        ),
+      )
+    } else {
+      unknown[unitId] = waiting
+    }
+  }
+
+  // Productions without harvest days ticked weighed some of the waiting units already.
+  const waitingKg = pending.reduce((sum, row) => sum + row.kg, 0)
+  if (unlinkedKg > 0 && waitingKg > 0) {
+    const left = Math.max(1 - unlinkedKg / waitingKg, 0)
+    for (const row of pending) {
+      row.amount *= left
+      row.kg *= left
+    }
+  }
+  const stillPending = pending.filter((row) => row.amount > 1e-9)
+  const weighedKg = weighIns.reduce((sum, weighIn) => sum + weighIn.oliveKg, 0)
+  const estimatedKg = stillPending.reduce((sum, row) => sum + row.kg, 0)
+
+  return {
+    weighedKg,
+    estimatedKg,
+    totalKg: weighedKg + estimatedKg,
+    weighIns,
+    pending: stillPending,
+    unknown,
+  }
+}
+
+function waitingOf(
+  unitId: string,
+  amount: number,
+  kgPerUnit: number,
+  source: PendingOlives['source'],
+): PendingOlives {
+  return { unitId, amount, kgPerUnit, source, kg: amount * kgPerUnit }
 }

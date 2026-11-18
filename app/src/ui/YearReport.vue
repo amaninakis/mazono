@@ -16,6 +16,7 @@ import {
   averageCurve,
   cumulativeCurves,
   dayOfSeason,
+  oliveEstimate,
   valueOnDay,
   yearSummary,
 } from '../core/yearReport'
@@ -67,8 +68,25 @@ function unitById(id: string) {
   return farm.value.units.find((unit) => unit.id === id)
 }
 
+/**
+ * A unit's name inside a sentence: "Τσουβάλια" reads "τσουβάλια", but names written in
+ * capitals ("BIG BAG") stay as they are.
+ */
+function inSentence(name: string) {
+  const [first, second] = [...name]
+  if (!second || second !== second.toLocaleLowerCase()) {
+    return name
+  }
+
+  return first.toLocaleLowerCase() + name.slice(first.length)
+}
+
+function unitName(unitId: string, amount: number) {
+  return inSentence(unitLabel(unitById(unitId), amount))
+}
+
 function unitAmount(unitId: string, amount: number, decimals = 0) {
-  return `${fmt(amount, decimals)} ${unitLabel(unitById(unitId), amount)}`
+  return `${fmt(amount, decimals)} ${unitName(unitId, amount)}`
 }
 
 function trees(count: number) {
@@ -76,6 +94,59 @@ function trees(count: number) {
 }
 
 /* ---------- totals ---------- */
+/** Weighed olives, plus an estimate for the units not yet taken to the mill. */
+const olives = computed(() =>
+  oliveEstimate({
+    season: season.value,
+    entries: farm.value.entries,
+    extractions: farm.value.extractions,
+    units: farm.value.units,
+    harvestTypeIds: harvestTypeIds.value,
+    seasonStartMonth: startMonth.value,
+  }),
+)
+const weighInRows = computed(() =>
+  olives.value.weighIns.map((weighIn) => {
+    const units = Object.entries(weighIn.units).map(([unitId, amount]) =>
+      unitAmount(unitId, amount, 1),
+    )
+
+    return {
+      key: weighIn.extractionId,
+      name: `${shortDate(weighIn.date)} · ${kg(weighIn.oliveKg)}`,
+      detail: units.length
+        ? translate('reports.year.weighInUnits', { units: units.join(' + ') })
+        : translate('reports.year.weighInNoUnits'),
+      value: weighIn.kgPerUnit ? perUnit(weighIn.kgPerUnit.unitId, weighIn.kgPerUnit.kg) : '–',
+    }
+  }),
+)
+const pendingRows = computed(() =>
+  olives.value.pending.map((row) => ({
+    key: row.unitId,
+    name: translate('reports.year.notWeighed', {
+      units: unitAmount(row.unitId, row.amount, 1),
+    }),
+    detail: translate(`reports.year.from.${row.source}`, {
+      perUnit: perUnit(row.unitId, row.kgPerUnit),
+    }),
+    value: `≈ ${kg(row.kg)}`,
+  })),
+)
+const unknownText = computed(() =>
+  Object.entries(olives.value.unknown)
+    .map(([unitId, amount]) => unitAmount(unitId, amount, 1))
+    .join(' + '),
+)
+
+/** "44,2 kg per sack". */
+function perUnit(unitId: string, kgPerUnit: number) {
+  return translate('reports.year.perUnit', {
+    kg: `${fmt(kgPerUnit, 1)} ${translate('common.kg')}`,
+    unit: unitName(unitId, 1),
+  })
+}
+
 const unitTotals = computed(() =>
   Object.entries(summary.value.units).map(([unitId, amount]) => unitAmount(unitId, amount, 1)),
 )
@@ -308,8 +379,18 @@ const compareNow = computed(() => {
       </li>
       <li class="year-stat">
         <span class="year-stat-name">{{ $t('reports.year.olives') }}</span>
-        <strong class="year-stat-value">{{ kg(summary.oliveKg) }}</strong>
-        <span class="year-stat-detail">
+        <strong class="year-stat-value">
+          {{ olives.estimatedKg ? `≈ ${kg(olives.totalKg)}` : kg(olives.weighedKg) }}
+        </strong>
+        <span v-if="olives.estimatedKg" class="year-stat-detail">
+          {{
+            $t('reports.year.weighedAndEstimated', {
+              weighed: kg(olives.weighedKg),
+              estimated: kg(olives.estimatedKg),
+            })
+          }}
+        </span>
+        <span v-else class="year-stat-detail">
           {{ $t('reports.year.productions', { count: summary.productions }) }}
         </span>
       </li>
@@ -360,6 +441,22 @@ const compareNow = computed(() => {
         {{ trees(summary.treesHarvested) }} · {{ $t('reports.year.noTreeCounts') }}
       </p>
     </div>
+
+    <template v-if="weighInRows.length || pendingRows.length || unknownText">
+      <h3>{{ $t('reports.year.olivesTitle') }}</h3>
+      <dl class="lines per-day">
+        <div v-for="row in [...weighInRows, ...pendingRows]" :key="row.key">
+          <dt>
+            {{ row.name }}
+            <small class="muted per-day-detail">{{ row.detail }}</small>
+          </dt>
+          <dd>{{ row.value }}</dd>
+        </div>
+      </dl>
+      <p v-if="unknownText" class="muted small">
+        {{ $t('reports.year.unknownWeight', { units: unknownText }) }}
+      </p>
+    </template>
 
     <template v-if="perDayRows.length">
       <h3>{{ $t('reports.year.perDayTitle') }}</h3>
