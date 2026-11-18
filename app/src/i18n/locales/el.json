@@ -476,7 +476,19 @@
       },
       "byNow": "Μέχρι σήμερα: φέτος {{now}}, {{when}} {{then}}.",
       "change": "({{change}})",
-      "wholeYear": "Όλη η χρονιά, {{when}}: {{total}}."
+      "wholeYear": "Όλη η χρονιά, {{when}}: {{total}}.",
+      "olivesTitle": "Κιλά ελιάς",
+      "weighedAndEstimated": "{{weighed}} ζυγισμένα + περίπου {{estimated}} που δεν ζυγίστηκαν ακόμα",
+      "weighInUnits": "ζύγισμα για {{units}}",
+      "weighInNoUnits": "ζύγισμα χωρίς σημειωμένες μέρες μαζέματος",
+      "notWeighed": "Δεν ζυγίστηκαν ακόμα: {{units}}",
+      "perUnit": "{{kg}} το {{unit}}",
+      "from": {
+        "thisYear": "με {{perUnit}}, από τα φετινά ζυγίσματα",
+        "earlier": "με {{perUnit}}, από ζυγίσματα άλλων χρονιών",
+        "user": "με {{perUnit}}, όπως το βάλατε στις Ρυθμίσεις"
+      },
+      "unknownWeight": "Δεν ξέρουμε ακόμα πόσο ζυγίζουν {{units}}. Θα το μάθουμε στο πρώτο ζύγισμα, ή βάλτε περίπου πόσα κιλά είναι στις Ρυθμίσεις."
     }
   },
   "records": {

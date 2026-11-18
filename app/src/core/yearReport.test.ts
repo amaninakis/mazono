@@ -1,9 +1,10 @@
-import type { Extraction, Field, TaskEntry, TaskType } from './types'
+import type { Extraction, Field, TaskEntry, TaskType, Unit } from './types'
 import { describe, expect, it } from 'vitest'
 import {
   averageCurve,
   cumulativeCurves,
   dayOfSeason,
+  oliveEstimate,
   valueOnDay,
   yearSummary,
 } from './yearReport'
@@ -196,5 +197,119 @@ describe('averageCurve', () => {
     expect(valueOnDay(average, 12)).toBe(2)
     expect(valueOnDay(average, 5)).toBe(0)
     expect(averageCurve([])).toEqual([])
+  })
+})
+
+describe('oliveEstimate', () => {
+  const sack: Unit = { ...record, id: 'sack', name: 'Sack', isDefault: true, archived: false }
+  const crate: Unit = {
+    ...record,
+    id: 'crate',
+    name: 'Crate',
+    approxKg: 20,
+    isDefault: false,
+    archived: false,
+  }
+  const harvestTypeIds = new Set(['h'])
+  const days = [
+    harvest('d1', '2026-11-02', 20, 10),
+    harvest('d2', '2026-11-03', 20, 12),
+    harvest('d3', '2026-11-05', 20, 8),
+  ]
+  function linked(id: string, date: string, oliveKg: number, entryIds: string[]): Extraction {
+    return {
+      ...pressing(id, date, oliveKg, oliveKg / 5),
+      allocations: entryIds.map((entryId) => ({
+        entryId,
+        quantities: days.find((day) => day.id === entryId)!.quantities!,
+      })),
+    }
+  }
+
+  it('estimates from the units until there is a weigh-in', () => {
+    const result = oliveEstimate({
+      season: 2026,
+      entries: days,
+      extractions: [],
+      units: [{ ...sack, approxKg: 45 }],
+      harvestTypeIds,
+    })
+
+    expect(result.weighedKg).toBe(0)
+    expect(result.pending).toEqual([
+      { unitId: 'sack', amount: 30, kgPerUnit: 45, source: 'user', kg: 1350 },
+    ])
+
+    expect(result.totalKg).toBe(1350)
+  })
+
+  it('uses each weigh-in for its own units, and its kg per unit for the rest', () => {
+    // 22 sacks weighed 1,100 kg: 50 kg a sack; the 8 still waiting are about 400 kg.
+    const result = oliveEstimate({
+      season: 2026,
+      entries: days,
+      extractions: [linked('x', '2026-11-04', 1100, ['d1', 'd2'])],
+      units: [{ ...sack, approxKg: 45 }],
+      harvestTypeIds,
+    })
+
+    expect(result.weighIns[0].kgPerUnit).toEqual({ unitId: 'sack', kg: 50 })
+    expect(result.pending).toEqual([
+      { unitId: 'sack', amount: 8, kgPerUnit: 50, source: 'thisYear', kg: 400 },
+    ])
+
+    expect(result.totalKg).toBe(1500)
+  })
+
+  it('learns from earlier years when this year has no weigh-in yet', () => {
+    const lastYear = harvest('old', '2025-11-02', 20, 10)
+    const result = oliveEstimate({
+      season: 2026,
+      entries: [...days, lastYear],
+      extractions: [
+        {
+          ...pressing('o', '2025-11-04', 420, 80),
+          allocations: [{ entryId: 'old', quantities: lastYear.quantities! }],
+        },
+      ],
+      units: [sack],
+      harvestTypeIds,
+    })
+
+    expect(result.pending[0]).toMatchObject({ amount: 30, kgPerUnit: 42, source: 'earlier' })
+  })
+
+  it('counts a production without harvest days ticked against the waiting units', () => {
+    // 30 sacks ≈ 1,350 kg are waiting; an unlinked 900 kg weigh-in leaves about 450 kg.
+    const result = oliveEstimate({
+      season: 2026,
+      entries: days,
+      extractions: [pressing('u', '2026-11-06', 900, 180)],
+      units: [{ ...sack, approxKg: 45 }],
+      harvestTypeIds,
+    })
+
+    expect(result.weighedKg).toBe(900)
+    expect(result.pending[0].amount).toBeCloseTo(10)
+    expect(result.estimatedKg).toBeCloseTo(450)
+    expect(result.totalKg).toBeCloseTo(1350)
+  })
+
+  it('says which units cannot be estimated yet', () => {
+    const crates = harvest('c', '2026-11-07', 5, 0, {
+      quantities: [{ unitId: 'crate', amount: 6 }],
+    })
+    const result = oliveEstimate({
+      season: 2026,
+      entries: [...days, crates],
+      extractions: [],
+      units: [sack, crate],
+      harvestTypeIds,
+    })
+
+    expect(result.unknown).toEqual({ sack: 30 })
+    expect(result.pending).toEqual([
+      { unitId: 'crate', amount: 6, kgPerUnit: 20, source: 'user', kg: 120 },
+    ])
   })
 })
