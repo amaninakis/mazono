@@ -130,11 +130,7 @@ const onlyUnit = computed(() => {
 /** What the numbers in the table are, e.g. "In sacks per tree". */
 const unitCaption = computed(() => {
   if (fieldMetric.value === 'yield') {
-    return translate(
-      farm.value.settings.yieldFormat === 'percent'
-        ? 'reports.yieldCaptionPercent'
-        : 'reports.yieldCaptionRatio',
-    )
+    return translate('reports.yieldCaption')
   }
   const unit = onlyUnit.value
   const unitsName = (

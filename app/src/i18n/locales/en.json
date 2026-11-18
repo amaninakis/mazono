@@ -441,8 +441,7 @@
     "unitCaptionPerTree": "In {{unit}} per tree",
     "inKg": "in kg",
     "logHarvest": "Log a harvest",
-    "yieldCaptionRatio": "Yield: kg of olives for 1 kg of oil (estimate per field)",
-    "yieldCaptionPercent": "Yield: oil as a share of the olives (estimate per field)",
+    "yieldCaption": "Yield",
     "year": {
       "season": "Year {{season}}",
       "collected": "Collected",
