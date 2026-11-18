@@ -1,0 +1,200 @@
+import type { Extraction, Field, TaskEntry, TaskType } from './types'
+import { describe, expect, it } from 'vitest'
+import {
+  averageCurve,
+  cumulativeCurves,
+  dayOfSeason,
+  valueOnDay,
+  yearSummary,
+} from './yearReport'
+
+const record = { farmId: 'f', updatedAt: 0 }
+const taskTypes: TaskType[] = [
+  {
+    ...record,
+    id: 'h',
+    name: 'Harvest',
+    color: '',
+    icon: '',
+    inputKind: 'harvest',
+    activeMonths: [],
+    archived: false,
+    order: 0,
+  },
+  {
+    ...record,
+    id: 'p',
+    name: 'Pruning',
+    color: '',
+    icon: '',
+    inputKind: 'trees',
+    activeMonths: [],
+    archived: false,
+    order: 1,
+  },
+]
+const fields: Field[] = [
+  { ...record, id: 'a', name: 'A', trees: 100, archived: false, order: 0 },
+  { ...record, id: 'b', name: 'B', trees: 60, archived: false, order: 1 },
+  { ...record, id: 'c', name: 'Old', trees: 40, archived: true, order: 2 },
+]
+
+function harvest(
+  id: string,
+  date: string,
+  trees: number,
+  sacks: number,
+  extra: Partial<TaskEntry> = {},
+): TaskEntry {
+  return {
+    ...record,
+    id,
+    date,
+    fieldId: 'a',
+    taskTypeId: 'h',
+    fieldFinished: false,
+    trees,
+    quantities: [{ unitId: 'sack', amount: sacks }],
+    ...extra,
+  }
+}
+
+function pressing(id: string, date: string, oliveKg: number, oilKg: number): Extraction {
+  return {
+    ...record,
+    id,
+    date,
+    oliveKg,
+    oilKg,
+    charges: [{ chargeTypeId: 'fee', kg: oilKg / 10 }],
+    storage: [],
+    allocations: [],
+  }
+}
+
+const entries: TaskEntry[] = [
+  harvest('1', '2026-11-02', 20, 8),
+  harvest('2', '2026-11-02', 10, 4, { fieldId: 'b' }), // same day: one work day
+  harvest('3', '2026-11-05', 25, 9),
+  harvest('4', '2027-01-10', 15, 5), // January is still the 2026 farming year
+  harvest('5', '2025-11-20', 40, 14), // last year
+  harvest('6', '2026-11-06', 5, 2, { deletedAt: 1 }),
+  {
+    ...record,
+    id: 'p1',
+    date: '2026-04-01',
+    fieldId: 'a',
+    taskTypeId: 'p',
+    fieldFinished: false,
+    trees: 30,
+  },
+  {
+    ...record,
+    id: 'p2',
+    date: '2026-04-03',
+    fieldId: 'a',
+    taskTypeId: 'p',
+    fieldFinished: false,
+    trees: 50,
+  },
+]
+const extractions = [
+  pressing('x1', '2026-11-06', 1500, 300),
+  pressing('x2', '2027-01-12', 500, 90),
+  pressing('x3', '2025-11-25', 2500, 450),
+]
+
+describe('yearSummary', () => {
+  const summary = yearSummary({ season: 2026, entries, extractions, fields, taskTypes })
+
+  it('adds up units, olives and oil of the year', () => {
+    expect(summary.units).toEqual({ sack: 26 })
+    expect(summary.oliveKg).toBe(2000)
+    expect(summary.oilKg).toBe(390)
+    expect(summary.netOilKg).toBeCloseTo(351)
+    expect(summary.productions).toBe(2)
+  })
+
+  it('averages per work day, counting a day once', () => {
+    expect(summary.harvestDays).toBe(3)
+    expect(summary.unitsPerHarvestDay.sack).toBeCloseTo(26 / 3)
+    expect(summary.treesPerDay).toEqual([
+      { taskTypeId: 'h', trees: 70, days: 3, perDay: 70 / 3 },
+      { taskTypeId: 'p', trees: 80, days: 2, perDay: 40 },
+    ])
+  })
+
+  it('compares trees harvested with the trees of the fields in use', () => {
+    expect(summary.treesHarvested).toBe(70)
+    expect(summary.farmTrees).toBe(160)
+  })
+})
+
+describe('cumulativeCurves', () => {
+  const harvestTypeIds = new Set(['h'])
+
+  it('adds up units day by day, per farming year', () => {
+    const curves = cumulativeCurves({
+      metric: { kind: 'unit', unitId: 'sack' },
+      entries,
+      extractions,
+      harvestTypeIds,
+    })
+
+    expect([...curves.keys()]).toEqual([2025, 2026])
+    expect(curves.get(2026)).toEqual([
+      { day: dayOfSeason('2026-11-02'), value: 12 },
+      { day: dayOfSeason('2026-11-05'), value: 21 },
+      { day: dayOfSeason('2027-01-10'), value: 26 },
+    ])
+  })
+
+  it('does oil from productions and trees from harvests', () => {
+    const oil = cumulativeCurves({
+      metric: { kind: 'oil' },
+      entries,
+      extractions,
+      harvestTypeIds,
+    })
+    const trees = cumulativeCurves({
+      metric: { kind: 'trees' },
+      entries,
+      extractions,
+      harvestTypeIds,
+    })
+
+    expect(oil.get(2026)!.at(-1)!.value).toBe(390)
+    expect(trees.get(2026)!.at(-1)!.value).toBe(70)
+    // Pruned trees are not harvested trees.
+    expect(trees.get(2026)!.some((point) => point.value > 70)).toBe(false)
+  })
+
+  it('counts days from the start of the farming year', () => {
+    expect(dayOfSeason('2026-03-01')).toBe(0)
+    expect(dayOfSeason('2026-11-02')).toBe(246)
+    expect(dayOfSeason('2027-01-10')).toBe(315)
+    expect(dayOfSeason('2026-10-01', 10)).toBe(0)
+  })
+})
+
+describe('averageCurve', () => {
+  it('averages the running totals on every day any of them changes', () => {
+    const average = averageCurve([
+      [
+        { day: 10, value: 4 },
+        { day: 20, value: 10 },
+      ],
+      [{ day: 15, value: 6 }],
+    ])
+
+    expect(average).toEqual([
+      { day: 10, value: 2 },
+      { day: 15, value: 5 },
+      { day: 20, value: 8 },
+    ])
+
+    expect(valueOnDay(average, 12)).toBe(2)
+    expect(valueOnDay(average, 5)).toBe(0)
+    expect(averageCurve([])).toEqual([])
+  })
+})

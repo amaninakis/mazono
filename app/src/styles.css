@@ -459,6 +459,24 @@ button, input, select, textarea { font: inherit; color: inherit; }
 .chart-legend { display: flex; flex-wrap: wrap; gap: 12px; margin: 6px 0 0; padding: 0; list-style: none; font-size: 0.875rem; }
 .chart-legend li { display: inline-flex; align-items: center; gap: 6px; }
 .chart-swatch { width: 14px; height: 4px; border-radius: 2px; background: var(--series); }
+.chart .dashed .chart-line { stroke-dasharray: 6 4; }
+.chart-legend .dashed .chart-swatch { background: repeating-linear-gradient(to right, var(--series) 0 5px, transparent 5px 8px); }
+.chart-today line { stroke: var(--muted); stroke-width: 1; stroke-dasharray: 2 3; }
+.chart-today text { fill: var(--muted); font-size: 12px; }
+
+/* This year report */
+.year-stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 8px; margin: 12px 0; padding: 0; list-style: none; }
+.year-stat { display: flex; flex-direction: column; gap: 2px; padding: 10px 12px; border: 1px solid var(--line); border-radius: 12px; }
+.year-stat-name { font-size: 0.8rem; color: var(--muted); }
+.year-stat-value { font-size: 1.25rem; font-weight: 600; font-variant-numeric: tabular-nums; }
+.year-stat-detail { font-size: 0.8rem; color: var(--muted); }
+.year-progress { margin: 4px 0 16px; }
+.year-progress .badge-bar { height: 10px; border-radius: 5px; margin: 6px 0 4px; }
+.year-progress .badge-bar > span { border-radius: 5px; }
+.per-day { margin: 0 0 16px; }
+.per-day-detail { display: block; }
+.per-day dd { white-space: nowrap; }
+.compare-now { margin: 4px 0 0; font-size: 0.875rem; }
 
 /* Calendar that opens under a date box */
 .calendar-pop {
