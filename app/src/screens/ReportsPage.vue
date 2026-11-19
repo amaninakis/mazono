@@ -15,6 +15,7 @@ import {
 import { unitLabel } from '../core/units'
 import { formatLocale } from '../i18n'
 import AppIcon from '../ui/AppIcon.vue'
+import { usePrefersDark } from '../ui/colorScheme'
 import { canDo, useFarm } from '../ui/farm'
 import { seasonMonthTicks } from '../ui/monthTicks'
 import RecordsBoard from '../ui/RecordsBoard.vue'
@@ -33,6 +34,13 @@ const canLogWork = computed(() => canDo(farm.value, 'work', 'change'))
 const startMonth = computed(() => farm.value.settings.seasonStartMonth)
 const REPORTS: ReportKey[] = ['year', 'fields', 'seasons', 'yield', 'money', 'records']
 const report = ref<ReportKey>('year')
+const prefersDark = usePrefersDark()
+/** The fields table describes its shades, which are lighter for more on the dark theme. */
+const aboutText = computed(() =>
+  report.value === 'fields' && prefersDark.value
+    ? translate('reports.about.fieldsDark')
+    : translate(`reports.about.${report.value}`),
+)
 
 function fmt(value: number, decimals = 1) {
   return formatNumber(value, formatLocale.value, decimals)
@@ -203,7 +211,7 @@ const fieldMax = computed(() =>
     0,
   ),
 )
-/** Darker cells for bigger values, so good and poor years stand out. */
+/** Stronger shades for better values (darker on the light theme, lighter on the dark one). */
 function cellShade(cell: FieldSeasonCell | undefined) {
   const value = metricValue(cell, fieldMetric.value)
   if (!value || !fieldMax.value) {
@@ -475,7 +483,7 @@ const visibleReports = computed(() =>
 
     <section class="card">
       <h2>{{ $t(`reports.title.${report}`) }}</h2>
-      <p class="muted small">{{ $t(`reports.about.${report}`) }}</p>
+      <p class="muted small">{{ aboutText }}</p>
 
       <div v-if="!hasData" class="empty-note">
         <p>{{ $t(`reports.empty.${report}`) }}</p>

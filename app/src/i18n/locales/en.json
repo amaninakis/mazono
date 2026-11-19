@@ -389,7 +389,8 @@
       "year": "This year"
     },
     "about": {
-      "fields": "How the fields performed each year. Darker cells mean more, so good and poor years stand out.",
+      "fields": "How the fields performed each year. Darker cells mean better results, so good and poor years stand out.",
+      "fieldsDark": "How the fields performed each year. Lighter cells mean better results, so good and poor years stand out.",
       "seasons": "Each year’s totals. Choose what the chart shows.",
       "yield": "The yield of each mill visit, by date. Use it to see when the olives give the most olive oil.",
       "money": "Expenses and income of each calendar year, set against the olive oil of the same year.",
@@ -462,8 +463,8 @@
       "trees_other": "{{shown}} trees",
       "perDayTitle": "Trees per work day",
       "perDayValue": "{{trees}} a day",
-      "daysCount_one": "{{trees}} in {{count}} day",
-      "daysCount_other": "{{trees}} in {{count}} days",
+      "daysCount_one": "{{trees}} trees in {{count}} day",
+      "daysCount_other": "{{trees}} trees in {{count}} days",
       "chartTitle": "How the year is coming along",
       "show": "What the chart shows",
       "compareWith": "Compare with",
