@@ -1,4 +1,4 @@
-# Contributing to HarvestLog
+# Contributing to Mazono
 
 Thanks for helping! Bug reports, translations and pull requests are all welcome.
 

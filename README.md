@@ -1,6 +1,11 @@
-# HarvestLog
+<p align="center"><img src="brand/logo.svg" alt="Mazono" width="420"></p>
 
-> **Harvesting olives is hard work. Keeping track of it shouldn't be.**
+# Mazono
+
+> **Harvesting olives is hard work. Managing your grove shouldn't be.**
+
+Named after *μαζώνω* (ma-ZO-no), the word olive growers on the Greek island of Crete have used
+for generations for harvesting their olives. (Formerly HarvestLog; see [the brand guide](docs/BRAND.md).)
 
 Open-source, self-hosted app for olive growers: log field work in seconds, follow olive oil
 production season by season, and compare fields and years.
@@ -109,7 +114,8 @@ allow offline mode, "Install app" and secure sign-in over HTTPS, so:
   `SITE_ADDRESS=harvest.example.com docker compose --profile https up -d --build`.
   Caddy runs in front and gets an HTTPS certificate automatically.
 
-Data lives in the `harvestlog_data` Docker volume (`/data` in the container): the database
+Data lives in the `harvestlog_data` Docker volume (the Docker names keep the app's first name, so
+existing installs keep their data) (`/data` in the container): the database
 `harvestlog.db` and the last 14 daily copies in `backups/`. To back up elsewhere, copy the newest
 file from `backups/`.
 

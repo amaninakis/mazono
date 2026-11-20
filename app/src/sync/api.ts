@@ -7,7 +7,7 @@ import type {
   SyncResponse,
 } from '../core/syncFormat'
 
-/* Calls to the HarvestLog server. All requests go to the same address the app came from. */
+/* Calls to the Mazono server. All requests go to the same address the app came from. */
 
 /** The server said this device is not signed in (any more). */
 export class SignedOutError extends Error {
@@ -29,6 +29,7 @@ export class ApiError extends Error {
 }
 
 export interface ServerStatus {
+  // The server's marker keeps the app's first name, so older and newer versions still match.
   app: 'harvestlog'
   version: string
   needsSetup: boolean
@@ -65,7 +66,7 @@ async function call<T>(path: string, body?: unknown, timeoutMs = 20_000): Promis
 }
 
 /**
- * Is there a HarvestLog server behind this app? Undefined when the app runs on its own
+ * Is there a Mazono server behind this app? Undefined when the app runs on its own
  * (e.g. `npm run dev` without the server) or the server cannot be reached right now.
  */
 export async function serverStatus(): Promise<ServerStatus | undefined> {

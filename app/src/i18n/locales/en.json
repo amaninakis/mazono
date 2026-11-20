@@ -1,6 +1,6 @@
 {
   "app": {
-    "name": "HarvestLog"
+    "name": "Mazono"
   },
   "nav": {
     "today": "Today",
@@ -55,8 +55,8 @@
     "today": "Today"
   },
   "setup": {
-    "welcome": "Welcome to HarvestLog",
-    "tagline": "Harvesting olives is hard work. Keeping track of it shouldn't be.",
+    "welcome": "Welcome to Mazono",
+    "tagline": "Harvesting olives is hard work. Managing your grove shouldn't be.",
     "intro": "Log field work in seconds, then follow your olive oil production year by year. Everything is stored on this device and works without signal.",
     "language": "Language",
     "farmName": "Farm name",
@@ -175,9 +175,9 @@
     "export": "Export backup (JSON)",
     "import": "Restore from backup",
     "importDone": "Backup restored",
-    "importFailed": "Could not read this file. Choose a HarvestLog backup (.json) file.",
+    "importFailed": "Could not read this file. Choose a Mazono backup (.json) file. Older HarvestLog backups open too.",
     "importConfirm": "Restoring adds the farm from the file to this device and switches to it. Continue?",
-    "about": "About",
+    "about": "Named after μαζώνω (ma-ZO-no), the word olive growers on the Greek island of Crete have used for generations for harvesting their olives.",
     "version": "Version {{version}} · open source (MIT)",
     "storageNote": "Your data is stored on this device. Export a backup regularly until server sync is available.",
     "storageNoteServer": "Everything is saved on the server, which keeps daily backups. You can also export a copy of this grove.",
@@ -218,7 +218,8 @@
       "categories_other": "{{count}} categories",
       "data": "Backup copy",
       "dataOwner": "Backup copy, accounts on this server"
-    }
+    },
+    "aboutTitle": "About Mazono"
   },
   "chargeType": {
     "millFee": "Mill fee",
@@ -841,5 +842,8 @@
         "oneTo": "the Rio–Antirrio bridge"
       }
     }
+  },
+  "brand": {
+    "line": "Harvesting olives is hard work. Managing your grove shouldn't be."
   }
 }

@@ -6,6 +6,7 @@ import { UNIT_PRESETS } from '../core/defaults'
 import { parseDecimal } from '../core/progress'
 import { createFarm, importFarm } from '../db/repo'
 import { chooseLanguage, LANGUAGES } from '../i18n'
+import AppLogo from '../ui/AppLogo.vue'
 
 interface UnitDraft {
   key: string
@@ -141,6 +142,7 @@ async function restore(event: Event) {
     </div>
 
     <section v-if="step === 0">
+      <AppLogo size="large" class="welcome-logo" />
       <h1>{{ $t('setup.welcome') }}</h1>
       <p class="tagline">{{ $t('setup.tagline') }}</p>
       <p class="muted">{{ $t('setup.intro') }}</p>

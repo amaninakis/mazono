@@ -316,7 +316,7 @@ function download(name: string, header: string[], rows: CsvValue[][]) {
   const csv = `${BYTE_ORDER_MARK}${toCsv(header, rows, formatLocale.value)}`
   const link = document.createElement('a')
   link.href = URL.createObjectURL(new Blob([csv], { type: 'text/csv;charset=utf-8' }))
-  link.download = `harvestlog-${name}.csv`
+  link.download = `mazono-${name}.csv`
   link.click()
   URL.revokeObjectURL(link.href)
 }

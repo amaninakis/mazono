@@ -46,19 +46,19 @@ jobs:
         with:
           context: .
           load: true
-          tags: harvestlog:check
+          tags: mazono:check
           cache-from: type=gha
           cache-to: type=gha,mode=max
       - name: Check that the server starts
         run: |
-          docker run -d --name harvestlog-check -p 8080:8080 harvestlog:check
+          docker run -d --name mazono-check -p 8080:8080 mazono:check
           for attempt in $(seq 1 30); do
             if curl -fsS http://localhost:8080/api/status; then
               curl -fsS http://localhost:8080/ | grep -q '<div id="root"' && exit 0
             fi
             sleep 1
           done
-          docker logs harvestlog-check
+          docker logs mazono-check
           exit 1
       - uses: docker/build-push-action@v6
         with:
