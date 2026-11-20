@@ -67,7 +67,7 @@ const startType =
 
 const date = ref(startDate)
 /**
- * One smart button after the date, so the date fits on one line: on today it offers
+ * One smart button before the date, so the date fits on one line: on today it offers
  * yesterday (the usual other choice); on any other day it brings you back to today.
  */
 const isToday = computed(() => date.value === today)
@@ -518,7 +518,6 @@ const canEditSettings = computed(() => canDo(farm.value, 'settings', 'change'))
       <div class="row-between">
         <label class="label" for="date">{{ $t('today.date') }}</label>
         <div class="chips tight date-quick">
-          <DateField id="date" v-model="date" :max="today" :label="$t('today.date')" arrows />
           <!-- Both words are laid out, one hidden, so the button keeps one width. -->
           <button
             type="button"
@@ -532,6 +531,7 @@ const canEditSettings = computed(() => canDo(farm.value, 'settings', 'change'))
               $t('today.yesterday')
             }}</span>
           </button>
+          <DateField id="date" v-model="date" :max="today" :label="$t('today.date')" arrows />
         </div>
       </div>
     </section>
