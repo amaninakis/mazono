@@ -4,6 +4,8 @@ import { useTranslation } from 'i18next-vue'
 import { computed, watch } from 'vue'
 import { RouterLink, RouterView, useRoute, useRouter } from 'vue-router'
 import { type Area, can, PRESETS } from './core/access'
+import { todayISO } from './core/dates'
+import { landingPage } from './core/landing'
 import { pickLanguage } from './core/locale'
 import { db } from './db/db'
 import { FarmRepo } from './db/repo'
@@ -14,6 +16,7 @@ import SetupWizard from './screens/SetupWizard.vue'
 import { accessTo, account, retryLoad, signOut } from './sync/account'
 import AppIcon from './ui/AppIcon.vue'
 import AppToast from './ui/AppToast.vue'
+import { hasDraft } from './ui/draft'
 import { type FarmData, provideFarm } from './ui/farm'
 import { useLiveQuery } from './ui/live'
 
@@ -136,6 +139,48 @@ const state = computed(() => {
 
   return 'ready'
 })
+
+/*
+ * Where the app opens. An installed app always starts at "/", also after the phone closed
+ * it in the background, so once the data is ready the first page is chosen from today's
+ * state (see core/landing.ts). Opening a link to another page is left alone, and this
+ * happens only once, at start.
+ */
+let landed = false
+watch(
+  state,
+  async (current) => {
+    if (landed || current !== 'ready') {
+      return
+    }
+    landed = true
+    await router.isReady()
+    if (route.path !== '/' || Object.keys(route.query).length > 0) {
+      return
+    }
+    const grove = farm.value
+    const to = landingPage({
+      today: todayISO(),
+      entries: grove.entries,
+      fields: grove.fields,
+      taskTypes: grove.taskTypes,
+      seasonStartMonth: grove.settings.seasonStartMonth,
+      drafts: {
+        extraction: hasDraft(grove.repo.farmId, 'extraction'),
+        task: hasDraft(grove.repo.farmId, 'today'),
+      },
+      may: {
+        enterWork: can(grove.access, 'work', 'change'),
+        enterOil: can(grove.access, 'oil', 'change'),
+        seeReports: can(grove.access, 'reports', 'see'),
+      },
+    })
+    if (to !== '/') {
+      await router.replace(to)
+    }
+  },
+  { immediate: true },
+)
 
 /** Bottom bar: only the pages this person may use (Settings always, for their account). */
 interface NavItem {
