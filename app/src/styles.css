@@ -59,7 +59,7 @@ button, input, select, textarea { font: inherit; color: inherit; }
   margin-bottom: 12px;
 }
 .label { display: block; font-size: 0.85rem; font-weight: 600; color: var(--muted); margin: 0.75rem 0 0.4rem; text-transform: uppercase; letter-spacing: 0.03em; }
-.card > .label:first-child, .row-between .label { margin-top: 0; }
+.card > .label:first-child, .row-between .label, .quick-stack .label { margin-top: 0; }
 .row-between { display: flex; align-items: center; justify-content: space-between; gap: 8px; flex-wrap: wrap; }
 .row-end { display: flex; justify-content: flex-end; margin: 0 0 8px; }
 
@@ -355,8 +355,10 @@ button, input, select, textarea { font: inherit; color: inherit; }
 }
 .date-button:hover, .date-button:focus-visible { background: var(--olive-soft); }
 /* Task page: the smart today/yesterday button and the date fit on one line (48px targets kept) */
-/* The button on the left, as tall as the date box; the date on the right (also when wrapped). */
-.date-quick { flex: 1 1 100%; align-items: center; justify-content: space-between; gap: 4px; }
+/* The label over the button on the left, the button as tall as the date box; the date on the right, level with the button (also when wrapped). */
+.date-quick { display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 4px; }
+/* As wide as the wider of the label and the button, each centred on the other (any language). */
+.quick-stack { display: inline-flex; flex-direction: column; align-items: center; }
 .date-quick .chip { padding: 0 10px; }
 .quick-date { display: inline-grid; place-items: center; min-height: calc(var(--tap) + 2px); }
 .quick-date > span { grid-area: 1 / 1; }

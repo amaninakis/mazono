@@ -515,9 +515,10 @@ const canEditSettings = computed(() => canDo(farm.value, 'settings', 'change'))
     </div>
 
     <section class="card">
-      <div class="row-between">
-        <label class="label" for="date">{{ $t('today.date') }}</label>
-        <div class="chips tight date-quick">
+      <div class="date-quick">
+        <!-- The label and the button are centred on each other, whichever is wider. -->
+        <div class="quick-stack">
+          <label class="label" for="date">{{ $t('today.date') }}</label>
           <!-- Both words are laid out, one hidden, so the button keeps one width. -->
           <button
             type="button"
@@ -531,8 +532,8 @@ const canEditSettings = computed(() => canDo(farm.value, 'settings', 'change'))
               $t('today.yesterday')
             }}</span>
           </button>
-          <DateField id="date" v-model="date" :max="today" :label="$t('today.date')" arrows />
         </div>
+        <DateField id="date" v-model="date" :max="today" :label="$t('today.date')" arrows />
       </div>
     </section>
 
