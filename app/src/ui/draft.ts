@@ -27,6 +27,13 @@ function storage() {
   }
 }
 
+/** Whether a form has an unsaved draft on this device (a new record unless `recordId`). */
+export function hasDraft(farmId: string, form: string, recordId?: string) {
+  return (
+    readDraft(storage()?.getItem(draftKey(farmId, form, recordId)) ?? null, Date.now()) != null
+  )
+}
+
 /**
  * Keeps a form's unsaved changes on this device and brings them back next time the form
  * opens. Call `clear()` after saving.

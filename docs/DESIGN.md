@@ -185,6 +185,17 @@ Every kind also has a "field finished" toggle and notes. Workers and hours appea
 
 After saving, a confirmation shows units per tree for the day, and for the season so far in that field both the tree yield and the field yield (when they differ), with **Undo**. The form keeps the date and task, so logging the next field is quick.
 
+### Where the app opens
+
+An installed app always starts at its home address, also after the phone closed it in the background. So when it opens at "/", the first page is chosen once from today's state (`core/landing.ts`), skipping pages the person may not use:
+
+1. a new production being entered (unsaved draft): back to that form, values restored;
+2. a new task being entered (unsaved draft): the task page;
+3. work already entered for today, or the harvest finished in every field this farming year: Reports, on "This year";
+4. otherwise: the task page.
+
+Opening a link to another page is left alone.
+
 ## Journal and calendar — v0.1
 
 - A month calendar with one coloured dot per task type done that day (up to 3, then "+"). Each task type also has an icon, so colour is never the only signal.
