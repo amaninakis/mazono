@@ -15,6 +15,7 @@ import NewPasswordScreen from './screens/NewPasswordScreen.vue'
 import SetupWizard from './screens/SetupWizard.vue'
 import { accessTo, account, retryLoad, signOut } from './sync/account'
 import AppIcon from './ui/AppIcon.vue'
+import AppLogo from './ui/AppLogo.vue'
 import AppToast from './ui/AppToast.vue'
 import { hasDraft } from './ui/draft'
 import { type FarmData, provideFarm } from './ui/farm'
@@ -235,7 +236,10 @@ watch(
 </script>
 
 <template>
-  <div v-if="state === 'loading'" class="splash">{{ $t('common.loading') }}</div>
+  <div v-if="state === 'loading'" class="splash">
+    <AppLogo size="large" light />
+    <span class="splash-text">{{ $t('common.loading') }}</span>
+  </div>
   <AccountScreen v-else-if="state === 'account'" />
   <NewPasswordScreen v-else-if="state === 'new-password'" />
   <main v-else-if="state === 'no-access'" class="setup loading-data">
@@ -261,8 +265,10 @@ watch(
   </main>
   <SetupWizard v-else-if="state === 'setup'" />
   <div v-else class="shell">
+    <header class="brand-bar"><AppLogo /></header>
     <RouterView :key="route.path" />
     <nav class="bottom-nav">
+      <div class="nav-logo"><AppLogo /></div>
       <RouterLink
         v-for="item in nav"
         :key="item.to"

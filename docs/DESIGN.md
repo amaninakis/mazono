@@ -1,14 +1,14 @@
-# HarvestLog — Design
+# Mazono — Design
 
 > **Harvesting olives is hard work. Keeping track of it shouldn't be.**
 
-This document explains what HarvestLog is meant to become and why it is built the way it is.
+This document explains what Mazono is meant to become and why it is built the way it is. How it looks and sounds (name, logo, colours, words) is in [BRAND.md](BRAND.md).
 Read it before opening a pull request for a new feature, so your change fits the plan.
 For setup and development commands, see the [README](../README.md).
 
 ## Overview
 
-HarvestLog is a self-hosted, open-source app that replaces the yearly olive spreadsheet. It lets you:
+Mazono is a self-hosted, open-source app that replaces the yearly olive spreadsheet. It lets you:
 
 - log field work from your phone in under 30 seconds;
 - record each mill extraction;

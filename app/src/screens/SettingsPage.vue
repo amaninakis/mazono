@@ -15,6 +15,7 @@ import { chooseLanguage, formatLocale, LANGUAGES, locale } from '../i18n'
 import { account } from '../sync/account'
 import AccountCard from '../ui/AccountCard.vue'
 import AppIcon from '../ui/AppIcon.vue'
+import AppLogo from '../ui/AppLogo.vue'
 import AppModal from '../ui/AppModal.vue'
 import { canDo, categoryName, chargeName, locationName, taskName, useFarm } from '../ui/farm'
 import ServerAccountsCard from '../ui/ServerAccountsCard.vue'
@@ -212,7 +213,7 @@ async function exportData() {
   const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' })
   const link = document.createElement('a')
   link.href = URL.createObjectURL(blob)
-  link.download = `harvestlog-${new Date().toISOString().slice(0, 10)}.json`
+  link.download = `mazono-${new Date().toISOString().slice(0, 10)}.json`
   link.click()
   URL.revokeObjectURL(link.href)
 }
@@ -948,7 +949,12 @@ watch(
       v-if="section === 'data' && account.mode === 'server' && account.user?.isOwner"
     />
 
-    <p v-if="!section" class="muted small center">{{ $t('settings.version', { version }) }}</p>
+    <section v-if="!section" class="about" :aria-label="$t('settings.aboutTitle')">
+      <AppLogo size="large" />
+      <p class="about-line">{{ $t('brand.line') }}</p>
+      <p class="muted small">{{ $t('settings.about') }}</p>
+      <p class="muted small">{{ $t('settings.version', { version }) }}</p>
+    </section>
 
     <AppModal
       v-if="pendingImport"

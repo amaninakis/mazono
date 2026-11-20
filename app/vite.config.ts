@@ -16,17 +16,39 @@ export default defineConfig({
       registerType: 'autoUpdate',
       // Server calls must always reach the server, never the offline copy of the app.
       workbox: { navigateFallbackDenylist: [/^\/api\//] },
-      includeAssets: ['icon.svg'],
+      // The logo and icons are drawn by brand/build.py (see BRAND.md).
+      includeAssets: [
+        'icon.svg',
+        'favicon.svg',
+        'wordmark.svg',
+        'wordmark-light.svg',
+        'apple-touch-icon.png',
+      ],
       manifest: {
-        name: 'HarvestLog',
-        short_name: 'HarvestLog',
-        description: "Harvesting olives is hard work. Keeping track of it shouldn't be.",
+        name: 'Mazono',
+        short_name: 'Mazono',
+        description: "Harvesting olives is hard work. Managing your grove shouldn't be.",
         theme_color: '#4d5b2a',
-        background_color: '#f7f5ee',
+        // The phone's start-up screen: the sky of the icon, so it flows into the app's own.
+        background_color: '#2a6699',
         display: 'standalone',
         start_url: '/',
         icons: [
-          { src: 'icon.svg', sizes: 'any', type: 'image/svg+xml', purpose: 'any maskable' },
+          { src: 'icon-192.png', sizes: '192x192', type: 'image/png', purpose: 'any' },
+          { src: 'icon-512.png', sizes: '512x512', type: 'image/png', purpose: 'any' },
+          { src: 'icon.svg', sizes: 'any', type: 'image/svg+xml', purpose: 'any' },
+          {
+            src: 'maskable-512.png',
+            sizes: '512x512',
+            type: 'image/png',
+            purpose: 'maskable',
+          },
+          {
+            src: 'monochrome-512.png',
+            sizes: '512x512',
+            type: 'image/png',
+            purpose: 'monochrome',
+          },
         ],
       },
     }),

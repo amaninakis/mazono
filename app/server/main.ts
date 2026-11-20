@@ -5,7 +5,7 @@ import { buildServer } from './app.ts'
 import { backupTo, openDatabase } from './database.ts'
 
 /*
- * Starts the HarvestLog server. Settings (all optional):
+ * Starts the Mazono server. Settings (all optional):
  *   PORT        port to listen on (8080)
  *   DATA_DIR    where the database and its daily backups live (/data, or ./data outside Docker)
  *   STATIC_DIR  the built web app (../dist)
@@ -55,7 +55,7 @@ async function start() {
   process.on('SIGINT', stop)
 
   await app.listen({ port, host: '0.0.0.0' })
-  process.stdout.write(`HarvestLog ${pkg.version} on port ${port}, data in ${dataDir}\n`)
+  process.stdout.write(`Mazono ${pkg.version} on port ${port}, data in ${dataDir}\n`)
 }
 
 void start()

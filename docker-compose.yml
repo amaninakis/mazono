@@ -1,4 +1,5 @@
-# HarvestLog: the app, sign-in and sync. Data (and 14 daily backups) live in the
+# Mazono (formerly HarvestLog): the app, sign-in and sync. The service and volume keep the
+# old name, so existing installs keep their data. Data (and 14 daily backups) live in the
 # harvestlog_data volume, at /data inside the container.
 #
 # Home lab / private use (reach it through Tailscale):

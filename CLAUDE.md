@@ -1,4 +1,4 @@
-# Working on HarvestLog
+# Working on Mazono
 
 Read `docs/DESIGN.md` (what to build and why) and `CONTRIBUTING.md` before changing code.
 

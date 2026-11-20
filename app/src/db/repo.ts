@@ -155,6 +155,7 @@ export class FarmRepo {
     }
 
     return {
+      // The format name keeps the app's first name, so every version can read every backup.
       format: 'harvestlog-export',
       version: 3,
       exportedAt: new Date().toISOString(),
@@ -245,7 +246,7 @@ export async function importFarm(
   const backup = data as Awaited<ReturnType<FarmRepo['exportAll']>> &
     Partial<Record<FarmTable, object[]>>
   if (backup?.format !== 'harvestlog-export' || !backup.farm) {
-    throw new Error('Not a HarvestLog export file')
+    throw new Error('Not a Mazono (or HarvestLog) backup file')
   }
   const farmId = backup.farm.id
   const tables = FARM_TABLES.map((tableName) => database[tableName])
