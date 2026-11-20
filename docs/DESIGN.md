@@ -165,7 +165,7 @@ The app opens here. Everything for one entry sits on a single scrollable page wi
 **Shared top area**
 
 - Task type chips: Harvest · Pruning · Fertilizer · Weed whacking · + New. The default is the task active this month (from each type's active months). When several overlap, the one logged most recently wins.
-- Date: today by default, with a quick "Yesterday" and a date picker.
+- Date: today by default. One smart button beside the date: on today it says "Yesterday", on any other day "Today" (back to today in one tap). Then ‹ date ›, with a date picker. On a typical phone (393 px, the phone's own font) it all fits on one line with every target 48 px: the date box is as wide as its date where `field-sizing` is supported. Smaller phones wrap it to two lines.
 - Field picker: unfinished fields come first and show "12 of 22 left". The default is the field worked most recently that still has trees left. Finished fields are greyed out but still selectable.
 
 **Input kinds**

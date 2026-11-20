@@ -66,6 +66,15 @@ const startType =
   editing?.taskTypeId ?? defaultTaskTypeId(activeTypes.value, farm.value.entries, startDate)
 
 const date = ref(startDate)
+/**
+ * One smart button beside the date, so the date fits on one line: on today it offers
+ * yesterday (the usual other choice); on any other day it brings you back to today.
+ */
+const quickDate = computed(() =>
+  date.value === today
+    ? { date: addDays(today, -1), label: translate('today.yesterday') }
+    : { date: today, label: translate('today.today') },
+)
 const typeId = ref<string | undefined>(startType)
 const fieldId = ref<string | undefined>(
   editing?.fieldId ?? defaultFieldFor(startType, startDate),
@@ -509,22 +518,9 @@ const canEditSettings = computed(() => canDo(farm.value, 'settings', 'change'))
     <section class="card">
       <div class="row-between">
         <label class="label" for="date">{{ $t('today.date') }}</label>
-        <div class="chips tight">
-          <button
-            type="button"
-            class="chip"
-            :class="[{ selected: date === today }]"
-            @click="date = today"
-          >
-            {{ $t('today.today') }}
-          </button>
-          <button
-            type="button"
-            class="chip"
-            :class="[{ selected: date === addDays(today, -1) }]"
-            @click="date = addDays(today, -1)"
-          >
-            {{ $t('today.yesterday') }}
+        <div class="chips tight date-quick">
+          <button type="button" class="chip" @click="date = quickDate.date">
+            {{ quickDate.label }}
           </button>
           <DateField id="date" v-model="date" :max="today" :label="$t('today.date')" arrows />
         </div>

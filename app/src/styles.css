@@ -354,6 +354,13 @@ button, input, select, textarea { font: inherit; color: inherit; }
   border-radius: 0 10px 10px 0; background: transparent; font-size: 1.1em; cursor: pointer;
 }
 .date-button:hover, .date-button:focus-visible { background: var(--olive-soft); }
+/* Task page: the smart today/yesterday button and the date fit on one line (48px targets kept) */
+.date-quick { align-items: center; gap: 4px; }
+.date-quick .chip { padding: 0 10px; }
+.date-quick .date-line { gap: 2px; }
+.date-quick .date-text { width: 6.9em; padding-left: 10px; }
+/* Where supported (Chrome, Android), the date box is as wide as the date in the phone's font. */
+@supports (field-sizing: content) { .date-quick .date-text { width: auto; field-sizing: content; } }
 .modal .date-wrap, .modal .date-line, .modal .date-field { display: flex; width: 100%; }
 .modal .date-line .date-field { flex: 1; }
 .modal .date-text { flex: 1; }
