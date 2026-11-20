@@ -355,8 +355,12 @@ button, input, select, textarea { font: inherit; color: inherit; }
 }
 .date-button:hover, .date-button:focus-visible { background: var(--olive-soft); }
 /* Task page: the smart today/yesterday button and the date fit on one line (48px targets kept) */
-.date-quick { align-items: center; gap: 4px; }
+/* The date stays put on the left; the button sits on the right, as tall as the date box. */
+.date-quick { flex: 1 1 100%; align-items: center; justify-content: space-between; gap: 4px; }
 .date-quick .chip { padding: 0 10px; }
+.quick-date { display: inline-grid; place-items: center; margin-left: auto; min-height: calc(var(--tap) + 2px); }
+.quick-date > span { grid-area: 1 / 1; }
+.quick-date > .ghost { visibility: hidden; }
 .date-quick .date-line { gap: 2px; }
 .date-quick .date-text { width: 6.9em; padding-left: 10px; }
 /* Where supported (Chrome, Android), the date box is as wide as the date in the phone's font. */

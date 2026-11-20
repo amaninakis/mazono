@@ -67,13 +67,12 @@ const startType =
 
 const date = ref(startDate)
 /**
- * One smart button beside the date, so the date fits on one line: on today it offers
+ * One smart button after the date, so the date fits on one line: on today it offers
  * yesterday (the usual other choice); on any other day it brings you back to today.
  */
+const isToday = computed(() => date.value === today)
 const quickDate = computed(() =>
-  date.value === today
-    ? { date: addDays(today, -1), label: translate('today.yesterday') }
-    : { date: today, label: translate('today.today') },
+  isToday.value ? { date: addDays(today, -1) } : { date: today },
 )
 const typeId = ref<string | undefined>(startType)
 const fieldId = ref<string | undefined>(
@@ -519,10 +518,20 @@ const canEditSettings = computed(() => canDo(farm.value, 'settings', 'change'))
       <div class="row-between">
         <label class="label" for="date">{{ $t('today.date') }}</label>
         <div class="chips tight date-quick">
-          <button type="button" class="chip" @click="date = quickDate.date">
-            {{ quickDate.label }}
-          </button>
           <DateField id="date" v-model="date" :max="today" :label="$t('today.date')" arrows />
+          <!-- Both words are laid out, one hidden, so the button keeps one width. -->
+          <button
+            type="button"
+            class="chip selected quick-date"
+            @click="date = quickDate.date"
+          >
+            <span :class="{ ghost: isToday }" :aria-hidden="isToday">{{
+              $t('today.today')
+            }}</span>
+            <span :class="{ ghost: !isToday }" :aria-hidden="!isToday">{{
+              $t('today.yesterday')
+            }}</span>
+          </button>
         </div>
       </div>
     </section>
