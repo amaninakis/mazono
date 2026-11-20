@@ -37,6 +37,11 @@ function fmt(value: number, decimals = 1) {
   return formatNumber(value, formatLocale.value, decimals)
 }
 
+/** Charges always show two decimals, like the mill's slip: "11,70". */
+function chargeKg(value: number) {
+  return formatNumber(value, formatLocale.value, 2, 2)
+}
+
 function yieldOf(olives: number, oil: number) {
   return formatYield(olives, oil, farm.value.settings.yieldFormat, formatLocale.value)
 }
@@ -299,7 +304,7 @@ async function removeAnyway() {
           </tr>
           <tr v-for="c in chargeRows" :key="c.name" class="sub">
             <th>{{ c.name }}</th>
-            <td>{{ fmt(c.kg) }} {{ $t('common.kg') }} · {{ pct(c.kg, totals.oilKg) }}</td>
+            <td>{{ chargeKg(c.kg) }} {{ $t('common.kg') }} · {{ pct(c.kg, totals.oilKg) }}</td>
           </tr>
           <tr class="strong">
             <th>{{ $t('oil.net') }}</th>
@@ -333,7 +338,7 @@ async function removeAnyway() {
             </span>
             <small class="muted">
               <template v-if="x.charges.length"
-                >{{ $t('oil.charges') }} {{ fmt(chargesKg(x)) }} ({{
+                >{{ $t('oil.charges') }} {{ chargeKg(chargesKg(x)) }} ({{
                   pct(chargesKg(x), x.oilKg)
                 }}) ·
               </template>

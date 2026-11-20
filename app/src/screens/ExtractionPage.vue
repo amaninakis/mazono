@@ -620,6 +620,7 @@ async function remove(confirmed = false) {
           <NumberStepper
             :model-value="charges[c.id] ?? null"
             :label="chargeName($t, c)"
+            :decimals="2"
             @update:model-value="(v) => setCharge(c.id, v)"
           />
           <span

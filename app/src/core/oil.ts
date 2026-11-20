@@ -35,8 +35,9 @@ export function chargeShare(kg: number, oilKg: number) {
 }
 
 /** Kg for a charge from its default percentage, rounded to 0.1 kg. */
+/** A charge's kg from its usual %, to two decimals (14% of 181 kg = 25,34 kg). */
 export function chargeFromPercent(percent: number, oilKg: number) {
-  return Math.round((oilKg * percent) / 10) / 10
+  return Math.round(oilKg * percent) / 100
 }
 
 /* ---------- harvest entries ↔ extractions ---------- */

@@ -1,7 +1,16 @@
 import type { YieldFormat } from './types'
 
-export function formatNumber(value: number, locale: string, maxDecimals = 2): string {
-  return new Intl.NumberFormat(locale, { maximumFractionDigits: maxDecimals }).format(value)
+/** A number in the user's style; `minDecimals` pads (2 → "11,70", as on a mill's slip). */
+export function formatNumber(
+  value: number,
+  locale: string,
+  maxDecimals = 2,
+  minDecimals = 0,
+): string {
+  return new Intl.NumberFormat(locale, {
+    maximumFractionDigits: maxDecimals,
+    minimumFractionDigits: Math.min(minDecimals, maxDecimals),
+  }).format(value)
 }
 
 /**

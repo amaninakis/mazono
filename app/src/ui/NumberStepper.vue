@@ -8,6 +8,7 @@ import { formatLocale } from '../i18n'
  * − value + control with a typeable number in the middle. Accepts comma decimals.
  * `max` caps the value (also when typed); `half` adds a "+½" button.
  * Pasted text like "255 €" or "1.234,50 €" is cleaned up to the number it means.
+ * `decimals` is how many decimals are kept (3 unless set).
  */
 const props = withDefaults(
   defineProps<{
@@ -17,8 +18,9 @@ const props = withDefaults(
     max?: number
     half?: boolean
     id?: string
+    decimals?: number
   }>(),
-  { step: 1, min: 0, max: undefined, half: false, id: undefined },
+  { step: 1, min: 0, max: undefined, half: false, id: undefined, decimals: 3 },
 )
 const model = defineModel<number | null>({ required: true })
 
@@ -26,13 +28,14 @@ function fmt(value: number | null) {
   return value == null
     ? ''
     : new Intl.NumberFormat(formatLocale.value, {
-        maximumFractionDigits: 3,
+        maximumFractionDigits: props.decimals,
         useGrouping: false,
       }).format(value)
 }
 
 function round(value: number) {
-  return Math.round(value * 1000) / 1000
+  const scale = 10 ** props.decimals
+  return Math.round(value * scale) / scale
 }
 
 const text = ref(fmt(model.value))

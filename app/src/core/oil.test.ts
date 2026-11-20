@@ -68,7 +68,8 @@ describe('charges', () => {
 
     expect(netOil(x)).toBeCloseTo(152.3)
     expect(chargeShare(25.3, 181)).toBeCloseTo(0.1398, 3)
-    expect(chargeFromPercent(14, 181)).toBe(25.3)
+    expect(chargeFromPercent(14, 181)).toBe(25.34)
+    expect(chargeFromPercent(11, 106)).toBe(11.66)
   })
 })
 

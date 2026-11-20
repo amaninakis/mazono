@@ -141,7 +141,8 @@ export function seasonHistory(
         oliveKg: round(totals.oliveKg, 1),
         oilKg: round(totals.oilKg, 1),
         netKg: round(totals.netKg, 1),
-        chargesKg: round(totals.chargesKg, 1),
+        // Charges are kept to two decimals.
+        chargesKg: round(totals.chargesKg, 2),
       }
     })
 }
