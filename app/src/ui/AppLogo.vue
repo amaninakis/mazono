@@ -1,8 +1,8 @@
 <script setup lang="ts">
 /**
- * The Mazono logo: the icon (an olive-oil drop whose shine is an olive leaf) and the
- * wordmark, drawn in brand/ (see BRAND.md). The wordmark's letters follow the phone's
- * theme; `light` keeps them light, for the sky-blue start-up screen.
+ * The Mazono logo: the icon (an olive leaf in olive oil, on ripe olive) and the wordmark,
+ * drawn in brand/ (see docs/BRAND.md). The wordmark's letters follow the phone's theme;
+ * `light` keeps them light, for the ripe-olive start-up screen.
  */
 withDefaults(defineProps<{ size?: 'small' | 'large'; light?: boolean }>(), {
   size: 'small',
