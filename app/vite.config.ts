@@ -29,8 +29,8 @@ export default defineConfig({
         short_name: 'Mazono',
         description: "Harvesting olives is hard work. Managing your grove shouldn't be.",
         theme_color: '#4d5b2a',
-        // The phone's start-up screen: the sky of the icon, so it flows into the app's own.
-        background_color: '#2a6699',
+        // The phone's start-up screen: the ripe olive of the icon, so it flows into the app's own.
+        background_color: '#3b2436',
         display: 'standalone',
         start_url: '/',
         icons: [
