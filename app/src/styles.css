@@ -61,10 +61,9 @@ button, input, select, textarea { font: inherit; color: inherit; }
 /* Every page's first row is the same height, so the hill and its wave sit at the same place
    on every tab. A title too long for the row ends in "…"; a control that does not fit
    (Oil's year) wraps below the wave. */
-.page > :first-child { position: relative; min-height: var(--head-row); margin: 0 0 22px; padding-right: 116px; }
-.page > :first-child:not(h1) { display: flex; flex-wrap: wrap; align-items: center; align-content: flex-start; column-gap: 8px; row-gap: 20px; }
-.page > :first-child h1 { margin: 0; min-width: 0; }
-.page > :first-child h1, .page > h1:first-child { line-height: var(--head-row); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.page > :first-child { position: relative; min-height: var(--head-row); margin: 0 0 22px; padding-right: 116px;
+  display: flex; flex-wrap: wrap; align-items: center; align-content: flex-start; column-gap: 8px; row-gap: 20px; }
+.page > :first-child h1 { margin: 0; min-width: 0; line-height: var(--head-row); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 /* A row with its own control (Oil's year, Journal's "Today") or a back arrow keeps the whole
    width on phones: the logo steps aside there. */
 .page > .row-between:first-child, .page.settings.in-section > .page-head { padding-right: 0; }

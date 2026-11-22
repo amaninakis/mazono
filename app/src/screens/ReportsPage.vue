@@ -465,7 +465,9 @@ const visibleReports = computed(() =>
 
 <template>
   <main class="page reports">
-    <h1>{{ $t('nav.reports') }}</h1>
+    <header class="page-head">
+      <h1>{{ $t('nav.reports') }}</h1>
+    </header>
     <div class="chips report-tabs" role="tablist">
       <button
         v-for="key in visibleReports"
