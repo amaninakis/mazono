@@ -88,9 +88,9 @@ button, input, select, textarea { font: inherit; color: inherit; }
 .app-logo { display: inline-flex; align-items: center; gap: 8px; }
 .app-logo img { display: block; }
 .app-logo.small .app-logo-icon { width: 20px; height: 20px; }
-.app-logo.small .app-logo-word { height: 16px; width: auto; }
+.app-logo.small .app-logo-word { height: 17px; width: auto; }
 .app-logo.large .app-logo-icon { width: 56px; height: 56px; border-radius: 12px; }
-.app-logo.large .app-logo-word { height: 40px; width: auto; }
+.app-logo.large .app-logo-word { height: 43px; width: auto; }
 .app-logo.large { gap: 14px; }
 /* Phone: a quiet logo above each page. Computer: at the top of the side menu instead. */
 .brand-bar { position: absolute; top: var(--page-top); right: 14px; z-index: 1; display: flex; align-items: center; height: var(--head-row); }

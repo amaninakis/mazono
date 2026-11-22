@@ -30,7 +30,7 @@ RIPE = '#3B2436'  # ripe olive: the brand colour
 INK = '#2A1A26'  # ripe olive, darkest: text on light backgrounds
 OIL = '#C2CB55'  # olive oil
 SURFACE = '#E6EBB0'  # the light line on the oil's surface
-GROVE = '#8A9A5B'  # the olive in the wordmark
+GROVE = '#8A9A5B'  # the olive in the icon and the wordmark
 SHINE = '#F2F5D6'
 CREAM = '#F6F1E7'  # text on dark backgrounds, light backgrounds
 
@@ -119,8 +119,18 @@ def monochrome(fill=RIPE):
 
 
 class Wordmark:
-    """'Mazono' in Comfortaa Bold outlines. The last o is an olive: as tall as the o, a
-    little narrower and tilted, outlined in the letters' own stroke weight and colour."""
+    """'Mazono' in Comfortaa Bold outlines. The stressed o (ma-ZO-no) is an olive: the
+    typeface's own o, filled grove green with a light shine, so it still reads as a letter.
+    An olive leaf in the letters' colour sits over it as its accent (the Greek tonos, ό),
+    which also shows other readers where the stress falls."""
+
+    OLIVE_INDEX = 3  # the o in "Maz-o-no"
+    # The leaf, from its foot, before turning: full and soft, like Comfortaa's shapes.
+    LEAF = 'M0 0C73 -49 61 -194 0 -270C-61 -194 -73 -49 0 0Z'
+    # Where its foot sits from the o's origin, and how far it leans to the right. Close to
+    # Comfortaa's own tonos on ό, a little nearer the o and leaning a little more.
+    LEAF_FOOT = (360, -574)
+    LEAF_LEAN = 34
 
     def __init__(self, font_path):
         self.font = TTFont(font_path)
@@ -144,40 +154,39 @@ class Wordmark:
         return pen.getCommands(), self.font['hmtx'][name][0]
 
     def olive(self, x, ink, fill):
+        """The green inside the o's ring, its shine, and the leaf above it."""
         x_min, y_min, x_max, y_max = self.bounds('o')
         cx, cy = x + (x_min + x_max) / 2, -(y_min + y_max) / 2
-        tilt = math.radians(16)
-        # Outer edge as tall as the o; 0.88 as wide as tall, like an olive.
-        outer_ry = (y_max - y_min) / 2 / math.hypot(math.cos(tilt), 0.88 * math.sin(tilt))
-        outer_rx = 0.88 * outer_ry
-        rx, ry = outer_rx - self.stroke / 2, outer_ry - self.stroke / 2
-        rotate = f'rotate(-16 {cx:.1f} {cy:.1f})'
-        body = (
-            f'<ellipse cx="{cx:.1f}" cy="{cy:.1f}" rx="{rx:.1f}" ry="{ry:.1f}" fill="{fill}" '
-            f'stroke="{ink}" stroke-width="{self.stroke:.0f}" transform="{rotate}"/>'
+        radius = (y_max - y_min) / 2 - self.stroke / 2
+        foot_x, foot_y = self.LEAF_FOOT
+        leaf = (
+            f'<path d="{self.LEAF}" fill="{ink}" '
+            f'transform="translate({x + foot_x:.0f} {foot_y}) rotate({self.LEAF_LEAN})"/>'
         )
         if fill == 'none':
-            return body
-        sx, sy = cx - 0.32 * rx, cy - 0.36 * ry
-        return body + (
-            f'<ellipse cx="{sx:.1f}" cy="{sy:.1f}" rx="{0.17 * rx:.1f}" ry="{0.26 * ry:.1f}" '
-            f'fill="{SHINE}" opacity="0.85" transform="{rotate}"/>'
+            return '', leaf
+        rotate = f'rotate(-16 {cx:.1f} {cy:.1f})'
+        inside = (
+            f'<circle cx="{cx:.1f}" cy="{cy:.1f}" r="{radius:.1f}" fill="{fill}"/>'
+            f'<ellipse cx="{cx - 0.34 * radius:.1f}" cy="{cy - 0.36 * radius:.1f}" '
+            f'rx="{0.16 * radius:.1f}" ry="{0.24 * radius:.1f}" fill="{SHINE}" opacity="0.85" '
+            f'transform="{rotate}"/>'
         )
+        return inside, leaf
 
     def build(self, ink, fill=GROVE):
         """The word's SVG body and its box (left, top, width, height) in font units."""
-        x, letters, olive = 0.0, [], ''
+        x, letters, inside, leaf = 0.0, [], '', ''
         for i, char in enumerate('Mazono'):
-            if i == 5:
-                olive = self.olive(x, ink, fill)
-                x += self.font['hmtx'][self.cmap[ord('o')]][0]
-            else:
-                path, advance = self.letter(char, x)
-                letters.append(path)
-                x += advance
+            if i == self.OLIVE_INDEX:
+                inside, leaf = self.olive(x, ink, fill)
+            path, advance = self.letter(char, x)
+            letters.append(path)
+            x += advance
         pad = 30
-        box = (-pad, -(self.cap + pad), x + 2 * pad, self.cap + 2 * pad + 20)
-        return f'<path d="{" ".join(letters)}" fill="{ink}"/>{olive}', box
+        top = self.cap + 70  # the leaf rises a little above the capitals
+        box = (-pad, -(top + pad), x + 2 * pad, top + 2 * pad + 20)
+        return f'{inside}<path d="{" ".join(letters)}" fill="{ink}"/>{leaf}', box
 
 
 def view(box):

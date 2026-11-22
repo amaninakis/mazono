@@ -14,7 +14,8 @@ the same root as *λιομάζωμα*, the olive harvest.
 
 - Written **Mazono**: capital M, the same Latin spelling in every language, so the icon, the
   website and word of mouth all match.
-- Pronounced **ma-ZO-no**, stress on the middle syllable.
+- Pronounced **ma-ZO-no**, stress on the middle syllable. In the wordmark the leaf over the
+  olive marks that stress; in running text the name is written without an accent: Mazono.
 - Formerly HarvestLog. Internal names (the database, saved settings, the backup format, the
   Docker service and volume) keep that first name, so existing installs lose nothing.
 
@@ -61,9 +62,13 @@ grove-green hill behind, on a ripe-olive tile: the grove, the fruit and the oil 
 landscape. No outlines; shapes and colour only. It matches the green hill at the top of the
 app's pages.
 
-**Wordmark.** *Mazono* in Comfortaa Bold, turned into outlines (no font needed). The last o
-is an olive: as tall as the o, a little narrower and tilted, outlined in the letters' own
-stroke weight and colour, and filled **Grove** green. It is always green.
+**Wordmark.** *Mazóno* in Comfortaa Bold, turned into outlines (no font needed). The
+stressed o, ma-**ZO**-no, is an olive: the typeface's own o, the same size, roundness and
+stroke as the other letters, filled **Grove** green with a light shine, so the word still
+reads as one word. Over it, as its accent, is a plain olive leaf in the letters' colour: the
+Greek tonos (ό), placed near where Comfortaa draws its own, a little closer to the o and
+leaning a little more to the right. It also shows readers of other languages where the
+stress falls. The olive is always green; the leaf is always the letters' colour.
 
 | File | Use |
 |---|---|
@@ -73,20 +78,22 @@ stroke weight and colour, and filled **Grove** green. It is always green.
 | `brand/favicon.svg` | 16–32 px: no surface line, no leaf vein, no shine on the olive. |
 | `brand/icon-monochrome.svg` | One colour: the olive, the leaf and the oil hill, a thin gap between hill and olive (print, stamps, Android themed icons). |
 | `brand/wordmark.svg` / `wordmark-light.svg` | Ripe-olive letters for light backgrounds / cream letters for dark ones. |
-| `brand/wordmark-mono.svg` | One colour: the olive is its outline only. |
+| `brand/wordmark-mono.svg` | One colour: the olive is a plain o, the leaf stays. |
 | `brand/logo.svg` / `logo-light.svg` | Icon and wordmark side by side. |
 | `brand/logo-stacked.svg` / `logo-stacked-light.svg` | Icon above the word: start-up screen, website, print. |
 | `brand/png/` | PNG exports (1024, 512, 192, 32, 16). |
 
 **Using the logo**
 
-- Leave space around it at least as wide as the olive.
+- Leave space around it at least as wide as the olive (the o).
 - Smallest sizes: icon 16 px (use the favicon below 48 px); wordmark 14 px tall.
 - On light backgrounds use the ripe-olive letters; on dark ones, cream letters. The olive
   stays green on both.
-- In one-colour printing use the one-colour icon and wordmark (the olive becomes its outline).
-- Don't recolour the olive (no violet, no orange), stretch, rotate, outline or add shadows.
-  Don't put the full-colour icon on busy photos; use the one-colour version there.
+- In one-colour printing use the one-colour icon and wordmark (the olive becomes a plain o;
+  the leaf stays).
+- Don't recolour the olive (no violet, no orange) or the leaf, move or resize the leaf,
+  stretch, rotate, outline or add shadows. Don't put the full-colour icon on busy photos; use
+  the one-colour version there.
 
 ## Colours
 
@@ -130,7 +137,7 @@ Task colours stay the grower's own.
 | Ink on Cream | 14.6:1 | ✓ text |
 | Olive oil on Ripe olive (the leaf and the oil hill in the icon) | 8.0:1 | ✓ graphic and text |
 | Grove on Ripe olive | 4.6:1 | ✓ graphic |
-| Grove on Cream | 2.7:1 | only as the olive, inside its dark outline; never text |
+| Grove on Cream | 2.7:1 | only as the olive, inside the o's dark ring; never text |
 | White or Cream on Olive oil | 1.6–1.8:1 | ✗ never |
 | Ink on Olive oil (dark-theme buttons) | 9.4:1 | ✓ text |
 | Olive oil on night card `#221822` | 9.8:1 | ✓ text |
@@ -170,6 +177,10 @@ read like an "A", echoing a well-known online shop.
 The second icon (November 2026) was a big ripe-olive leaf in olive oil filling two thirds of
 the tile. It was replaced a few days later by the olive over the hill, together with the
 app's new colours, so the icon and the screens tell the same story.
+
+The first Mazono wordmark (November 2026) made the last o the olive: a little narrower than
+the letters and tilted. It set the end of the word apart ("-no"), so the same week the olive
+moved to the stressed o, became the typeface's own o, and gained its leaf accent.
 
 ## Rebuilding the files
 
