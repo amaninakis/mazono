@@ -387,7 +387,9 @@ watch(
   <main class="page settings" :class="{ 'in-section': section }">
     <header class="page-head">
       <RouterLink v-if="section" to="/settings" class="back-link">
-        <AppIcon name="chevronLeft" :size="20" />{{ $t('settings.title') }}
+        <AppIcon name="chevronLeft" :size="24" /><span class="back-text">{{
+          $t('settings.title')
+        }}</span>
       </RouterLink>
       <h1>{{ current?.title ?? $t('settings.title') }}</h1>
     </header>
