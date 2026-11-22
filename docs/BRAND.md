@@ -110,8 +110,11 @@ stroke weight and colour, and filled **Grove** green. It is always green.
 | Growth `--grow` (progress bars, income, shading) | `#5F7230` | `#A9BD63` |
 | The hill `--hill` | `#DCE5C4` | `#25301C` |
 
-Every page (not the first-start screens) has a green hill behind the logo and the title, with
-a wavy lower edge, and the phone's top bar takes the same green. Ripe olive by day and olive
+Every page (not the first-start screens) opens with a green hill: the page title sits in it,
+the small logo at the right end of the same row on phones, and the wavy lower edge falls in
+the space before the content, so nothing covers it. The hill grows with the row (a title that
+wraps, Oil's year picker); on a page whose title row has its own control (Oil, Journal), the
+logo steps aside on phones. The phone's top bar takes the same green. Ripe olive by day and olive
 oil by night mark what to press; green marks what is growing. Task colours stay the grower's
 own.
 
