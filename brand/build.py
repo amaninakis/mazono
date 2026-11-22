@@ -34,14 +34,15 @@ GROVE = '#8A9A5B'  # the olive in the wordmark
 SHINE = '#F2F5D6'
 CREAM = '#F6F1E7'  # text on dark backgrounds, light backgrounds
 
-# The mark, on a 130 × 130 grid: olive oil filling two thirds of the tile, its surface a
-# gentle wave, and a big olive leaf in it.
-WAVE = 'M0 43Q33 33 65 43T130 43'
-OIL_FILL = WAVE + 'V130H0Z'
-LEAF = 'M24 120Q28 64 104 52Q98 114 24 120Z'
-VEIN = 'M30 114Q62 88 100 56'
-# One colour: the oil as a single shape with the leaf cut out of it.
-MONO = 'M8 43Q36 33 65 43T122 43V108Q122 122 108 122H22Q8 122 8 108Z ' + LEAF
+# The mark, on a 130 × 130 grid: a green olive rising like a sun over a hill of olive oil,
+# with a big leaf, and a grove-green hill behind. No outlines: shapes and colour only.
+OLIVE = (65, 58, 22, 28)  # cx, cy, rx, ry, tilted −16°
+LEAF = 'M71 32Q80 4 118 6Q110 40 71 32Z'
+VEIN = 'M76 30Q94 18 114 8'
+BACK_HILL = 'M0 84Q40 66 75 80T130 76V130H0Z'
+HILL = '#67654A'  # grove green at 55 % over ripe olive
+CREST = 'M0 92Q40 74 75 88T130 84'
+OIL_HILL = CREST + 'V130H0Z'
 
 
 def svg(width, height, body, view=None, label='Mazono'):
@@ -52,15 +53,36 @@ def svg(width, height, body, view=None, label='Mazono'):
     )
 
 
-def mark(small=False, inset=False, clip='tile'):
-    """The oil and the leaf. `small` drops the surface line and the vein (16–32 px);
-    `inset` shrinks the leaf into the safe circle of phones that crop icons round."""
-    line = '' if small else f'<path d="{WAVE}" fill="none" stroke="{SURFACE}" stroke-width="3"/>'
-    vein = '' if small else f'<path d="{VEIN}" fill="none" stroke="{OIL}" stroke-width="2.2"/>'
-    leaf = f'<path d="{LEAF}" fill="{RIPE}"/>{vein}'
+def olive(small=False, fill=GROVE):
+    cx, cy, rx, ry = OLIVE
+    rotate = f'rotate(-16 {cx} {cy})'
+    body = f'<ellipse cx="{cx}" cy="{cy}" rx="{rx}" ry="{ry}" fill="{fill}" transform="{rotate}"/>'
+    if small or fill != GROVE:
+        return body
+    return body + (
+        f'<ellipse cx="{cx - 0.38 * rx:.1f}" cy="{cy - 0.38 * ry:.1f}" rx="{0.16 * rx:.1f}" '
+        f'ry="{0.22 * ry:.1f}" fill="{SHINE}" opacity="0.3" transform="{rotate}"/>'
+    )
+
+
+def fruit(small=False, inset=False):
+    """The olive and its leaf. `inset` sinks them a little behind the hill so they fit the
+    safe circle of phones that crop icons round."""
+    vein = '' if small else f'<path d="{VEIN}" fill="none" stroke="{RIPE}" stroke-width="2" stroke-linecap="round" opacity="0.7"/>'
+    body = f'{olive(small)}<path d="{LEAF}" fill="{OIL}"/>{vein}'
     if inset:
-        leaf = f'<g transform="translate(65 65) scale(0.74) translate(-65 -70)">{leaf}</g>'
-    return f'<g clip-path="url(#{clip})"><path d="{OIL_FILL}" fill="{OIL}"/>{line}</g>{leaf}'
+        body = f'<g transform="translate(65 88) scale(0.82) translate(-65 -88)">{body}</g>'
+    return body
+
+
+def mark(small=False, inset=False, clip='tile'):
+    """The back hill, the olive and leaf, and the oil hill in front. `small` drops the
+    oil's surface line, the vein and the shine (16–32 px)."""
+    line = '' if small else f'<path d="{CREST}" fill="none" stroke="{SURFACE}" stroke-width="3"/>'
+    return (
+        f'<g clip-path="url(#{clip})"><path d="{BACK_HILL}" fill="{HILL}"/>{fruit(small, inset)}'
+        f'<path d="{OIL_HILL}" fill="{OIL}"/>{line}</g>'
+    )
 
 
 def tile(rounded=True, small=False, inset=False, clip='tile'):
@@ -74,12 +96,26 @@ def tile(rounded=True, small=False, inset=False, clip='tile'):
 
 def icon(rounded=True, small=False, inset=False):
     """The app icon. Rounded for browsers and the logo; full-bleed for phones that cut
-    their own shape (Apple; Android "maskable", with the leaf inside the safe circle)."""
+    their own shape (Apple; Android "maskable", with the olive inside the safe circle)."""
     return svg(512, 512, tile(rounded, small, inset), '0 0 130 130')
 
 
 def monochrome(fill=RIPE):
-    return svg(512, 512, f'<path d="{MONO}" fill="{fill}" fill-rule="evenodd"/>', '0 0 130 130')
+    """One colour, for Android's themed icons: the olive, the leaf and the oil hill, with a
+    thin gap where the hill passes in front of the olive."""
+    cx, cy, rx, ry = OLIVE
+    shapes = (
+        f'<g transform="translate(65 88) scale(0.82) translate(-65 -88)">'
+        f'<ellipse cx="{cx}" cy="{cy}" rx="{rx}" ry="{ry}" transform="rotate(-16 {cx} {cy})"/>'
+        f'<path d="{LEAF}"/></g><path d="{OIL_HILL}"/>'
+    )
+    body = (
+        '<defs><clipPath id="safe"><rect x="8" y="8" width="114" height="114" rx="14"/></clipPath>'
+        '<mask id="gap"><rect width="130" height="130" fill="#fff"/>'
+        f'<path d="{CREST}" fill="none" stroke="#000" stroke-width="7"/></mask></defs>'
+        f'<g clip-path="url(#safe)" mask="url(#gap)" fill="{fill}">{shapes}</g>'
+    )
+    return svg(512, 512, body, '0 0 130 130')
 
 
 class Wordmark:
