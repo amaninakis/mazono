@@ -1,3 +1,3 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 130 130" role="img" aria-label="Mazono">
-<defs><clipPath id="tile"><rect width="130" height="130" rx="28"/></clipPath></defs><g clip-path="url(#tile)"><rect width="130" height="130" fill="#3B2436"/></g><g clip-path="url(#tile)"><path d="M0 43Q33 33 65 43T130 43V130H0Z" fill="#C2CB55"/></g><path d="M24 120Q28 64 104 52Q98 114 24 120Z" fill="#3B2436"/>
+<defs><clipPath id="tile"><rect width="130" height="130" rx="28"/></clipPath></defs><g clip-path="url(#tile)"><rect width="130" height="130" fill="#3B2436"/></g><g clip-path="url(#tile)"><path d="M0 84Q40 66 75 80T130 76V130H0Z" fill="#67654A"/><ellipse cx="65" cy="58" rx="22" ry="28" fill="#8A9A5B" transform="rotate(-16 65 58)"/><path d="M71 32Q80 4 118 6Q110 40 71 32Z" fill="#C2CB55"/><path d="M0 92Q40 74 75 88T130 84V130H0Z" fill="#C2CB55"/></g>
 </svg>
