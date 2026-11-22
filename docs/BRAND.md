@@ -112,11 +112,15 @@ stroke weight and colour, and filled **Grove** green. It is always green.
 
 Every page (not the first-start screens) opens with a green hill: the page title sits in it,
 the small logo at the right end of the same row on phones, and the wavy lower edge falls in
-the space before the content, so nothing covers it. The hill grows with the row (a title that
-wraps, Oil's year picker); on a page whose title row has its own control (Oil, Journal), the
-logo steps aside on phones. The phone's top bar takes the same green. Ripe olive by day and olive
-oil by night mark what to press; green marks what is growing. Task colours stay the grower's
-own.
+the space before the content, so nothing covers it. The title row is the same height on every
+page (48 px), so the hill and its wave sit at exactly the same place on every tab; a title too
+long for the row ends in "…", and a control that does not fit (Oil's year picker) goes on its
+own line below the wave. Where the row has its own control or a back arrow (Oil, Journal, a
+settings section), the logo steps aside on phones, and a settings section shows only the back
+arrow (its word stays for screen readers). The phone's top bar takes the same green.
+
+Ripe olive by day and olive oil by night mark what to press; green marks what is growing.
+Task colours stay the grower's own.
 
 **Contrast** (checked; aim for 4.5:1 for text, 3:1 for graphics)
 
