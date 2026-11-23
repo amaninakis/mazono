@@ -81,7 +81,7 @@ the last mill visit (February), named by its year. Money is counted per calendar
 
 ### Field log (v0.1)
 
-- **First-run setup**: language, packaging units (sack, half sack, crate, pallet bin… or your own,
+- **First-run setup**: language, collection units (sack, half sack, crate, pallet bin… or your own,
   with an optional approximate weight) and your fields with tree counts.
 - **Today screen**: the task for the season is preselected (harvest, pruning, fertilizer,
   weed whacking, or your own task types). The field you worked last is preselected while it still
