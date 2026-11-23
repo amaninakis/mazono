@@ -5,14 +5,15 @@ import { computed, ref, useTemplateRef, watch } from 'vue'
 import { RouterLink, useRoute, useRouter } from 'vue-router'
 import { addDays, monthGrid, parseISODate, todayISO } from '../core/dates'
 import { formatNumber } from '../core/format'
+import { isFutureMonth, monthsWithWork, shownMonth } from '../core/months'
 import { unitLabel } from '../core/units'
 import { formatLocale } from '../i18n'
 import { account } from '../sync/account'
 import AppIcon from '../ui/AppIcon.vue'
 import { canDo, taskName, useFarm } from '../ui/farm'
-import MonthYearNav from '../ui/MonthYearNav.vue'
+import MonthStrip from '../ui/MonthStrip.vue'
 import OilDrop from '../ui/OilDrop.vue'
-import { slideIn } from '../ui/slide'
+import { nudge, slideIn } from '../ui/slide'
 import { useSwipe } from '../ui/swipe'
 import TaskIcon from '../ui/TaskIcon.vue'
 import { showToast } from '../ui/toast'
@@ -49,12 +50,21 @@ const byDay = computed(() => {
 
 const ym = computed(() => month.value.split('-').map(Number) as [number, number])
 const grid = computed(() => monthGrid(ym.value[0], ym.value[1]))
+const days = useTemplateRef<HTMLElement>('days')
+/** Show another month; a month after today shows today's month instead. */
+function showMonth(year: number, monthNumber: number) {
+  month.value = shownMonth(year, monthNumber, today)
+}
+
 function shiftMonth(delta: number) {
   const dt = new Date(ym.value[0], ym.value[1] - 1 + delta, 1)
-  month.value = `${dt.getFullYear()}-${String(dt.getMonth() + 1).padStart(2, '0')}`
+  if (isFutureMonth(dt.getFullYear(), dt.getMonth() + 1, today)) {
+    nudge(days.value, 1)
+    return
+  }
+  showMonth(dt.getFullYear(), dt.getMonth() + 1)
 }
 // Swiping the days sideways changes the month too (left: the next one); the days slide in.
-const days = useTemplateRef<HTMLElement>('days')
 useSwipe(days, shiftMonth)
 watch(month, (shown, before) => slideIn(days.value, shown > before ? 1 : -1), {
   flush: 'post',
@@ -81,6 +91,12 @@ const dayEntries = computed(() =>
 )
 
 const extractionDays = computed(() => new Set(farm.value.extractions.map((x) => x.date)))
+/** Months of the shown year with work or a mill visit, for the dots on the month chips. */
+const monthsWithDots = computed(() =>
+  monthsWithWork([...byDay.value.keys(), ...extractionDays.value], ym.value[0]),
+)
+/** Away from today (another day or another month): the day row offers a way back. */
+const awayFromToday = computed(() => date.value !== today || month.value !== today.slice(0, 7))
 const dayExtractions = computed(() =>
   farm.value.extractions.filter((x) => x.date === date.value),
 )
@@ -159,19 +175,17 @@ function loggedBy(createdBy: string | undefined) {
 
 <template>
   <main class="page journal">
-    <div class="row-between journal-head">
+    <header class="page-head">
       <h1>{{ $t('nav.journal') }}</h1>
-      <button
-        type="button"
-        class="btn small"
-        :disabled="date === today && month === today.slice(0, 7)"
-        @click="setDate(today)"
-      >
-        {{ $t('journal.goToday') }}
-      </button>
-    </div>
+    </header>
+    <MonthStrip
+      :year="ym[0]"
+      :month="ym[1]"
+      :today="today"
+      :with-work="monthsWithDots"
+      @pick="showMonth"
+    />
     <section class="card calendar">
-      <MonthYearNav :year="ym[0]" :month="ym[1]" @shift="shiftMonth" />
       <div ref="days" class="cal-grid">
         <span v-for="(w, i) in weekdays" :key="`w${i}`" class="cal-wd">{{ w }}</span>
         <template v-for="(d, i) in grid" :key="d ?? `x${i}`">
@@ -184,7 +198,12 @@ function loggedBy(createdBy: string | undefined) {
             :aria-current="d === date ? 'date' : undefined"
             @click="setDate(d)"
           >
-            <span>{{ Number(d.slice(8)) }}</span>
+            <span class="day-number"
+              >{{ Number(d.slice(8)) }}
+              <small v-if="d === today" class="today-mark">{{
+                $t('journal.todayMark')
+              }}</small></span
+            >
             <span class="dots" aria-hidden="true">
               <i
                 v-for="x in dayTypes(d).slice(0, 3)"
@@ -218,15 +237,15 @@ function loggedBy(createdBy: string | undefined) {
       >
         <AppIcon name="chevronRight" :size="20" />
       </button>
+      <button
+        v-if="awayFromToday"
+        type="button"
+        class="chip selected day-today"
+        @click="setDate(today)"
+      >
+        {{ $t('journal.goToday') }}
+      </button>
     </div>
-    <button
-      v-if="date !== today || month !== today.slice(0, 7)"
-      type="button"
-      class="btn ghost small center"
-      @click="setDate(today)"
-    >
-      {{ $t('journal.goToday') }}
-    </button>
 
     <ul v-if="dayExtractions.length" class="entries">
       <li v-for="x in dayExtractions" :key="x.id" class="entry oil-entry">

@@ -150,7 +150,10 @@
     "extractionLine": "{{olives}} kg olives → {{olive oil}} kg olive oil",
     "prevYear": "Previous year",
     "nextYear": "Next year",
-    "loggedBy": "Logged by {{name}}"
+    "loggedBy": "Logged by {{name}}",
+    "month": "Month",
+    "hasWork": "has entries",
+    "todayMark": "today"
   },
   "settings": {
     "title": "Settings",
