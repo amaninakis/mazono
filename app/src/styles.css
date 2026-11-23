@@ -477,18 +477,18 @@ button, input, select, textarea { font: inherit; color: inherit; }
 .field-picker .edge-btn.right { right: -10px; }
 .field-picker .edge-btn.left { left: -10px; }
 /* Rows of buttons that scroll sideways (task types, report tabs): like the field chooser,
-   the side with more to see fades out over about two button widths, wider than its arrow
-   button so the fade shows past it. No scroll bars, and nothing scrolls up and down. */
+   the side with more to see fades out over 80 px, a little
+   wider than its arrow button so the fade shows past it. No scroll bars, and nothing scrolls up and down. */
 .scroll-row { position: relative; }
 .scroll-row-strip {
   --fade-left: 0px; --fade-right: 0px;
   overflow-x: auto; overflow-y: hidden;
-  -webkit-mask-image: linear-gradient(to right, transparent calc(var(--fade-left) * 0.35), #000 var(--fade-left), #000 calc(100% - var(--fade-right)), transparent calc(100% - var(--fade-right) * 0.35));
-  mask-image: linear-gradient(to right, transparent calc(var(--fade-left) * 0.35), #000 var(--fade-left), #000 calc(100% - var(--fade-right)), transparent calc(100% - var(--fade-right) * 0.35));
+  -webkit-mask-image: linear-gradient(to right, transparent calc(var(--fade-left) * 0.2), #000 var(--fade-left), #000 calc(100% - var(--fade-right)), transparent calc(100% - var(--fade-right) * 0.2));
+  mask-image: linear-gradient(to right, transparent calc(var(--fade-left) * 0.2), #000 var(--fade-left), #000 calc(100% - var(--fade-right)), transparent calc(100% - var(--fade-right) * 0.2));
 }
 .scroll-row-strip::-webkit-scrollbar { display: none; }
-.scroll-row.more-left > .scroll-row-strip { --fade-left: 110px; }
-.scroll-row.more-right > .scroll-row-strip { --fade-right: 110px; }
+.scroll-row.more-left > .scroll-row-strip { --fade-left: 80px; }
+.scroll-row.more-right > .scroll-row-strip { --fade-right: 80px; }
 .scroll-row .edge-btn { top: 50%; transform: translateY(-50%); }
 .scroll-row .edge-btn.left { left: -8px; }
 .scroll-row .edge-btn.right { right: -8px; }
