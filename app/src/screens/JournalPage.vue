@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import type { TaskEntry, TaskType } from '../core/types'
 import { useTranslation } from 'i18next-vue'
-import { computed, ref } from 'vue'
+import { computed, ref, useTemplateRef, watch } from 'vue'
 import { RouterLink, useRoute, useRouter } from 'vue-router'
 import { addDays, monthGrid, parseISODate, todayISO } from '../core/dates'
 import { formatNumber } from '../core/format'
@@ -12,6 +12,8 @@ import AppIcon from '../ui/AppIcon.vue'
 import { canDo, taskName, useFarm } from '../ui/farm'
 import MonthYearNav from '../ui/MonthYearNav.vue'
 import OilDrop from '../ui/OilDrop.vue'
+import { slideIn } from '../ui/slide'
+import { useSwipe } from '../ui/swipe'
 import TaskIcon from '../ui/TaskIcon.vue'
 import { showToast } from '../ui/toast'
 
@@ -51,6 +53,12 @@ function shiftMonth(delta: number) {
   const dt = new Date(ym.value[0], ym.value[1] - 1 + delta, 1)
   month.value = `${dt.getFullYear()}-${String(dt.getMonth() + 1).padStart(2, '0')}`
 }
+// Swiping the days sideways changes the month too (left: the next one); the days slide in.
+const days = useTemplateRef<HTMLElement>('days')
+useSwipe(days, shiftMonth)
+watch(month, (shown, before) => slideIn(days.value, shown > before ? 1 : -1), {
+  flush: 'post',
+})
 const weekdays = computed(() =>
   Array.from({ length: 7 }, (_, i) =>
     new Intl.DateTimeFormat(formatLocale.value, { weekday: 'narrow' }).format(
@@ -164,7 +172,7 @@ function loggedBy(createdBy: string | undefined) {
     </div>
     <section class="card calendar">
       <MonthYearNav :year="ym[0]" :month="ym[1]" @shift="shiftMonth" />
-      <div class="cal-grid">
+      <div ref="days" class="cal-grid">
         <span v-for="(w, i) in weekdays" :key="`w${i}`" class="cal-wd">{{ w }}</span>
         <template v-for="(d, i) in grid" :key="d ?? `x${i}`">
           <button

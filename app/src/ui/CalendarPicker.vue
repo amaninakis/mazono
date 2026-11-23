@@ -1,12 +1,15 @@
 <script setup lang="ts">
-import { computed, onBeforeUnmount, onMounted, ref, useTemplateRef } from 'vue'
+import { computed, onBeforeUnmount, onMounted, ref, useTemplateRef, watch } from 'vue'
 import { monthGrid, todayISO } from '../core/dates'
 import { formatLocale } from '../i18n'
 import MonthYearNav from './MonthYearNav.vue'
+import { nudge, slideIn } from './slide'
+import { useSwipe } from './swipe'
 
 /**
  * Month calendar that opens under a date box. The current date is selected, days after `max`
- * cannot be picked, and "Today" is always one tap away.
+ * cannot be picked, and "Today" is always one tap away. Swiping the days sideways changes the
+ * month (left: the next one).
  */
 const props = defineProps<{ selected: string; max?: string }>()
 const emit = defineEmits<{ pick: [isoDate: string]; close: [] }>()
@@ -50,6 +53,20 @@ function shiftMonth(delta: number) {
   }
   shown.value = [Math.floor(index / 12), (index % 12) + 1]
 }
+
+const days = useTemplateRef<HTMLElement>('days')
+useSwipe(days, (step) => {
+  if (step > 0 && !canGoForward.value) {
+    nudge(days.value, step)
+    return
+  }
+  shiftMonth(step)
+})
+watch(
+  () => shown.value[0] * 12 + shown.value[1],
+  (now, before) => slideIn(days.value, now > before ? 1 : -1),
+  { flush: 'post' },
+)
 
 function isDisabled(isoDate: string) {
   return !!props.max && isoDate > props.max
@@ -98,7 +115,7 @@ onBeforeUnmount(() => {
       :forward-disabled="!canGoForward"
       @shift="shiftMonth"
     />
-    <div class="cal-grid">
+    <div ref="days" class="cal-grid">
       <span v-for="(weekday, i) in weekdays" :key="`w${i}`" class="cal-wd">{{ weekday }}</span>
       <template v-for="(day, i) in grid" :key="day ?? `x${i}`">
         <button

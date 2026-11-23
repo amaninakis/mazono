@@ -11,11 +11,15 @@ import {
 import { formatLocale } from '../i18n'
 import AppIcon from './AppIcon.vue'
 import CalendarPicker from './CalendarPicker.vue'
+import { nudge, slideIn } from './slide'
+import { useSwipe } from './swipe'
 
 /**
  * A date box: type the date in the app's format (e.g. 15/11/2026), or tap the calendar button.
  * Tapping the box selects the date in it, so typing or pasting replaces it. A date is used as
  * soon as it is fully typed (with its year), so the rest of the page updates straight away.
+ * Swiping the box sideways moves the date a day (left: the next day); every change made by a
+ * swipe, an arrow, the calendar or the page (not by typing) slides the new date in.
  */
 /** `arrows` adds ‹ › buttons that move the date one day back or forward. */
 const props = defineProps<{ id?: string; max?: string; label?: string; arrows?: boolean }>()
@@ -23,6 +27,7 @@ const model = defineModel<string>({ required: true })
 const { t: translate } = useTranslation()
 const input = useTemplateRef<HTMLInputElement>('input')
 const wrap = useTemplateRef<HTMLElement>('wrap')
+const line = useTemplateRef<HTMLElement>('line')
 /** Open the calendar towards the side of the screen that has room for it. */
 const openToRight = ref(false)
 
@@ -42,10 +47,13 @@ const text = ref(formatDate(model.value))
 const error = ref('')
 const calendarOpen = ref(false)
 let typing = false
-watch([model, formatLocale], () => {
+watch([model, formatLocale], ([date], [before]) => {
   // Keep what the user is typing (e.g. "16/2/26") instead of reformatting it under them.
   if (!typing) {
     text.value = formatDate(model.value)
+    if (date && before && date !== before) {
+      slideIn(input.value, date > before ? 1 : -1)
+    }
   }
   error.value = ''
 })
@@ -137,6 +145,14 @@ function shiftDay(delta: number) {
   text.value = formatDate(next)
 }
 
+useSwipe(line, (step) => {
+  if (step > 0 && !canGoForward.value) {
+    nudge(input.value, step)
+    return
+  }
+  shiftDay(step)
+})
+
 function toggleCalendar() {
   if (!calendarOpen.value && typing) {
     commit()
@@ -157,7 +173,7 @@ function onPick(isoDate: string) {
 
 <template>
   <div ref="wrap" class="date-wrap">
-    <div class="date-line">
+    <div ref="line" class="date-line">
       <button
         v-if="arrows"
         type="button"
