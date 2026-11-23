@@ -94,7 +94,7 @@
     "treesPruned": "Trees pruned",
     "treesWorked": "Trees (optional)",
     "leftAfter": "{{left}} trees left in {{field}} after this",
-    "collected": "Collected",
+    "collected": "Amount collected",
     "addUnitRow": "Add unit",
     "newUnit": "New unit…",
     "newUnitName": "Name of the new unit",
