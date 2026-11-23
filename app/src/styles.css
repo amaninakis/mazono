@@ -171,7 +171,7 @@ button, input, select, textarea { font: inherit; color: inherit; }
 }
 .chip.selected { background: var(--accent); border-color: var(--accent); color: var(--on-accent); }
 
-.task-chips { display: flex; gap: 8px; overflow-x: auto; padding: 2px 0 12px; }
+.task-chips { display: flex; gap: 8px; padding: 4px 0; margin-bottom: 8px; }
 .task-chips::-webkit-scrollbar { display: none; }
 .task-chip {
   flex: none; min-height: var(--tap); padding: 0 16px; border-radius: 999px;
@@ -462,19 +462,36 @@ button, input, select, textarea { font: inherit; color: inherit; }
 }
 .field-picker.scrolling .field-chips::-webkit-scrollbar { display: none; }
 @supports (scrollbar-width: none) {
-  .task-chips, .field-picker.scrolling .field-chips { scrollbar-width: none; }
+  .scroll-row-strip, .field-picker.scrolling .field-chips { scrollbar-width: none; }
 }
 .field-picker.scrolling .field-chip { scroll-snap-align: center; }
 .field-picker .edge { position: absolute; top: 0; bottom: 28px; width: 36px; pointer-events: none; }
 .field-picker .edge.right { right: 0; background: linear-gradient(to right, transparent, var(--card)); }
 .field-picker .edge.left { left: 0; background: linear-gradient(to left, transparent, var(--card)); }
-.field-picker .edge-btn {
+.field-picker .edge-btn, .scroll-row .edge-btn {
   position: absolute; top: calc(50% - 14px - 24px); width: var(--tap); height: var(--tap); border-radius: 50%;
   border: 1px solid var(--line); background: var(--card); color: var(--accent); font-size: 1.4rem; line-height: 1;
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.06); cursor: pointer;
+  display: grid; place-items: center; padding: 0;
 }
 .field-picker .edge-btn.right { right: -10px; }
 .field-picker .edge-btn.left { left: -10px; }
+/* Rows of buttons that scroll sideways (task types, report tabs): like the field chooser,
+   the side with more to see fades out and has an arrow button. No scroll bars, and nothing
+   scrolls up and down. */
+.scroll-row { position: relative; }
+.scroll-row-strip {
+  --fade-left: 0px; --fade-right: 0px;
+  overflow-x: auto; overflow-y: hidden;
+  -webkit-mask-image: linear-gradient(to right, transparent, #000 var(--fade-left), #000 calc(100% - var(--fade-right)), transparent);
+  mask-image: linear-gradient(to right, transparent, #000 var(--fade-left), #000 calc(100% - var(--fade-right)), transparent);
+}
+.scroll-row-strip::-webkit-scrollbar { display: none; }
+.scroll-row.more-left > .scroll-row-strip { --fade-left: 48px; }
+.scroll-row.more-right > .scroll-row-strip { --fade-right: 48px; }
+.scroll-row .edge-btn { top: 50%; transform: translateY(-50%); }
+.scroll-row .edge-btn.left { left: -8px; }
+.scroll-row .edge-btn.right { right: -8px; }
 .more-hint { text-align: right; font-size: 0.8rem; margin-top: 6px; }
 
 /* Money page */
@@ -504,7 +521,7 @@ button, input, select, textarea { font: inherit; color: inherit; }
 .sale-sum { margin-top: 12px; }
 
 /* Reports */
-.report-tabs { margin-bottom: 12px; flex-wrap: nowrap; overflow-x: auto; gap: 6px; }
+.report-tabs { margin-bottom: 8px; padding: 4px 0; flex-wrap: nowrap; gap: 6px; }
 .report-tabs .chip { flex: none; padding: 0 12px; }
 .heat-table td { cursor: pointer; }
 .reports .chips.tight { margin: 4px 0 10px; }

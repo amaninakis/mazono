@@ -51,6 +51,8 @@
     "notes": "Notes",
     "dateInvalid": "Type a date like {{example}}",
     "dateTooLate": "The date can’t be after {{max}}",
+    "scrollBack": "Previous",
+    "scrollMore": "More",
     "openCalendar": "Open calendar",
     "today": "Today"
   },

@@ -29,6 +29,7 @@ import NewTaskModal from '../ui/NewTaskModal.vue'
 import NewUnitModal from '../ui/NewUnitModal.vue'
 import NumberStepper from '../ui/NumberStepper.vue'
 import { useSaving } from '../ui/saving'
+import ScrollRow from '../ui/ScrollRow.vue'
 import TaskIcon from '../ui/TaskIcon.vue'
 import { showToast } from '../ui/toast'
 import ToggleSwitch from '../ui/ToggleSwitch.vue'
@@ -491,7 +492,7 @@ const canEditSettings = computed(() => canDo(farm.value, 'settings', 'change'))
       @discard="draft.discard()"
     />
 
-    <div class="task-chips" role="tablist">
+    <ScrollRow class="task-chips" role="tablist" :selected-key="typeId">
       <button
         v-for="x in activeTypes"
         :key="x.id"
@@ -513,7 +514,7 @@ const canEditSettings = computed(() => canDo(farm.value, 'settings', 'change'))
       >
         <AppIcon name="plus" :size="20" /> {{ $t('task.new') }}
       </button>
-    </div>
+    </ScrollRow>
 
     <section class="card">
       <div class="date-quick">

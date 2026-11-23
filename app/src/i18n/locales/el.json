@@ -13,7 +13,7 @@
   "task": {
     "harvest": "Μάζεμα",
     "pruning": "Κλάδεμα",
-    "fertilizer": "Λίπανση",
+    "fertilizer": "Λίπασμα",
     "weeding": "Χορτοκοπή",
     "new": "Νέα εργασία"
   },
@@ -51,6 +51,8 @@
     "notes": "Σημειώσεις",
     "dateInvalid": "Γράψτε μια ημερομηνία όπως {{example}}",
     "dateTooLate": "Η ημερομηνία δεν μπορεί να είναι μετά τις {{max}}",
+    "scrollBack": "Προηγούμενα",
+    "scrollMore": "Περισσότερα",
     "openCalendar": "Άνοιγμα ημερολογίου",
     "today": "Σήμερα"
   },
