@@ -63,7 +63,7 @@
     "language": "Language",
     "farmName": "Farm name",
     "farmNamePlaceholder": "My olive grove",
-    "unitsTitle": "How do you pack your olives?",
+    "unitsTitle": "What do you collect your olives in?",
     "unitsHelp": "Choose the collection units you use and pick your default. The weight is optional; the app will learn it from your mill extractions.",
     "addUnit": "Add your own collection unit",
     "unitName": "Collection unit name",
