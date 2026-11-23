@@ -516,7 +516,7 @@ const canEditSettings = computed(() => canDo(farm.value, 'settings', 'change'))
 
     <section class="card">
       <div class="date-quick">
-        <!-- The label and the button are centred on each other, whichever is wider. -->
+        <!-- The label over the button, at the same inset as the other section titles. -->
         <div class="quick-stack">
           <label class="label" for="date">{{ $t('today.date') }}</label>
           <!-- Both words are laid out, one hidden, so the button keeps one width. -->

@@ -119,6 +119,9 @@ button, input, select, textarea { font: inherit; color: inherit; }
 }
 .label { display: block; font-size: 0.85rem; font-weight: 600; color: var(--muted); margin: 0.75rem 0 0.4rem; text-transform: uppercase; letter-spacing: 0.03em; }
 .card > .label:first-child, .row-between .label, .quick-stack .label { margin-top: 0; }
+/* Task page: every section title starts at the same inset, in line with the text inside the
+   buttons and boxes under it. */
+.page.today .card .label { padding-left: 15px; }
 .row-between { display: flex; align-items: center; justify-content: space-between; gap: 8px; flex-wrap: wrap; }
 .row-end { display: flex; justify-content: flex-end; margin: 0 0 8px; }
 
@@ -414,8 +417,8 @@ button, input, select, textarea { font: inherit; color: inherit; }
 /* Task page: the smart today/yesterday button and the date fit on one line (48px targets kept) */
 /* The label over the button on the left, the button as tall as the date box; the date on the right, level with the button (also when wrapped). */
 .date-quick { display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 4px; }
-/* As wide as the wider of the label and the button, each centred on the other (any language). */
-.quick-stack { display: inline-flex; flex-direction: column; align-items: center; }
+/* The label over the button; the label starts at the same inset as every other label below. */
+.quick-stack { display: inline-flex; flex-direction: column; align-items: flex-start; }
 .date-quick .chip { padding: 0 10px; }
 .quick-date { display: inline-grid; place-items: center; min-height: calc(var(--tap) + 2px); }
 .quick-date > span { grid-area: 1 / 1; }
