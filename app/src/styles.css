@@ -99,6 +99,7 @@ button, input, select, textarea { font: inherit; color: inherit; }
 .about { display: flex; flex-direction: column; align-items: center; gap: 6px; margin: 28px 0 8px; text-align: center; }
 .about .about-line { margin: 8px 0 0; color: var(--ink); font-weight: 500; }
 .about p { max-width: 34em; margin: 0; }
+.about .source-link { display: inline-flex; align-items: center; min-height: var(--tap); padding: 0 8px; }
 .shell { max-width: 560px; margin: 0 auto; min-height: 100vh; }
 .page { padding: var(--page-top) 14px calc(150px + env(safe-area-inset-bottom)); }
 .page-head h1 { margin-bottom: 0.5rem; }

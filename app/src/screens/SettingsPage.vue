@@ -956,6 +956,13 @@ watch(
       <p class="about-line">{{ $t('brand.line') }}</p>
       <p class="muted small">{{ $t('settings.about') }}</p>
       <p class="muted small">{{ $t('settings.version', { version }) }}</p>
+      <a
+        class="source-link small"
+        href="https://github.com/amaninakis/olive-harvest"
+        target="_blank"
+        rel="noopener"
+        >{{ $t('settings.sourceCode') }}</a
+      >
     </section>
 
     <AppModal
