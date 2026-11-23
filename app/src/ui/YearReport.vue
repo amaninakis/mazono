@@ -24,6 +24,7 @@ import { formatLocale } from '../i18n'
 import CumulativeChart from './CumulativeChart.vue'
 import { taskName, useFarm } from './farm'
 import { seasonMonthTicks } from './monthTicks'
+import TaskIcon from './TaskIcon.vue'
 
 /**
  * How this farming year is going: totals so far, work per day, trees harvested out of all,
@@ -463,7 +464,7 @@ const compareNow = computed(() => {
       <dl class="lines per-day">
         <div v-for="row in perDayRows" :key="row.key">
           <dt>
-            <span aria-hidden="true">{{ row.icon }}</span> {{ row.name }}
+            <TaskIcon :icon="row.icon" :size="18" /> {{ row.name }}
             <small class="muted per-day-detail">{{ row.detail }}</small>
           </dt>
           <dd>{{ row.perDay }}</dd>

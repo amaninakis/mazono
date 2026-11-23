@@ -9,6 +9,7 @@ import { formatNumber } from '../core/format'
 import { formatLocaleFor } from '../core/locale'
 import { unitWeights } from '../core/oil'
 import { parseDecimal } from '../core/progress'
+import { taskIconName } from '../core/taskIcons'
 import { db } from '../db/db'
 import { importFarm } from '../db/repo'
 import { chooseLanguage, formatLocale, LANGUAGES, locale } from '../i18n'
@@ -20,6 +21,7 @@ import AppModal from '../ui/AppModal.vue'
 import { canDo, categoryName, chargeName, locationName, taskName, useFarm } from '../ui/farm'
 import ServerAccountsCard from '../ui/ServerAccountsCard.vue'
 import SettingInput from '../ui/SettingInput.vue'
+import TaskIcon from '../ui/TaskIcon.vue'
 import { showToast } from '../ui/toast'
 import ToggleSwitch from '../ui/ToggleSwitch.vue'
 import UsersCard from '../ui/UsersCard.vue'
@@ -855,16 +857,7 @@ watch(
             :style="{ '--c': x.color }"
           >
             <div class="tt-head">
-              <select
-                class="input select icon-select"
-                :aria-label="$t('settings.icon')"
-                :value="x.icon"
-                @change="(e) => repo.update('taskTypes', x.id, { icon: val(e) })"
-              >
-                <option v-for="i in [...new Set([x.icon, ...TASK_ICONS])]" :key="i">
-                  {{ i }}
-                </option>
-              </select>
+              <span class="tt-icon"><TaskIcon :icon="x.icon" :size="24" /></span>
               <SettingInput
                 :key="`${x.id}-${locale}`"
                 class="input"
@@ -882,6 +875,21 @@ watch(
                 <span class="wide-only">{{
                   x.archived ? $t('common.unarchive') : $t('common.archive')
                 }}</span>
+              </button>
+            </div>
+            <div class="icon-choices" role="radiogroup" :aria-label="$t('settings.icon')">
+              <button
+                v-for="i in TASK_ICONS"
+                :key="i"
+                type="button"
+                role="radio"
+                :aria-checked="x.icon === i"
+                :aria-label="$t(`taskIcon.${taskIconName(i)?.split(':')[1]}`)"
+                class="icon-choice"
+                :class="[{ selected: x.icon === i }]"
+                @click="repo.update('taskTypes', x.id, { icon: i })"
+              >
+                <TaskIcon :icon="i" :size="22" />
               </button>
             </div>
             <div class="swatches" role="radiogroup" :aria-label="$t('settings.color')">

@@ -848,5 +848,17 @@
   },
   "brand": {
     "line": "Harvesting olives is hard work. Managing your grove shouldn't be."
+  },
+  "taskIcon": {
+    "olive": "Olives",
+    "scissors": "Scissors",
+    "flask-conical": "Flask",
+    "sprout": "Sprout",
+    "droplet": "Water drop",
+    "tractor": "Tractor",
+    "flame": "Fire",
+    "bug": "Insect",
+    "axe": "Axe",
+    "clipboard-list": "List"
   }
 }

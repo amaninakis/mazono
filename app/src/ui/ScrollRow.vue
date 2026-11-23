@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { nextTick, onBeforeUnmount, onMounted, ref, useTemplateRef, watch } from 'vue'
+import AppIcon from './AppIcon.vue'
 
 const props = defineProps<{ selectedKey?: string | number }>()
 /**
@@ -78,7 +79,7 @@ watch(
       :aria-label="$t('common.scrollBack')"
       @click="page(-1)"
     >
-      ‹
+      <AppIcon name="chevronLeft" :size="20" />
     </button>
     <button
       v-if="!atEnd"
@@ -88,7 +89,7 @@ watch(
       :aria-label="$t('common.scrollMore')"
       @click="page(1)"
     >
-      ›
+      <AppIcon name="chevronRight" :size="20" />
     </button>
   </div>
 </template>

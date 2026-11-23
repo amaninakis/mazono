@@ -12,6 +12,7 @@ import AppIcon from '../ui/AppIcon.vue'
 import { canDo, taskName, useFarm } from '../ui/farm'
 import MonthYearNav from '../ui/MonthYearNav.vue'
 import OilDrop from '../ui/OilDrop.vue'
+import TaskIcon from '../ui/TaskIcon.vue'
 import { showToast } from '../ui/toast'
 
 const { t: translate } = useTranslation()
@@ -198,7 +199,7 @@ function loggedBy(createdBy: string | undefined) {
         :aria-label="$t('journal.prevDay')"
         @click="setDate(addDays(date, -1))"
       >
-        ‹
+        <AppIcon name="chevronLeft" :size="20" />
       </button>
       <h1 class="cap">{{ dayTitle }}</h1>
       <button
@@ -207,7 +208,7 @@ function loggedBy(createdBy: string | undefined) {
         :aria-label="$t('journal.nextDay')"
         @click="setDate(addDays(date, 1))"
       >
-        ›
+        <AppIcon name="chevronRight" :size="20" />
       </button>
     </div>
     <button
@@ -260,9 +261,7 @@ function loggedBy(createdBy: string | undefined) {
           :class="{ readonly: !canEditWork }"
           @click="canEditWork && router.push(`/entry/${e.id}`)"
         >
-          <span class="entry-icon" aria-hidden="true">{{
-            typeById.get(e.taskTypeId)?.icon
-          }}</span>
+          <TaskIcon class="entry-icon" :icon="typeById.get(e.taskTypeId)?.icon" :size="24" />
           <span class="entry-text">
             <strong>
               {{ typeById.get(e.taskTypeId) ? taskName($t, typeById.get(e.taskTypeId)!) : '?' }}

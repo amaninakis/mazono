@@ -177,8 +177,16 @@ button, input, select, textarea { font: inherit; color: inherit; }
   flex: none; min-height: var(--tap); padding: 0 16px; border-radius: 999px;
   border: 2px solid var(--c, var(--line)); background: var(--card); font-weight: 600; cursor: pointer;
 }
+.task-chip { display: inline-flex; align-items: center; gap: 6px; }
+/* The task's icon takes its colour; selected, it turns white with the words. At night the task
+   colours are too dark on the cards, so the icon takes the text colour there. */
+.task-chip .task-icon { color: var(--c); }
 .task-chip.selected { background: var(--c); color: #fff; }
+.task-chip.selected .task-icon { color: #fff; }
 .task-chip.add { border-style: dashed; border-color: var(--line); color: var(--muted); }
+@media (prefers-color-scheme: dark) { .task-chip:not(.selected) .task-icon { color: var(--ink); } }
+.app-icon, .task-icon { flex: none; vertical-align: middle; }
+.task-icon.emoji { font-size: 1.1em; line-height: 1; }
 
 .field-chips { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 8px; }
 .field-chip {
@@ -303,7 +311,8 @@ button, input, select, textarea { font: inherit; color: inherit; }
   border-left: 6px solid var(--c); border-radius: var(--radius);
 }
 .entry-main { flex: 1; display: flex; gap: 12px; align-items: center; text-align: left; padding: 12px; border: none; background: transparent; cursor: pointer; }
-.entry-icon { font-size: 1.5rem; }
+.entry-icon { font-size: 1.5rem; color: var(--c); }
+@media (prefers-color-scheme: dark) { .entry-icon { color: var(--ink); } }
 .entry-text { display: flex; flex-direction: column; gap: 2px; }
 .entry-text small { font-size: 0.88rem; }
 .empty { text-align: center; padding: 32px 0; }
@@ -313,8 +322,16 @@ button, input, select, textarea { font: inherit; color: inherit; }
 .task-types { gap: 14px; }
 .tt { border-left: 5px solid var(--c); padding-left: 10px; }
 .tt-head { display: flex; gap: 8px; align-items: center; }
-.tt-head .input:not(.icon-select) { flex: 1; }
-.icon-select { width: 64px; flex: none; font-size: 1.2rem; }
+.tt-head .input { flex: 1; }
+/* The task type's icon beside its name, and the icons to choose from below it. */
+.tt-icon { flex: none; display: grid; place-items: center; width: 40px; color: var(--c); }
+.icon-choices { display: flex; flex-wrap: wrap; gap: 4px; margin: 8px 0 2px; }
+.icon-choice {
+  width: var(--tap); height: var(--tap); display: grid; place-items: center;
+  border: 1px solid var(--line); border-radius: 12px; background: var(--card); color: var(--ink); cursor: pointer;
+}
+.icon-choice.selected { border: 2px solid var(--accent); background: var(--accent-soft); }
+@media (prefers-color-scheme: dark) { .tt-icon { color: var(--ink); } }
 .swatches { display: flex; gap: 0; margin: 6px 0; flex-wrap: wrap; }
 /* A 32px colour dot inside a 48px tap area. */
 .swatch { width: var(--tap); height: var(--tap); padding: 6px; border-radius: 50%; border: 2px solid transparent; background-clip: content-box; cursor: pointer; }
@@ -455,6 +472,7 @@ button, input, select, textarea { font: inherit; color: inherit; }
   position: absolute; top: calc(50% - 14px - 24px); width: var(--tap); height: var(--tap); border-radius: 50%;
   border: 1px solid var(--line); background: var(--card); color: var(--accent); font-size: 1.4rem; line-height: 1;
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.06); cursor: pointer;
+  display: grid; place-items: center; padding: 0;
 }
 .field-picker .edge-btn.right { right: -10px; }
 .field-picker .edge-btn.left { left: -10px; }

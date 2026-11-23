@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import { formatLocale } from '../i18n'
+import AppIcon from './AppIcon.vue'
 
 /**
  * Calendar header: ‹ month › and ‹ year ›, each with its own arrows, so moving a whole year
@@ -29,7 +30,7 @@ const monthName = computed(() => {
         :aria-label="$t('journal.prevMonth')"
         @click="emit('shift', -1)"
       >
-        ‹
+        <AppIcon name="chevronLeft" :size="20" />
       </button>
       <strong class="cap">{{ monthName }}</strong>
       <button
@@ -39,7 +40,7 @@ const monthName = computed(() => {
         :disabled="forwardDisabled"
         @click="emit('shift', 1)"
       >
-        ›
+        <AppIcon name="chevronRight" :size="20" />
       </button>
     </span>
     <span class="nav-group year-group">
@@ -49,7 +50,7 @@ const monthName = computed(() => {
         :aria-label="$t('journal.prevYear')"
         @click="emit('shift', -12)"
       >
-        ‹
+        <AppIcon name="chevronLeft" :size="20" />
       </button>
       <strong>{{ year }}</strong>
       <button
@@ -59,7 +60,7 @@ const monthName = computed(() => {
         :disabled="forwardDisabled"
         @click="emit('shift', 12)"
       >
-        ›
+        <AppIcon name="chevronRight" :size="20" />
       </button>
     </span>
   </div>

@@ -442,7 +442,7 @@ async function removeAnyway() {
                 :to="`/money/${mv.sale!.id}`"
               >
                 {{ $t('oil.saleLine', { kg: fmt(mv.sale!.kg ?? 0), party: mv.sale!.party || '–' }) }}
-                <span aria-hidden="true" class="chevron">›</span>
+                <AppIcon name="chevronRight" :size="20" class="chevron" />
               </RouterLink>
               <template v-else>
                 {{ $t('oil.saleLine', { kg: fmt(mv.sale!.kg ?? 0), party: mv.sale!.party || '–' }) }}
