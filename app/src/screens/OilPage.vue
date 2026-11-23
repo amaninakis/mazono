@@ -271,19 +271,16 @@ async function removeAnyway() {
 
 <template>
   <main class="page oil">
-    <header class="page-head row-between">
+    <header class="page-head">
       <h1>{{ $t('oil.title') }}</h1>
-      <YearPicker
-        v-model="season"
-        :years="seasons"
-        :label="$t('oil.season')"
-        :prefix="$t('oil.season')"
-      />
     </header>
 
-    <RouterLink v-if="canEditOil" to="/oil/new" class="btn primary big block"
-      >+ {{ $t('oil.newExtraction') }}</RouterLink
-    >
+    <div class="oil-bar">
+      <RouterLink v-if="canEditOil" to="/oil/new" class="btn primary big"
+        >+ {{ $t('oil.newExtraction') }}</RouterLink
+      >
+      <YearPicker v-model="season" :years="seasons" :label="$t('oil.season')" />
+    </div>
 
     <!-- Season totals -->
     <section v-if="totals.count" class="card oil-totals">

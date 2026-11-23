@@ -203,8 +203,9 @@ Opening a link to another page is left alone.
 
 ## Journal and calendar — v0.1
 
-- A month calendar with one coloured dot per task type done that day (up to 3, then "+"). Each task type also has an icon, so colour is never the only signal.
-- Previous / next day navigation, and a list of that day's entries: tap to edit, delete with undo.
+- Below the header, **‹ year ›** with its own arrows and the twelve **months as chips** in a row that scrolls sideways (like the task chips). A dot marks months with work or a mill visit; months after today can't be chosen (`core/months.ts`, `ui/MonthStrip.vue`). Swiping the year or the days moves a year or a month.
+- A month calendar with one coloured dot per task type done that day (up to 3, then "+"). Each task type also has an icon, so colour is never the only signal. **Today** is marked with the word "σήμερα" under its number, so it is never mistaken for the chosen day (the box).
+- Previous / next day navigation, and a list of that day's entries: tap to edit, delete with undo. Away from today, a **Σήμερα** button at the end of the day row goes back.
 - Planned: extraction days get their own marker; filter by task or field; a whole-season log view.
 
 ## Oil extraction — v0.2
@@ -235,7 +236,7 @@ Here n is the number of units of type u in entry i, and w is that unit's weight.
 - Harvest days are pre-ticked when they are from the same season, on or before the extraction date and on or after the previous extraction, plus leftovers of days already partly milled. "Part" sets how many units of a day went into this batch.
 - An extraction is one record holding its charges, storage and allocations (`Extraction` in `app/src/core/types.ts`). Stock is never stored as a number: it is calculated from extractions (oil in) and stock movements (transfers, own use; sales in v0.3) in `stockLevels()`.
 - After saving: yield, net oil, kg of olives per unit (single unit type) and kg of oil per tree.
-- The Oil page shows season totals, the extractions, an estimate of oil per field (≈, with kg per tree in the field) and the stock table.
+- The Oil page opens with **+ New production** and the season year (« 2026 ») side by side below the header, then shows season totals, the extractions, an estimate of oil per field (≈, with kg per tree in the field) and the stock table.
 
 ## Season overview and oil stock — v0.2
 

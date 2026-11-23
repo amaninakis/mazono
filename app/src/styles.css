@@ -59,13 +59,13 @@ button, input, select, textarea { font: inherit; color: inherit; }
    right end of that row. */
 .shell { position: relative; overflow-x: clip; }
 /* Every page's first row is the same height, so the hill and its wave sit at the same place
-   on every tab. A title too long for the row ends in "…"; a control that does not fit
-   (Oil's year) wraps below the wave. */
+   on every tab. A title too long for the row ends in "…". Pages with controls (Journal's
+   months, Oil's year) put them in their own row below the wave, so every page shows the logo. */
 .page > :first-child { position: relative; min-height: var(--head-row); margin: 0 0 22px; padding-right: 116px;
   display: flex; flex-wrap: wrap; align-items: center; align-content: flex-start; column-gap: 8px; row-gap: 20px; }
 .page > :first-child h1 { margin: 0; min-width: 0; line-height: var(--head-row); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-/* A row with its own control (Oil's year, Journal's "Today") or a back arrow keeps the whole
-   width on phones: the logo steps aside there. */
+/* A settings section's row, with its back arrow, keeps the whole width on phones: the logo
+   steps aside there. */
 .page > .row-between:first-child, .page.settings.in-section > .page-head { padding-right: 0; }
 .shell:has(.page > .row-between:first-child, .page.settings.in-section) .brand-bar { display: none; }
 .page.settings > .page-head .back-link { min-width: var(--tap); margin-left: -12px; justify-content: center; }
@@ -298,13 +298,46 @@ button, input, select, textarea { font: inherit; color: inherit; }
   display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px;
   min-height: 44px; border: none; border-radius: 10px; background: transparent; cursor: pointer; font-size: 0.95rem;
 }
-.cal-day.today span { font-weight: 600; color: var(--accent); }
+.cal-day.today .day-number { font-weight: 600; color: var(--accent); }
+/* Today is marked with the word "σήμερα" under its number, so it is never mistaken for the
+   chosen day (the box). */
+.day-number { display: flex; flex-direction: column; align-items: center; line-height: 1.1; }
+.today-mark { font-size: 0.6875rem; font-weight: 600; line-height: 1; }
 .cal-day.selected { background: var(--accent-soft); outline: 2px solid var(--accent); }
 .dots { display: flex; gap: 3px; height: 7px; align-items: center; }
 .dots i { width: 7px; height: 7px; border-radius: 50%; display: block; }
 .dots b { font-size: 0.6rem; line-height: 1; }
 .day-nav { display: flex; align-items: center; justify-content: space-between; }
 .day-nav h1 { font-size: 1.1rem; margin: 0; text-align: center; }
+/* Away from today, "Today" sits at the end of the day row. */
+.day-nav .day-today { flex: none; margin-left: 4px; padding: 0 14px; font-weight: 600; font-size: 0.9rem; }
+.day-nav:has(.day-today) h1 { flex: 1; min-width: 0; font-size: 1rem; }
+
+/* Journal: ‹ year › and the twelve months as chips, in one row below the wave. */
+.month-strip { display: flex; align-items: center; gap: 6px; margin-bottom: 12px; }
+.year-step {
+  flex: none; display: inline-flex; align-items: center;
+  border: 1px solid var(--line); border-radius: 999px; background: var(--card);
+}
+.year-step strong { min-width: 2.8em; text-align: center; font-size: 1.05rem; font-variant-numeric: tabular-nums; }
+.year-step .icon-btn { width: 40px; min-width: 40px; height: var(--tap); }
+.year-step .icon-btn:disabled { opacity: 0.3; }
+.month-strip > .scroll-row { flex: 1; min-width: 0; }
+.month-chips { display: flex; gap: 6px; padding: 2px 0; }
+.month-strip .scroll-row.more-left > .scroll-row-strip { --fade-left: 48px; }
+.month-strip .scroll-row.more-right > .scroll-row-strip { --fade-right: 48px; }
+/* The strip is short beside the year, so it shows only the fades (no arrow buttons): the
+   months scroll with a finger, and on a computer all twelve fit. */
+.month-strip .scroll-row .edge-btn { display: none; }
+.month-chip { flex: none; display: inline-flex; align-items: center; gap: 6px; padding: 0 14px; font-weight: 600; font-size: 0.9rem; }
+.month-chip:disabled { opacity: 0.35; cursor: default; }
+.month-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--grow); }
+.month-chip.selected .month-dot { background: var(--on-accent); }
+
+/* Oil: "+ New production" and the year share one row below the wave. */
+.oil-bar { display: flex; align-items: center; justify-content: flex-end; gap: 8px; margin-bottom: 12px; }
+.oil-bar .btn { flex: 1; min-width: 0; white-space: nowrap; padding: 0 12px; }
+.oil-bar .year-picker .icon-btn { width: 36px; min-width: 36px; }
 .entries { list-style: none; padding: 0; margin: 8px 0; display: flex; flex-direction: column; gap: 8px; }
 .entry {
   display: flex; align-items: center; background: var(--card); border: 1px solid var(--line);
@@ -749,8 +782,6 @@ fieldset.plain:disabled .btn, fieldset.plain:disabled .input { opacity: 0.7; }
 .shortfall-note { margin-top: 12px; padding: 10px 12px; border-radius: 12px; background: #fbebeb; color: var(--ink); }
 .shortfall-list { margin: 6px 0; padding-left: 20px; }
 .shortfall-note p { margin: 4px 0 0; }
-.journal-head { align-items: center; gap: 12px; margin-bottom: 12px; }
-.journal-head h1 { margin: 0.25rem 0 0; }
 .block-top { display: flex; width: fit-content; margin-top: 8px; }
 .draft-notice { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin: 0 0 12px; padding: 4px 4px 4px 14px; border-radius: 12px; background: var(--accent-soft); font-size: 0.875rem; }
 .field-error { margin: 4px 0 0; color: var(--danger); font-size: 0.875rem; font-weight: 500; }

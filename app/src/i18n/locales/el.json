@@ -150,7 +150,10 @@
     "extractionLine": "{{olives}} κιλά ελιές → {{oil}} κιλά ελαιόλαδο",
     "prevYear": "Προηγούμενο έτος",
     "nextYear": "Επόμενο έτος",
-    "loggedBy": "Καταχωρίστηκε από {{name}}"
+    "loggedBy": "Καταχωρίστηκε από {{name}}",
+    "month": "Μήνας",
+    "hasWork": "έχει εγγραφές",
+    "todayMark": "σήμερα"
   },
   "settings": {
     "title": "Ρυθμίσεις",
