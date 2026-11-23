@@ -7,6 +7,13 @@ Thanks for helping! Bug reports, translations and pull requests are all welcome.
 2. **For bigger changes, open an issue first** describing what you want to build, so we can agree
    on the approach before you spend time on it.
 3. **Keep pull requests focused**: one feature or fix per pull request.
+4. **Accept the [Contributor Licence Agreement](CLA.md)** in your first pull request: a bot asks you to
+   comment with one sentence. You keep the copyright in your work; you allow the project to use it
+   under the AGPL and under other licences (for paid plans and app stores). If part of your pull
+   request comes from somewhere else, say where and under which licence.
+
+Mazono is licensed under the [GNU AGPL-3.0-or-later](LICENSE). The name and logo are not; see
+[TRADEMARKS.md](TRADEMARKS.md).
 
 ## Before you open a pull request
 

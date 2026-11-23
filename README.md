@@ -182,4 +182,17 @@ A test checks that every language has the same keys as English.
 
 ## Licence
 
-[MIT](LICENSE)
+Copyright (C) 2026 Andreas Maninakis.
+
+Mazono is free software: you can use, change and share it under the
+[GNU Affero General Public License, version 3 or later](LICENSE) (AGPL-3.0-or-later).
+If you run a changed version for other people, for example on a public server, you must offer them
+its source code under the same licence.
+
+- **Name and logo:** "Mazono" and its logo are not covered by the AGPL. Forks are welcome under their
+  own name and logo; see [TRADEMARKS.md](TRADEMARKS.md).
+- **Contributing:** contributors accept the [Contributor Licence Agreement](CLA.md) once, in their
+  first pull request. You keep the copyright in your work; the CLA lets the project also offer
+  commercial plans and app-store releases.
+- **Earlier versions:** Mazono (then HarvestLog) was MIT-licensed up to version 0.12.0. Copies of those
+  versions stay under MIT; everything after them is AGPL-3.0-or-later.

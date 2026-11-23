@@ -72,7 +72,7 @@ The app is a TypeScript PWA with a local database on the device and a small sync
 | Packaging | One Docker image (Caddy) + docker-compose | Home server, Raspberry Pi, NAS or VPS. |
 | Mobile (later) | Capacitor wrapper of the same web app | No rewrite; adds native camera and notifications. |
 | i18n | i18next with i18next-vue, one JSON file per language | Translators only edit JSON; Greek plural forms handled. |
-| Licence | MIT | May move to AGPL-3.0 later; that would apply to new versions only. |
+| Licence | AGPL-3.0-or-later, with a CLA | Keeps forks and hosted copies open; the CLA keeps paid plans, paid features and app-store releases possible. The name and logo are protected separately (TRADEMARKS.md). MIT up to version 0.12.0. |
 
 **Design rules (keep these in every PR)**
 
@@ -346,7 +346,7 @@ These are planned but not yet scheduled in detail. Open an issue before starting
 | Fertilizer cost per field | Not included. |
 | Spreadsheet import | To be decided; maybe selected seasons, or test data only. |
 | Weather | Planned: local weather services, rain vs oil yield in reports (see Future features). |
-| Licence | MIT for now. |
+| Licence | AGPL-3.0-or-later from November 2026 (MIT up to version 0.12.0). Contributors sign the CLA (`CLA.md`); the name and logo are covered by `TRADEMARKS.md`, not the AGPL. |
 | Hosting | Docker on any host: a VPS with public access, or a home lab reached through Tailscale. |
 
 ## Known concerns
