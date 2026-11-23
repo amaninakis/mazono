@@ -9,6 +9,7 @@ import {
   useTemplateRef,
   watch,
 } from 'vue'
+import AppIcon from './AppIcon.vue'
 
 /**
  * Field chooser. Up to four fields show as a plain 2-column grid. With more, the fields sit
@@ -102,7 +103,7 @@ watch(
         :aria-label="$t('today.prevFields')"
         @click="page(-1)"
       >
-        ‹
+        <AppIcon name="chevronLeft" :size="20" />
       </button>
       <button
         v-if="!atEnd"
@@ -111,7 +112,7 @@ watch(
         :aria-label="$t('today.moreFields')"
         @click="page(1)"
       >
-        ›
+        <AppIcon name="chevronRight" :size="20" />
       </button>
       <p class="hint more-hint">
         {{

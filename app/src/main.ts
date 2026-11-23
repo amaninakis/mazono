@@ -6,6 +6,7 @@ import i18next from './i18n'
 import { router } from './router'
 import { startAccount } from './sync/account'
 import './styles.css'
+import 'virtual:nuxt-icon-bundle/register'
 
 registerSW({ immediate: true })
 

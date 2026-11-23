@@ -165,7 +165,7 @@ function onPick(isoDate: string) {
         :aria-label="$t('journal.prevDay')"
         @click="shiftDay(-1)"
       >
-        ‹
+        <AppIcon name="chevronLeft" :size="20" />
       </button>
       <div class="date-field" :class="{ invalid: error }">
         <input
@@ -204,7 +204,7 @@ function onPick(isoDate: string) {
         :disabled="!canGoForward"
         @click="shiftDay(1)"
       >
-        ›
+        <AppIcon name="chevronRight" :size="20" />
       </button>
     </div>
     <CalendarPicker

@@ -12,7 +12,8 @@
     "isolatedModules": true,
     "skipLibCheck": true,
     "noEmit": true,
-    "types": ["vite/client", "vite-plugin-pwa/client"],
+    "allowImportingTsExtensions": true,
+    "types": ["vite/client", "vite-plugin-pwa/client", "@nuxt/icon/client"],
   },
   "include": ["src/**/*.ts", "src/**/*.vue", "vite.config.ts"],
 }

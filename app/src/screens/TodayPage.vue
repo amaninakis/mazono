@@ -29,6 +29,7 @@ import NewTaskModal from '../ui/NewTaskModal.vue'
 import NewUnitModal from '../ui/NewUnitModal.vue'
 import NumberStepper from '../ui/NumberStepper.vue'
 import { useSaving } from '../ui/saving'
+import TaskIcon from '../ui/TaskIcon.vue'
 import { showToast } from '../ui/toast'
 import ToggleSwitch from '../ui/ToggleSwitch.vue'
 
@@ -502,7 +503,7 @@ const canEditSettings = computed(() => canDo(farm.value, 'settings', 'change'))
         :style="{ '--c': x.color }"
         @click="chooseType(x.id)"
       >
-        <span aria-hidden="true">{{ x.icon }}</span> {{ taskName($t, x) }}
+        <TaskIcon :icon="x.icon" /> {{ taskName($t, x) }}
       </button>
       <button
         v-if="!editing && canEditSettings"
@@ -510,7 +511,7 @@ const canEditSettings = computed(() => canDo(farm.value, 'settings', 'change'))
         class="task-chip add"
         @click="newTask = true"
       >
-        + {{ $t('task.new') }}
+        <AppIcon name="plus" :size="20" /> {{ $t('task.new') }}
       </button>
     </div>
 
@@ -587,9 +588,10 @@ const canEditSettings = computed(() => canDo(farm.value, 'settings', 'change'))
               type="button"
               class="icon-btn"
               :aria-label="$t('common.delete')"
+              :title="$t('common.delete')"
               @click="quantities.splice(i, 1)"
             >
-              ×
+              <AppIcon name="clear" :size="20" />
             </button>
           </div>
           <NumberStepper
@@ -600,7 +602,7 @@ const canEditSettings = computed(() => canDo(farm.value, 'settings', 'change'))
           />
         </div>
         <button type="button" class="btn ghost small" @click="addUnitRow">
-          + {{ $t('today.addUnitRow') }}
+          <AppIcon name="plus" :size="18" /> {{ $t('today.addUnitRow') }}
         </button>
       </section>
 
@@ -651,7 +653,7 @@ const canEditSettings = computed(() => canDo(farm.value, 'settings', 'change'))
           <textarea id="notes" v-model="notes" class="input" rows="2"></textarea>
         </template>
         <button v-else type="button" class="btn ghost small" @click="showNotes = true">
-          + {{ $t('today.notes') }}
+          <AppIcon name="plus" :size="18" /> {{ $t('today.notes') }}
         </button>
       </section>
     </template>

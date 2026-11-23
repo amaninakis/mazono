@@ -1,8 +1,11 @@
+import { NuxtIconBundle } from '@nuxt/icon/vite'
 import vue from '@vitejs/plugin-vue'
 import { VitePWA } from 'vite-plugin-pwa'
 import { defineConfig } from 'vitest/config'
 
 import pkg from './package.json' with { type: 'json' }
+import { TASK_ICON_NAMES } from './src/core/taskIcons.ts'
+import { ICONS } from './src/ui/icons.ts'
 
 export default defineConfig({
   define: { APP_VERSION: JSON.stringify(pkg.version) },
@@ -12,6 +15,13 @@ export default defineConfig({
   preview: { proxy: {} },
   plugins: [
     vue(),
+    // Bundles every icon the app uses into the build, so they work offline and never come from
+    // the internet. Our own (`mazono:`) icons are the SVG files in src/assets/icons.
+    NuxtIconBundle({
+      icons: [...Object.values(ICONS), ...Object.values(TASK_ICON_NAMES)],
+      scan: false,
+      customCollections: [{ prefix: 'mazono', dir: './src/assets/icons' }],
+    }),
     VitePWA({
       registerType: 'autoUpdate',
       // Server calls must always reach the server, never the offline copy of the app.
