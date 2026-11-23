@@ -19,6 +19,7 @@ import { usePrefersDark } from '../ui/colorScheme'
 import { canDo, useFarm } from '../ui/farm'
 import { seasonMonthTicks } from '../ui/monthTicks'
 import RecordsBoard from '../ui/RecordsBoard.vue'
+import ScrollRow from '../ui/ScrollRow.vue'
 import SeasonBars from '../ui/SeasonBars.vue'
 import YearReport from '../ui/YearReport.vue'
 import YieldChart from '../ui/YieldChart.vue'
@@ -468,7 +469,7 @@ const visibleReports = computed(() =>
     <header class="page-head">
       <h1>{{ $t('nav.reports') }}</h1>
     </header>
-    <div class="chips report-tabs" role="tablist">
+    <ScrollRow class="chips report-tabs" role="tablist" :selected-key="report">
       <button
         v-for="key in visibleReports"
         :key="key"
@@ -481,7 +482,7 @@ const visibleReports = computed(() =>
       >
         {{ $t(`reports.tab.${key}`) }}
       </button>
-    </div>
+    </ScrollRow>
 
     <section class="card">
       <h2>{{ $t(`reports.title.${report}`) }}</h2>
