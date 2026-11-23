@@ -679,9 +679,30 @@ button, input, select, textarea { font: inherit; color: inherit; }
 .spinner { width: 40px; height: 40px; border: 4px solid var(--accent-soft); border-top-color: var(--accent); border-radius: 50%; animation: spin 0.9s linear infinite; }
 @keyframes spin { to { transform: rotate(360deg); } }
 /* Reduced motion: nothing slides or spins; the text says what is happening. */
+/* Swiping dates, months and years: sideways swipes are ours, up and down still scrolls. A new
+   value slides in from the side it comes from (later from the right, earlier from the left);
+   at the last value there is, the value gives a small push and springs back. */
+.swipeable { touch-action: pan-y; }
+.date-field, .quick-date { overflow: hidden; }
+.slide-next { animation: slide-from-right 0.22s ease-out; }
+.slide-prev { animation: slide-from-left 0.22s ease-out; }
+/* A drop-down list keeps its box still; only its text moves. */
+select.slide-next { animation-name: text-from-right; }
+select.slide-prev { animation-name: text-from-left; }
+.nudge-next { animation: nudge-left 0.25s ease-out; }
+.nudge-prev { animation: nudge-right 0.25s ease-out; }
+@keyframes slide-from-right { from { transform: translateX(1.6em); opacity: 0; } }
+@keyframes slide-from-left { from { transform: translateX(-1.6em); opacity: 0; } }
+@keyframes text-from-right { from { text-indent: 1.6em; color: transparent; } }
+@keyframes text-from-left { from { text-indent: -1.6em; color: transparent; } }
+@keyframes nudge-left { 40% { transform: translateX(-8px); } }
+@keyframes nudge-right { 40% { transform: translateX(8px); } }
+
 @media (prefers-reduced-motion: reduce) {
   .spinner { animation: none; }
   .toast { animation: toast-fade 0.15s ease-out; }
+  .slide-next, .slide-prev, select.slide-next, select.slide-prev { animation: toast-fade 0.2s ease-out; }
+  .nudge-next, .nudge-prev { animation: none; }
   .toggle-track, .toggle-track::after { transition: none; }
 }
 @keyframes toast-fade { from { opacity: 0; } }

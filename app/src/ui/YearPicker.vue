@@ -1,9 +1,12 @@
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, useTemplateRef, watch } from 'vue'
+import { nudge, slideIn } from './slide'
+import { useSwipe } from './swipe'
 
 /**
  * Year selector with « » arrows that step one year back or forward, between the oldest and
  * newest year in `years`. `prefix` is shown before each year in the list (e.g. "Χρονιά").
+ * Swiping it sideways steps a year too (left: the next year), and the new year slides in.
  */
 const props = defineProps<{ years: number[]; label: string; prefix?: string }>()
 const model = defineModel<number>({ required: true })
@@ -19,10 +22,24 @@ const options = computed(() => {
 
   return list
 })
+
+const picker = useTemplateRef<HTMLElement>('picker')
+const select = useTemplateRef<HTMLSelectElement>('select')
+useSwipe(picker, (step) => {
+  const year = model.value + step
+  if (year < oldest.value || year > newest.value) {
+    nudge(select.value, step)
+    return
+  }
+  model.value = year
+})
+watch(model, (year, before) => slideIn(select.value, year > before ? 1 : -1), {
+  flush: 'post',
+})
 </script>
 
 <template>
-  <div class="year-picker">
+  <div ref="picker" class="year-picker">
     <button
       type="button"
       class="icon-btn"
@@ -32,7 +49,12 @@ const options = computed(() => {
     >
       «
     </button>
-    <select v-model="model" class="input select season-select" :aria-label="label">
+    <select
+      ref="select"
+      v-model="model"
+      class="input select season-select"
+      :aria-label="label"
+    >
       <option v-for="year in options" :key="year" :value="year">
         {{ prefix ? `${prefix} ${year}` : year }}
       </option>

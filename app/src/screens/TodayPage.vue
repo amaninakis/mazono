@@ -2,7 +2,7 @@
 import type { FormValues } from '../core/drafts'
 import type { InputKind, TaskEntry, UnitAmount } from '../core/types'
 import { useTranslation } from 'i18next-vue'
-import { computed, nextTick, ref, watch } from 'vue'
+import { computed, nextTick, ref, useTemplateRef, watch } from 'vue'
 import { RouterLink, useRoute, useRouter } from 'vue-router'
 import { addDays, todayISO } from '../core/dates'
 import { AMOUNT_UNITS } from '../core/defaults'
@@ -30,6 +30,7 @@ import NewUnitModal from '../ui/NewUnitModal.vue'
 import NumberStepper from '../ui/NumberStepper.vue'
 import { useSaving } from '../ui/saving'
 import ScrollRow from '../ui/ScrollRow.vue'
+import { slideIn } from '../ui/slide'
 import TaskIcon from '../ui/TaskIcon.vue'
 import { showToast } from '../ui/toast'
 import ToggleSwitch from '../ui/ToggleSwitch.vue'
@@ -75,6 +76,17 @@ const date = ref(startDate)
 const isToday = computed(() => date.value === today)
 const quickDate = computed(() =>
   isToday.value ? { date: addDays(today, -1) } : { date: today },
+)
+// When the button's word changes (Today ↔ Yesterday), it slides in like the date does.
+const quickButton = useTemplateRef<HTMLElement>('quickButton')
+watch(
+  isToday,
+  (nowToday) => {
+    for (const word of quickButton.value?.children ?? []) {
+      slideIn(word as HTMLElement, nowToday ? 1 : -1)
+    }
+  },
+  { flush: 'post' },
 )
 const typeId = ref<string | undefined>(startType)
 const fieldId = ref<string | undefined>(
@@ -523,6 +535,7 @@ const canEditSettings = computed(() => canDo(farm.value, 'settings', 'change'))
           <label class="label" for="date">{{ $t('today.date') }}</label>
           <!-- Both words are laid out, one hidden, so the button keeps one width. -->
           <button
+            ref="quickButton"
             type="button"
             class="chip selected quick-date"
             @click="date = quickDate.date"
