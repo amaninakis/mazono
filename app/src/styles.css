@@ -299,6 +299,21 @@ html { scroll-padding-top: calc(var(--page-top) + var(--head-row) + 22px); }
 .setup-progress span { flex: 1; height: 4px; border-radius: 2px; background: var(--line); }
 .setup-progress span.on { background: var(--accent); }
 .list { list-style: none; padding: 0; margin: 0 0 12px; display: flex; flex-direction: column; gap: 8px; }
+/* Settings → Fields: what the order is for, and the screen that changes it with arrows */
+.section-help { margin: 0 0 12px; color: var(--muted); line-height: 1.4; }
+.btn.wide { width: 100%; justify-content: center; gap: 8px; }
+.order-row { display: flex; align-items: center; gap: 10px; min-height: 56px; padding: 4px 4px 4px 12px;
+  border: 1px solid var(--line); border-radius: 14px; background: var(--card); transition: background-color 0.4s; }
+.order-row.moved { background: var(--hill); transition: none; }
+.order-number { flex: none; display: grid; place-items: center; width: 26px; height: 26px; border-radius: 50%;
+  background: var(--hill); font-weight: 600; font-size: 0.9rem; }
+.order-row.moved .order-number { background: var(--card); }
+.order-name { flex: 1; min-width: 0; }
+.order-name b { display: block; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.order-name small { color: var(--muted); }
+.order-arrow { flex: none; display: grid; place-items: center; width: var(--tap); height: var(--tap); border-radius: 12px;
+  border: 1px solid var(--line); background: var(--bg); color: var(--ink); cursor: pointer; }
+.order-arrow:disabled { opacity: 0.3; cursor: default; }
 .unit-row, .field-row { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
 .unit-row .check { flex: 1; min-width: 140px; }
 .unit-row > .input:first-child, .field-row > .input:first-child { flex: 1; min-width: 140px; }
