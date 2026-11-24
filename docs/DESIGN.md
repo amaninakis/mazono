@@ -149,6 +149,8 @@ The **farming year** (called "season" in the code, *χρονιά* in Greek) is t
 
 Trees remaining in a field for a task = trees in the field − trees logged for that task type in the current season. All task types that record a harvest count together (a tree harvested under one harvest task is not left for another), and share "field finished"; other tasks such as pruning or spraying count on their own. A field also counts as finished when an entry marks it "field finished", because not every tree is harvested every year.
 
+**Field order.** Fields appear everywhere in the order set in Settings → Fields ("Change order": up and down arrows, saved at once; the setup asks for fields in the order they are usually worked). With "Order from your work" on, the new task page instead puts the fields of each task in the order they were first worked in earlier farming years: each field's place on the scale of all fields (0 first, 1 last), averaged over the years with last year counting fully, the year before half, and so on; fields without history keep their own place; this year never counts, so the list stays put during the work (`core/fieldOrder.ts`). Turning it off brings back the user's own order. Either way the unfinished field worked most recently is chosen first and finished fields go last.
+
 **Field yield and tree yield.** When not all trees of a field are harvested, the two per-tree figures differ:
 
 | Figure | Calculation | Example: field of 30 trees, 20 harvested, 30 sacks |

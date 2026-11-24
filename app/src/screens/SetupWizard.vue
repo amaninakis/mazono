@@ -229,6 +229,7 @@ async function restore(event: Event) {
 
     <section v-else>
       <h1>{{ $t('setup.fieldsTitle') }}</h1>
+      <p class="muted">{{ $t('setup.fieldsOrder') }}</p>
       <p class="muted">{{ $t('setup.fieldsHelp') }}</p>
       <ul class="list">
         <li v-for="(f, i) in fields" :key="i" class="field-row">

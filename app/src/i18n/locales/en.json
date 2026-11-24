@@ -79,7 +79,8 @@
     "restore": "Restore from a backup file",
     "saveFailed": "Something went wrong while saving. Please try again.",
     "notSecure": "This address doesn't start with https, so the app can't work offline or be added to the home screen. Everything else works. Ask the person who set it up to give you the https address.",
-    "pluralName": "Plural (optional)"
+    "pluralName": "Plural (optional)",
+    "fieldsOrder": "Enter them in the order you usually work them: this is the order they will appear in throughout the app. You can change it later in Settings."
   },
   "today": {
     "title": "What did you do today?",
@@ -97,7 +98,7 @@
     "treesWorked": "Trees (optional)",
     "leftAfter": "{{left}} trees left in {{field}} after this",
     "collected": "Amount collected",
-    "addUnitRow": "Add collection unit",
+    "addUnitRow": "Also used another collection unit",
     "newUnit": "New collection unit…",
     "newUnitName": "Name of the new collection unit",
     "product": "Product",
@@ -225,7 +226,18 @@
       "data": "Backup copy",
       "dataOwner": "Backup copy, accounts on this server"
     },
-    "aboutTitle": "About Mazono"
+    "aboutTitle": "About Mazono",
+    "fieldOrderHelp": "Fields appear in this order throughout the app, such as in a new task. Finished fields always go to the end.",
+    "learnedOrder": "Order from your work",
+    "learnedOrderHelp": "In a new task, the app puts the fields in the order you went to them in earlier years, separately for each task, with recent years counting most. Turn it off to go back to your own order.",
+    "learnedFrom_one": "Learning from {{count}} year of work.",
+    "learnedFrom_other": "Learning from {{count}} years of work.",
+    "learnedNothingYet": "There is no work from earlier years yet. Until then, your own order is used.",
+    "changeOrder": "Change order",
+    "changeOrderHelp": "Tap the arrows to move a field up or down. It is saved straight away.",
+    "moveUp": "Move up: {{name}}",
+    "moveDown": "Move down: {{name}}",
+    "orderDone": "Done"
   },
   "chargeType": {
     "millFee": "Mill fee",

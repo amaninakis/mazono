@@ -41,6 +41,11 @@ export interface FarmSettings {
   /** Places whose oil counts for the stock value on the Money page; all when not set. */
   stockValueLocations?: string[]
   labourEnabled: boolean
+  /**
+   * Fields appear in the order each task was done in during earlier years (see
+   * learnedFieldOrder) instead of the order set in Settings. Off when not set.
+   */
+  learnedFieldOrder?: boolean
   setupDone: boolean
 }
 

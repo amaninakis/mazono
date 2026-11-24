@@ -1,11 +1,13 @@
 <script setup lang="ts">
 import type { FormValues } from '../core/drafts'
-import type { InputKind, TaskEntry, UnitAmount } from '../core/types'
+import type { FieldProgress } from '../core/progress'
+import type { InputKind, TaskEntry, TaskType, UnitAmount } from '../core/types'
 import { useTranslation } from 'i18next-vue'
 import { computed, nextTick, ref, useTemplateRef, watch } from 'vue'
 import { RouterLink, useRoute, useRouter } from 'vue-router'
 import { addDays, todayISO } from '../core/dates'
 import { AMOUNT_UNITS } from '../core/defaults'
+import { arrangeFields, learnedFieldOrder } from '../core/fieldOrder'
 import { formatNumber } from '../core/format'
 import {
   averageTreesPerDay,
@@ -113,17 +115,40 @@ function defaultFieldFor(id: string | undefined, isoDate: string) {
 
   return tt
     ? defaultFieldId(
-        fieldProgress(
-          farm.value.fields,
-          farm.value.entries,
+        inOrder(
+          fieldProgress(
+            farm.value.fields,
+            farm.value.entries,
+            tt,
+            isoDate,
+            seasonStart(),
+            undefined,
+            farm.value.taskTypes,
+          ),
           tt,
           isoDate,
-          seasonStart(),
-          undefined,
-          farm.value.taskTypes,
         ),
       )
     : undefined
+}
+
+/**
+ * The fields in the order set in Settings: the user's own, or, with "order from your work" on,
+ * the order this task was done in during earlier years (see learnedFieldOrder).
+ */
+function inOrder(list: FieldProgress[], taskType: TaskType, isoDate: string) {
+  if (!farm.value.settings.learnedFieldOrder) {
+    return list
+  }
+  const learned = learnedFieldOrder({
+    fields: list.map((item) => item.field),
+    entries: farm.value.entries,
+    taskTypeIds: countedTogether(taskType, farm.value.taskTypes),
+    date: isoDate,
+    seasonStartMonth: seasonStart(),
+  })
+
+  return arrangeFields(list, learned)
 }
 
 const type = computed(() => farm.value.taskTypes.find((x) => x.id === typeId.value))
@@ -131,14 +156,18 @@ const kind = computed<InputKind>(() => type.value?.inputKind ?? 'harvest')
 
 const progress = computed(() =>
   type.value
-    ? fieldProgress(
-        farm.value.fields,
-        farm.value.entries,
+    ? inOrder(
+        fieldProgress(
+          farm.value.fields,
+          farm.value.entries,
+          type.value,
+          date.value,
+          seasonStart(),
+          editing?.id,
+          farm.value.taskTypes,
+        ),
         type.value,
         date.value,
-        seasonStart(),
-        editing?.id,
-        farm.value.taskTypes,
       )
     : [],
 )
@@ -423,7 +452,7 @@ async function saveEntry() {
     undefined,
     farm.value.taskTypes,
   )
-  fieldId.value = defaultFieldId(after)
+  fieldId.value = defaultFieldId(inOrder(after, tt, date.value))
   // The form is ready for the next entry: that is the new start, not a draft.
   await nextTick()
   draft.clear()

@@ -2,9 +2,11 @@
 import type { DateFormat, InputKind, Language, TaskType } from '../core/types'
 import type { IconName } from '../ui/icons'
 import { useTranslation } from 'i18next-vue'
-import { computed, ref, watch } from 'vue'
+import { computed, onBeforeUnmount, ref, watch } from 'vue'
 import { RouterLink, useRoute, useRouter } from 'vue-router'
+import { todayISO } from '../core/dates'
 import { TASK_COLORS, TASK_ICONS } from '../core/defaults'
+import { earlierYearsWithWork, moveOnePlace } from '../core/fieldOrder'
 import { formatNumber } from '../core/format'
 import { formatLocaleFor } from '../core/locale'
 import { unitWeights } from '../core/oil'
@@ -75,6 +77,49 @@ function visible<T extends { archived: boolean }>(rows: T[]) {
 const fieldList = computed(() =>
   visible(farm.value.fields).sort((left, right) => left.order - right.order),
 )
+
+/**
+ * Changing the order of the fields happens on its own screen with arrows ("Change order"):
+ * it is done rarely, and arrows are plainer than dragging. Every move is saved at once and
+ * the moved field lights up for a moment.
+ */
+const reorderingFields = ref(false)
+const movedFieldId = ref<string>()
+let movedTimer: ReturnType<typeof setTimeout> | undefined
+function byOrder<T extends { order: number }>(rows: T[]) {
+  return [...rows].sort((left, right) => left.order - right.order)
+}
+const fieldsToOrder = computed(() =>
+  byOrder(farm.value.fields.filter((field) => !field.archived)),
+)
+/** Earlier farming years the "order from your work" can learn from. */
+const yearsToLearnFrom = computed(() =>
+  earlierYearsWithWork(farm.value.entries, todayISO(), settings.value.seasonStartMonth),
+)
+
+async function moveField(index: number, step: -1 | 1) {
+  const active = fieldsToOrder.value
+  const moved = moveOnePlace(active, index, step)
+  if (moved === active) {
+    return
+  }
+  movedFieldId.value = active[index].id
+  clearTimeout(movedTimer)
+  movedTimer = setTimeout(() => {
+    movedFieldId.value = undefined
+  }, 1200)
+  // Archived fields keep their order after the others.
+  const all = [...moved, ...byOrder(farm.value.fields.filter((field) => field.archived))]
+  await Promise.all(
+    all.map(async (field, order) =>
+      field.order === order
+        ? undefined
+        : await repo.value.update('fields', field.id, { order }),
+    ),
+  )
+}
+onBeforeUnmount(() => clearTimeout(movedTimer))
+
 const unitList = computed(() => visible(farm.value.units))
 const typeList = computed(() =>
   visible(farm.value.taskTypes).sort((left, right) => left.order - right.order),
@@ -265,6 +310,9 @@ const isAdmin = computed(() => farm.value.access.role === 'admin')
 const route = useRoute()
 const router = useRouter()
 const section = computed(() => (route.params.section as string | undefined) || undefined)
+watch(section, () => {
+  reorderingFields.value = false
+})
 
 type SectionKey =
   'account' | 'people' | 'fields' | 'units' | 'oil' | 'money' | 'tasks' | 'general' | 'data'
@@ -500,11 +548,74 @@ watch(
         />
       </section>
 
-      <div v-if="section !== 'general'" class="row-end">
+      <div v-if="section !== 'general' && section !== 'fields'" class="row-end">
         <ToggleSwitch v-model="showArchived" :label="$t('settings.showArchived')" />
       </div>
 
-      <section v-if="section === 'fields'" id="fields" class="card">
+      <template v-if="section === 'fields' && reorderingFields">
+        <p class="section-help">{{ $t('settings.changeOrderHelp') }}</p>
+        <ol class="list order-list">
+          <li
+            v-for="(f, index) in fieldsToOrder"
+            :key="f.id"
+            class="order-row"
+            :class="{ moved: movedFieldId === f.id }"
+          >
+            <span class="order-number" aria-hidden="true">{{ index + 1 }}</span>
+            <span class="order-name">
+              <b>{{ f.name }}</b>
+              <small v-if="f.trees">{{
+                $t('settings.summary.trees', { count: f.trees })
+              }}</small>
+            </span>
+            <button
+              type="button"
+              class="order-arrow"
+              :disabled="index === 0"
+              :aria-label="$t('settings.moveUp', { name: f.name })"
+              @click="moveField(index, -1)"
+            >
+              <AppIcon name="chevronUp" :size="22" />
+            </button>
+            <button
+              type="button"
+              class="order-arrow"
+              :disabled="index === fieldsToOrder.length - 1"
+              :aria-label="$t('settings.moveDown', { name: f.name })"
+              @click="moveField(index, 1)"
+            >
+              <AppIcon name="chevronDown" :size="22" />
+            </button>
+          </li>
+        </ol>
+        <button type="button" class="btn primary big wide" @click="reorderingFields = false">
+          {{ $t('settings.orderDone') }}
+        </button>
+      </template>
+
+      <template v-if="section === 'fields' && !reorderingFields">
+        <p class="section-help">{{ $t('settings.fieldOrderHelp') }}</p>
+        <section class="card">
+          <ToggleSwitch
+            :model-value="!!settings.learnedFieldOrder"
+            :label="$t('settings.learnedOrder')"
+            :help="$t('settings.learnedOrderHelp')"
+            @update:model-value="(v) => repo.updateSettings({ learnedFieldOrder: v })"
+          />
+          <p v-if="settings.learnedFieldOrder" class="hint">
+            {{
+              yearsToLearnFrom
+                ? $t('settings.learnedFrom', { count: yearsToLearnFrom })
+                : $t('settings.learnedNothingYet')
+            }}
+          </p>
+        </section>
+        <div class="row-end">
+          <ToggleSwitch v-model="showArchived" :label="$t('settings.showArchived')" />
+        </div>
+      </template>
+
+      <section v-if="section === 'fields' && !reorderingFields" id="fields" class="card">
         <ul class="list">
           <li
             v-for="f in fieldList"
@@ -566,6 +677,14 @@ watch(
             </button>
           </li>
         </ul>
+        <button
+          v-if="fieldsToOrder.length > 1"
+          type="button"
+          class="btn wide"
+          @click="reorderingFields = true"
+        >
+          <AppIcon name="reorder" :size="18" /> {{ $t('settings.changeOrder') }}
+        </button>
       </section>
 
       <section v-if="section === 'units'" class="card">
