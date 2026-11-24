@@ -59,10 +59,12 @@ the colour of the moment the app is for, and nobody else in the category uses it
 
 <p><img src="../brand/icon.svg" alt="" width="96"> &nbsp; <img src="../brand/logo.svg" alt="Mazono logo" width="360"></p>
 
-**Icon.** A green olive with a big leaf, rising like a sun over a hill of olive oil, with a
-grove-green hill behind, on a ripe-olive tile: the grove, the fruit and the oil in one
-landscape. No outlines; shapes and colour only. It matches the green hill at the top of the
-app's pages.
+**Icon.** A green olive with a big leaf, resting in the dip of a wavy sea of olive oil that
+rises on both sides of it, leaning over a little as if just set down; behind it a longer,
+darker wave climbs to the right. All on a ripe-olive tile: the grove, the fruit and plenty of
+oil in one scene. No outlines; shapes and colour only. Both waves are true sine waves (the oil:
+length 130, height 8, its dip under the olive; behind: length 176, height 9), so the shape can
+always be redrawn exactly from `brand/build.py`.
 
 **Wordmark.** *Mazóno* in Comfortaa Bold, turned into outlines (no font needed). The
 stressed o, ma-**ZO**-no, is an olive: the typeface's own o, the same size, roundness and
@@ -78,7 +80,7 @@ stress falls. The olive is always green; the leaf is always the letters' colour.
 | `brand/icon-full.svg` | Full-bleed square, for phones that round it themselves (Apple). |
 | `brand/icon-maskable.svg` | Full-bleed, the olive and leaf a little smaller and lower so a round crop (Android) keeps them. |
 | `brand/favicon.svg` | 16–32 px: no surface line, no leaf vein, no shine on the olive. |
-| `brand/icon-monochrome.svg` | One colour: the olive, the leaf and the oil hill, a thin gap between hill and olive (print, stamps, Android themed icons). |
+| `brand/icon-monochrome.svg` | One colour: the olive, the leaf and the oil, a thin gap where the oil meets the olive (print, stamps, Android themed icons). |
 | `brand/wordmark.svg` / `wordmark-light.svg` | Ripe-olive letters for light backgrounds / cream letters for dark ones. |
 | `brand/wordmark-mono.svg` | One colour: the olive is a plain o, the leaf stays. |
 | `brand/logo.svg` / `logo-light.svg` | Icon and wordmark side by side. |
@@ -165,8 +167,8 @@ Never behind small text, never on the icon.
 ## Ideas for later
 
 - **A living icon:** in the app (start-up screen, top bar, the "This year" report) the olive
-  could rise over the hill with the season's progress, like a sun through the day. The
-  home-screen icon always shows it risen.
+  could settle into the oil as the season's harvest comes in, and the sea could rise with the
+  oil made. The home-screen icon always shows it settled.
 - **The ripening palette** (green olive → olive oil → violet → ripe) for charts and field
   progress, so colour carries meaning.
 
@@ -180,6 +182,11 @@ read like an "A", echoing a well-known online shop.
 The second icon (November 2026) was a big ripe-olive leaf in olive oil filling two thirds of
 the tile. It was replaced a few days later by the olive over the hill, together with the
 app's new colours, so the icon and the screens tell the same story.
+
+The third icon (November 2026) showed the olive rising like a sun over a hill of oil. The
+oil's light front wave covered the olive's lower part; the same month the olive was set down
+into a dip of the waves, so the sea frames it instead of hiding it, while keeping the waviness
+that says "plenty of oil".
 
 The first Mazono wordmark (November 2026) made the last o the olive: a little narrower than
 the letters and tilted. It set the end of the word apart ("-no"), so the same week the olive
