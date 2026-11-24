@@ -10,12 +10,13 @@ import {
   seasonRange,
   todayISO,
 } from '../core/dates'
-import { formatNumber } from '../core/format'
+import { formatNumber, formatYield } from '../core/format'
 import { unitLabel } from '../core/units'
 import {
   averageCurve,
   cumulativeCurves,
   dayOfSeason,
+  oilEstimate,
   oliveEstimate,
   valueOnDay,
   yearSummary,
@@ -139,6 +140,36 @@ const unknownText = computed(() =>
     .map(([unitId, amount]) => unitAmount(unitId, amount, 1))
     .join(' + '),
 )
+
+/** Oil already made this year, plus what the olives not weighed yet should give. */
+const oil = computed(() =>
+  oilEstimate({
+    season: season.value,
+    extractions: farm.value.extractions,
+    olives: olives.value,
+    seasonStartMonth: startMonth.value,
+  }),
+)
+/** How the expected oil was worked out: from which year's yield. */
+const oilRateText = computed(() => {
+  const rate = oil.value.rate
+  if (!rate) {
+    return ''
+  }
+  const shown = formatYield(
+    rate.oliveKg,
+    rate.oilKg,
+    farm.value.settings.yieldFormat,
+    formatLocale.value,
+  )
+
+  return rate.source === 'thisYear'
+    ? translate('reports.year.oilAt.thisYear', { yield: shown })
+    : translate('reports.year.oilAt.earlier', {
+        yield: shown,
+        season: seasonLabel(rate.season),
+      })
+})
 
 /** "44,2 kg per sack". */
 function perUnit(unitId: string, kgPerUnit: number) {
@@ -397,8 +428,20 @@ const compareNow = computed(() => {
       </li>
       <li class="year-stat">
         <span class="year-stat-name">{{ $t('reports.year.oil') }}</span>
-        <strong class="year-stat-value">{{ kg(summary.oilKg) }}</strong>
-        <span v-if="summary.oilKg" class="year-stat-detail">
+        <strong class="year-stat-value">{{
+          oil.expectedKg ? `≈ ${kg(oil.madeKg + oil.expectedKg)}` : kg(summary.oilKg)
+        }}</strong>
+        <span v-if="oil.expectedKg" class="year-stat-detail">
+          {{
+            oil.madeKg
+              ? $t('reports.year.madeAndExpected', {
+                  made: kg(oil.madeKg),
+                  expected: kg(oil.expectedKg),
+                })
+              : $t('reports.year.expectedOnly', { expected: kg(oil.expectedKg) })
+          }}
+        </span>
+        <span v-else-if="summary.oilKg" class="year-stat-detail">
           {{ $t('reports.year.afterCharges', { kg: kg(summary.netOilKg) }) }}
         </span>
       </li>
@@ -456,6 +499,41 @@ const compareNow = computed(() => {
       </dl>
       <p v-if="unknownText" class="muted small">
         {{ $t('reports.year.unknownWeight', { units: unknownText }) }}
+      </p>
+    </template>
+
+    <template v-if="oil.status !== 'allWeighed'">
+      <h3>{{ $t('reports.year.oilTitle') }}</h3>
+      <dl v-if="oil.status === 'estimate'" class="lines per-day">
+        <div>
+          <dt>
+            {{ $t('reports.year.oilFromWaiting', { olives: kg(olives.estimatedKg) }) }}
+            <small class="muted per-day-detail">{{ oilRateText }}</small>
+          </dt>
+          <dd>≈ {{ kg(oil.expectedKg) }}</dd>
+        </div>
+        <div>
+          <dt>{{ $t('reports.year.oilAfterCharges') }}</dt>
+          <dd>≈ {{ kg(oil.expectedNetKg) }}</dd>
+        </div>
+        <div v-if="oil.madeKg">
+          <dt>
+            {{ $t('reports.year.oilWholeYear') }}
+            <small class="muted per-day-detail">{{
+              $t('reports.year.oilMadeAlready', { kg: kg(oil.madeKg) })
+            }}</small>
+          </dt>
+          <dd>≈ {{ kg(oil.madeKg + oil.expectedKg) }}</dd>
+        </div>
+      </dl>
+      <p v-if="oil.status === 'nothingYet'" class="muted small">
+        {{ $t('reports.year.oilNothingYet') }}
+      </p>
+      <p v-else-if="oil.missing.includes('yield')" class="muted small">
+        {{ $t('reports.year.oilNeedsYield') }}
+      </p>
+      <p v-else-if="oil.missing.includes('weight')" class="muted small">
+        {{ $t('reports.year.oilNeedsWeight', { units: unknownText }) }}
       </p>
     </template>
 

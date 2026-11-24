@@ -392,3 +392,112 @@ function waitingOf(
 ): PendingOlives {
   return { unitId, amount, kgPerUnit, source, kg: amount * kgPerUnit }
 }
+
+/** How much oil the olives give, from the productions of one farming year. */
+export interface YieldRate {
+  /** Kg of oil per kg of olives, before the mill's charges. */
+  oilPerOlive: number
+  /** The part of the oil left after the mill's charges (0–1). */
+  netShare: number
+  oliveKg: number
+  oilKg: number
+  /** This year's own productions, or the most recent earlier year that has some. */
+  source: 'earlier' | 'thisYear'
+  season: number
+}
+
+/**
+ * Olive oil of the year: what the mill has already made, plus an estimate for the olives not
+ * weighed yet (their estimated kg × the year's average yield; before the first production of
+ * the year, the most recent earlier year's). When it cannot be told yet, `status` and
+ * `missing` say what it waits for, so the report can say what to enter.
+ */
+export interface OilEstimate {
+  /**
+   * estimate: there is oil to expect from olives not weighed yet; waiting: there are olives
+   * not weighed yet but something is missing to tell their oil; allWeighed: every olive
+   * harvested this year has been to the mill; nothingYet: nothing harvested this year yet.
+   */
+  status: 'allWeighed' | 'estimate' | 'nothingYet' | 'waiting'
+  rate?: YieldRate
+  madeKg: number
+  netMadeKg: number
+  /** Oil to expect from the olives not weighed yet, before and after the mill's charges. */
+  expectedKg: number
+  expectedNetKg: number
+  /** What is still missing for (part of) the estimate: a yield, or what some units weigh. */
+  missing: ('weight' | 'yield')[]
+}
+
+export function oilEstimate(input: {
+  season: number
+  extractions: Extraction[]
+  olives: OliveEstimate
+  seasonStartMonth?: number
+}): OilEstimate {
+  const startMonth = input.seasonStartMonth ?? 3
+  const bySeason = new Map<number, { oliveKg: number; oilKg: number; netKg: number }>()
+  for (const extraction of live(input.extractions)) {
+    if (extraction.oliveKg <= 0 || extraction.oilKg <= 0) {
+      continue
+    }
+    const season = seasonOf(extraction.date, startMonth)
+    const sum = bySeason.get(season) ?? { oliveKg: 0, oilKg: 0, netKg: 0 }
+    sum.oliveKg += extraction.oliveKg
+    sum.oilKg += extraction.oilKg
+    sum.netKg += netOil(extraction)
+    bySeason.set(season, sum)
+  }
+
+  const thisYear = bySeason.get(input.season)
+  const earlierSeason = Math.max(
+    ...[...bySeason.keys()].filter((season) => season < input.season),
+    Number.NEGATIVE_INFINITY,
+  )
+  const from = thisYear ?? bySeason.get(earlierSeason)
+  const rate: YieldRate | undefined = from && {
+    oilPerOlive: from.oilKg / from.oliveKg,
+    netShare: from.netKg / from.oilKg,
+    oliveKg: from.oliveKg,
+    oilKg: from.oilKg,
+    source: thisYear ? 'thisYear' : 'earlier',
+    season: thisYear ? input.season : earlierSeason,
+  }
+
+  const made = thisYear ?? { oilKg: 0, netKg: 0 }
+  const expectedKg = rate ? input.olives.estimatedKg * rate.oilPerOlive : 0
+  const unknownUnits = Object.values(input.olives.unknown).some((amount) => amount > 0)
+  const waitingOlives = input.olives.estimatedKg > 0 || unknownUnits
+  const missing: OilEstimate['missing'] = []
+  if (waitingOlives && !rate) {
+    missing.push('yield')
+  }
+  if (unknownUnits) {
+    missing.push('weight')
+  }
+
+  return {
+    status: oilStatus(expectedKg > 0, waitingOlives, input.olives),
+    rate,
+    madeKg: made.oilKg,
+    netMadeKg: made.netKg,
+    expectedKg,
+    expectedNetKg: rate ? expectedKg * rate.netShare : 0,
+    missing,
+  }
+}
+
+function oilStatus(
+  hasEstimate: boolean,
+  waitingOlives: boolean,
+  olives: OliveEstimate,
+): OilEstimate['status'] {
+  if (hasEstimate) {
+    return 'estimate'
+  }
+  if (waitingOlives) {
+    return 'waiting'
+  }
+
+  return olives.weighedKg > 0 ? 'allWeighed' : 'nothingYet'
+}
