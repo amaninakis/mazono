@@ -20,6 +20,7 @@ import AppToast from './ui/AppToast.vue'
 import { hasDraft } from './ui/draft'
 import { type FarmData, provideFarm } from './ui/farm'
 import { useLiveQuery } from './ui/live'
+import PageSwiper from './ui/PageSwiper.vue'
 
 /** The grove data on this phone (picked before the app started). */
 const db = localDb()
@@ -268,8 +269,12 @@ watch(
   </main>
   <SetupWizard v-else-if="state === 'setup'" />
   <div v-else class="shell">
-    <header class="brand-bar"><AppLogo /></header>
-    <RouterView :key="route.path" />
+    <PageSwiper :tabs="nav.map((item) => item.to)">
+      <div class="page-host">
+        <header class="brand-bar"><AppLogo /></header>
+        <RouterView :key="route.path" />
+      </div>
+    </PageSwiper>
     <nav class="bottom-nav">
       <div class="nav-logo"><AppLogo /></div>
       <RouterLink

@@ -1,9 +1,10 @@
 import type { FormValues } from '../core/drafts'
 import { useTranslation } from 'i18next-vue'
-import { nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
+import { inject, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { onBeforeRouteLeave } from 'vue-router'
 import { changedValues, draftKey, readDraft } from '../core/drafts'
 import { useFarm } from './farm'
+import { PAGE_PREVIEW } from './preview'
 import { showToast } from './toast'
 
 interface DraftOptions {
@@ -80,6 +81,9 @@ export function useDraft(options: DraftOptions) {
     write()
   }
 
+  // A page only shown beside the current one while swiping shows its draft, and saves nothing.
+  const preview = inject(PAGE_PREVIEW, false)
+
   onMounted(async () => {
     await nextTick() // let the form fill in its defaults first
     start = snapshot()
@@ -89,6 +93,9 @@ export function useDraft(options: DraftOptions) {
       restoredAt.value = draft.savedAt
     } else {
       storage()?.removeItem(key)
+    }
+    if (preview) {
+      return
     }
     ready = true
     window.addEventListener('pagehide', onPageHide)
@@ -108,7 +115,7 @@ export function useDraft(options: DraftOptions) {
   )
 
   onBeforeRouteLeave(() => {
-    if (write()) {
+    if (!preview && write()) {
       showToast({ title: translate('draft.kept') })
     }
   })
