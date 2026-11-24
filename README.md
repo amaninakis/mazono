@@ -100,8 +100,8 @@ the last mill visit (February), named by its year. Money is counted per calendar
 ### With Docker (home lab or server)
 
 ```bash
-git clone https://github.com/amaninakis/olive-harvest.git
-cd olive-harvest
+git clone https://github.com/amaninakis/mazono.git
+cd mazono
 docker compose up -d --build
 ```
 
@@ -114,10 +114,22 @@ allow offline mode, "Install app" and secure sign-in over HTTPS, so:
   `SITE_ADDRESS=harvest.example.com docker compose --profile https up -d --build`.
   Caddy runs in front and gets an HTTPS certificate automatically.
 
-Data lives in the `harvestlog_data` Docker volume (the Docker names keep the app's first name, so
-existing installs keep their data) (`/data` in the container): the database
-`harvestlog.db` and the last 14 daily copies in `backups/`. To back up elsewhere, copy the newest
-file from `backups/`.
+Data lives in the `mazono_data` Docker volume (`/data` in the container): the database
+`mazono.db` and the last 14 daily copies in `backups/`. To back up elsewhere, copy the newest
+file from `backups/`. Never run `docker compose down -v`: `-v` deletes the data volume.
+
+**Upgrading from HarvestLog** (installed before the app was renamed to Mazono): your data is in a
+volume with the old name, so tell the new setup to use it. Nothing is moved or copied:
+
+1. Find the volume: `docker volume ls | grep harvestlog`, e.g. `olive-harvest_harvestlog_data`.
+2. Next to `docker-compose.yml`, add it to a file called `.env`:
+   `MAZONO_DATA_VOLUME=olive-harvest_harvestlog_data` (and, if you use the `https` profile,
+   `MAZONO_CADDY_VOLUME=olive-harvest_caddy_data`, from `docker volume ls | grep caddy`).
+3. Stop the old setup: `docker compose -p olive-harvest down` (the name of the folder it ran
+   from; this keeps the volumes).
+4. `git pull`, then `docker compose up -d --build`. Docker warns that the volume "was created for
+   project olive-harvest": that is expected. The server keeps using its `harvestlog.db`, phones
+   keep their data and stay signed in, and old backup files still import.
 
 **Upgrading from v0.4 or earlier** (app only, no server): run `docker compose up -d --build`
 again and open the app on the phone that has your data. It asks you to create the administrator

@@ -51,6 +51,23 @@ describe('farm repo', () => {
     expect(await db2.entries.count()).toBe(1)
     await expect(importFarm({ nope: 1 }, db2)).rejects.toThrow()
   })
+
+  it('writes Mazono backups and still reads backups from before the rename', async () => {
+    const db = new HarvestDB(`test-${Math.random()}`)
+    const row = await createFarm('Old grove', 'el', db)
+    await row.addField({ name: 'Ρυάκι', trees: 14, archived: false, order: 0 })
+    const backup = JSON.parse(JSON.stringify(await row.exportAll())) as Record<string, unknown>
+
+    expect(backup.format).toBe('mazono-export')
+    // Nothing the phone keeps for itself (fields starting with "_") goes into the file.
+    expect(JSON.stringify(backup)).not.toMatch(/"_\w+":/)
+
+    const db2 = new HarvestDB(`test-${Math.random()}`)
+
+    expect(await importFarm({ ...backup, format: 'harvestlog-export' }, db2)).toBe(row.farmId)
+    expect((await db2.fields.toArray()).map((field) => field.name)).toEqual(['Ρυάκι'])
+    await expect(importFarm({ ...backup, format: 'other-app' }, db2)).rejects.toThrow()
+  })
 })
 
 describe('uuid', () => {

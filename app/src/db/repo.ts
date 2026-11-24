@@ -15,8 +15,9 @@ import type {
   Unit,
 } from '../core/types'
 import { BUILTIN_TASKS } from '../core/defaults'
+import { BACKUP_FORMAT, isBackupFormat } from '../core/names'
 import { uuid } from '../core/uuid'
-import { db as defaultDb, type HarvestDB, moneyDefaults, oilDefaults } from './db'
+import { type HarvestDB, localDb, moneyDefaults, oilDefaults } from './db'
 
 export { uuid }
 function now() {
@@ -79,7 +80,7 @@ interface AnyTable {
 export class FarmRepo {
   public constructor(
     public farmId: string,
-    private readonly db: HarvestDB = defaultDb,
+    private readonly db: HarvestDB = localDb(),
   ) {}
 
   /** Create or replace a record (keeps its id when given). */
@@ -148,19 +149,17 @@ export class FarmRepo {
   public async exportAll() {
     const tables: Record<string, object[]> = {}
     for (const tableName of FARM_TABLES) {
-      tables[tableName] = await this.table(tableName)
-        .where('farmId')
-        .equals(this.farmId)
-        .toArray()
+      const rows = await this.table(tableName).where('farmId').equals(this.farmId).toArray()
+      tables[tableName] = rows.map((row) => withoutSyncMarks(row))
     }
 
     return {
-      // The format name keeps the app's first name, so every version can read every backup.
-      format: 'harvestlog-export',
+      // Backups from before the rename say "harvestlog-export"; both are read (isBackupFormat).
+      format: BACKUP_FORMAT,
       version: 3,
       exportedAt: new Date().toISOString(),
-      farm: await this.db.farms.get(this.farmId),
-      settings: await this.settings(),
+      farm: withoutSyncMarks(await this.db.farms.get(this.farmId)),
+      settings: withoutSyncMarks(await this.settings()),
       ...tables,
     }
   }
@@ -186,7 +185,7 @@ export class FarmRepo {
 export async function createFarm(
   name: string,
   language: Language,
-  database: HarvestDB = defaultDb,
+  database: HarvestDB = localDb(),
 ): Promise<FarmRepo> {
   const farmId = uuid()
   const oil = oilDefaults(farmId, uuid)
@@ -233,19 +232,33 @@ export async function createFarm(
 }
 
 export async function currentFarmId(
-  database: HarvestDB = defaultDb,
+  database: HarvestDB = localDb(),
 ): Promise<string | undefined> {
   return (await database.meta.get('currentFarmId'))?.value
+}
+
+/**
+ * A record as it goes into a backup file: without the phone's own notes on what still has to
+ * be sent to the server (fields starting with "_"), which mean nothing on another phone.
+ */
+function withoutSyncMarks<Row extends object | undefined>(row: Row): Row {
+  if (!row) {
+    return row
+  }
+
+  return Object.fromEntries(
+    Object.entries(row).filter(([name]) => !name.startsWith('_')),
+  ) as Row
 }
 
 /** Import a JSON export into this device, keeping record ids, and switch to that farm. */
 export async function importFarm(
   data: unknown,
-  database: HarvestDB = defaultDb,
+  database: HarvestDB = localDb(),
 ): Promise<string> {
   const backup = data as Awaited<ReturnType<FarmRepo['exportAll']>> &
     Partial<Record<FarmTable, object[]>>
-  if (backup?.format !== 'harvestlog-export' || !backup.farm) {
+  if (!isBackupFormat(backup?.format) || !backup.farm) {
     throw new Error('Not a Mazono (or HarvestLog) backup file')
   }
   const farmId = backup.farm.id

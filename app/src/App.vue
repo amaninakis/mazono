@@ -7,7 +7,7 @@ import { type Area, can, PRESETS } from './core/access'
 import { todayISO } from './core/dates'
 import { landingPage } from './core/landing'
 import { pickLanguage } from './core/locale'
-import { db } from './db/db'
+import { localDb } from './db/db'
 import { FarmRepo } from './db/repo'
 import { chosenLanguage, dateFormatPref, deviceLanguage, setLanguage } from './i18n'
 import AccountScreen from './screens/AccountScreen.vue'
@@ -20,6 +20,9 @@ import AppToast from './ui/AppToast.vue'
 import { hasDraft } from './ui/draft'
 import { type FarmData, provideFarm } from './ui/farm'
 import { useLiveQuery } from './ui/live'
+
+/** The grove data on this phone (picked before the app started). */
+const db = localDb()
 
 const { t: translate } = useTranslation()
 const route = useRoute()

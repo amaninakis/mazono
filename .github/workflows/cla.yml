@@ -38,11 +38,11 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           path-to-signatures: signatures/cla.json
-          path-to-document: https://github.com/amaninakis/olive-harvest/blob/main/CLA.md
+          path-to-document: https://github.com/amaninakis/mazono/blob/main/CLA.md
           branch: cla-signatures
           # No allowlist: anyone can put any name or email on a commit, so names prove nothing.
           # Who may skip the CLA is decided above, by the account that opened the pull request.
           custom-notsigned-prcomment: >-
             Thank you for your pull request! Before it can be merged, please read the
-            [Contributor Licence Agreement](https://github.com/amaninakis/olive-harvest/blob/main/CLA.md)
+            [Contributor Licence Agreement](https://github.com/amaninakis/mazono/blob/main/CLA.md)
             and accept it by commenting with the sentence below. You only need to do this once.

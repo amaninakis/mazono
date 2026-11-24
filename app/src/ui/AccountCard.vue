@@ -2,7 +2,7 @@
 import { useTranslation } from 'i18next-vue'
 import { computed, ref } from 'vue'
 import { MIN_PASSWORD_LENGTH } from '../core/syncFormat'
-import { db } from '../db/db'
+import { localDb } from '../db/db'
 import { formatLocale } from '../i18n'
 import { account, changePassword, signOut, syncNow } from '../sync/account'
 import { ApiError, removeFarm } from '../sync/api'
@@ -10,6 +10,9 @@ import { groveHasData, removeLocalGrove } from '../sync/groves'
 import AppModal from './AppModal.vue'
 import { useLiveQuery } from './live'
 import { showToast } from './toast'
+
+/** The grove data on this phone (picked before the app started). */
+const db = localDb()
 
 /** Settings card: who is signed in, how syncing is going, password and signing out. */
 const { t: translate } = useTranslation()

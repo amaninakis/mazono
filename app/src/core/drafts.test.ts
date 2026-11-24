@@ -12,8 +12,8 @@ describe('drafts', () => {
   })
 
   it('keys drafts by grove, form and record', () => {
-    expect(draftKey('farm', 'today')).toBe('harvestlog.draft:farm:today:new')
-    expect(draftKey('farm', 'extraction', 'x1')).toBe('harvestlog.draft:farm:extraction:x1')
+    expect(draftKey('farm', 'today')).toBe('mazono.draft:farm:today:new')
+    expect(draftKey('farm', 'extraction', 'x1')).toBe('mazono.draft:farm:extraction:x1')
   })
 
   it('reads recent drafts and drops old, empty or broken ones', () => {
