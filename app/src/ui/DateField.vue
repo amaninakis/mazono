@@ -11,15 +11,15 @@ import {
 import { formatLocale } from '../i18n'
 import AppIcon from './AppIcon.vue'
 import CalendarPicker from './CalendarPicker.vue'
-import { nudge, slideIn } from './slide'
-import { useSwipe } from './swipe'
+import { slideIn } from './slide'
+import SwipeTrack from './SwipeTrack.vue'
 
 /**
  * A date box: type the date in the app's format (e.g. 15/11/2026), or tap the calendar button.
  * Tapping the box selects the date in it, so typing or pasting replaces it. A date is used as
  * soon as it is fully typed (with its year), so the rest of the page updates straight away.
- * Swiping the box sideways moves the date a day (left: the next day); every change made by a
- * swipe, an arrow, the calendar or the page (not by typing) slides the new date in.
+ * Dragging the date sideways brings in the next day (left) or the previous one, following the
+ * finger; a change made by an arrow, the calendar or the page (not by typing) slides in.
  */
 /** `arrows` adds ‹ › buttons that move the date one day back or forward. */
 const props = defineProps<{ id?: string; max?: string; label?: string; arrows?: boolean }>()
@@ -27,7 +27,6 @@ const model = defineModel<string>({ required: true })
 const { t: translate } = useTranslation()
 const input = useTemplateRef<HTMLInputElement>('input')
 const wrap = useTemplateRef<HTMLElement>('wrap')
-const line = useTemplateRef<HTMLElement>('line')
 /** Open the calendar towards the side of the screen that has room for it. */
 const openToRight = ref(false)
 
@@ -145,13 +144,10 @@ function shiftDay(delta: number) {
   text.value = formatDate(next)
 }
 
-useSwipe(line, (step) => {
-  if (step > 0 && !canGoForward.value) {
-    nudge(input.value, step)
-    return
-  }
-  shiftDay(step)
-})
+/** A day can be dragged in when there is a date, and a later one only up to `max`. */
+function canDrag(step: number) {
+  return !!model.value && (step < 0 || canGoForward.value)
+}
 
 function toggleCalendar() {
   if (!calendarOpen.value && typing) {
@@ -173,7 +169,7 @@ function onPick(isoDate: string) {
 
 <template>
   <div ref="wrap" class="date-wrap">
-    <div ref="line" class="date-line">
+    <div class="date-line">
       <button
         v-if="arrows"
         type="button"
@@ -184,23 +180,29 @@ function onPick(isoDate: string) {
         <AppIcon name="chevronLeft" :size="20" />
       </button>
       <div class="date-field" :class="{ invalid: error }">
-        <input
-          :id="id"
-          ref="input"
-          v-model="text"
-          type="text"
-          class="date-text"
-          autocomplete="off"
-          :placeholder="example"
-          :aria-label="label"
-          :aria-invalid="!!error"
-          @focus="onFocus"
-          @pointerdown="onPress"
-          @click="onTap"
-          @input="onInput"
-          @change="commit"
-          @keydown.enter.prevent="commit"
-        />
+        <SwipeTrack class="date-track" :can-go="canDrag" @step="shiftDay">
+          <template #default="{ offset }">
+            <input
+              v-if="offset === 0"
+              :id="id"
+              ref="input"
+              v-model="text"
+              type="text"
+              class="date-text"
+              autocomplete="off"
+              :placeholder="example"
+              :aria-label="label"
+              :aria-invalid="!!error"
+              @focus="onFocus"
+              @pointerdown="onPress"
+              @click="onTap"
+              @input="onInput"
+              @change="commit"
+              @keydown.enter.prevent="commit"
+            />
+            <span v-else class="date-text">{{ formatDate(addDays(model, offset)) }}</span>
+          </template>
+        </SwipeTrack>
         <button
           type="button"
           class="date-button"

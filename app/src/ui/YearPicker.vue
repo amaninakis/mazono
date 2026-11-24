@@ -1,12 +1,13 @@
 <script setup lang="ts">
 import { computed, useTemplateRef, watch } from 'vue'
-import { nudge, slideIn } from './slide'
-import { useSwipe } from './swipe'
+import { slideIn } from './slide'
+import SwipeTrack from './SwipeTrack.vue'
 
 /**
  * Year selector with « » arrows that step one year back or forward, between the oldest and
  * newest year in `years`. `prefix` is shown before each year in the list (e.g. "Χρονιά").
- * Swiping it sideways steps a year too (left: the next year), and the new year slides in.
+ * Dragging it sideways brings in the next year (left) or the previous one, following the
+ * finger.
  */
 const props = defineProps<{ years: number[]; label: string; prefix?: string }>()
 const model = defineModel<number>({ required: true })
@@ -23,23 +24,24 @@ const options = computed(() => {
   return list
 })
 
-const picker = useTemplateRef<HTMLElement>('picker')
 const select = useTemplateRef<HTMLSelectElement>('select')
-useSwipe(picker, (step) => {
+
+/** A year can be dragged in while there is one that way. */
+function canDrag(step: number) {
   const year = model.value + step
-  if (year < oldest.value || year > newest.value) {
-    nudge(select.value, step)
-    return
-  }
-  model.value = year
-})
+  return year >= oldest.value && year <= newest.value
+}
+
+function yearText(year: number) {
+  return props.prefix ? `${props.prefix} ${year}` : String(year)
+}
 watch(model, (year, before) => slideIn(select.value, year > before ? 1 : -1), {
   flush: 'post',
 })
 </script>
 
 <template>
-  <div ref="picker" class="year-picker">
+  <div class="year-picker">
     <button
       type="button"
       class="icon-btn"
@@ -49,16 +51,22 @@ watch(model, (year, before) => slideIn(select.value, year > before ? 1 : -1), {
     >
       «
     </button>
-    <select
-      ref="select"
-      v-model="model"
-      class="input select season-select"
-      :aria-label="label"
-    >
-      <option v-for="year in options" :key="year" :value="year">
-        {{ prefix ? `${prefix} ${year}` : year }}
-      </option>
-    </select>
+    <SwipeTrack class="year-track" :can-go="canDrag" @step="(step) => (model += step)">
+      <template #default="{ offset }">
+        <select
+          v-if="offset === 0"
+          ref="select"
+          v-model="model"
+          class="input select season-select"
+          :aria-label="label"
+        >
+          <option v-for="year in options" :key="year" :value="year">
+            {{ yearText(year) }}
+          </option>
+        </select>
+        <div v-else class="input select season-select">{{ yearText(model + offset) }}</div>
+      </template>
+    </SwipeTrack>
     <button
       type="button"
       class="icon-btn"

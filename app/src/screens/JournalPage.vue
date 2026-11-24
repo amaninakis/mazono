@@ -11,10 +11,11 @@ import { formatLocale } from '../i18n'
 import { account } from '../sync/account'
 import AppIcon from '../ui/AppIcon.vue'
 import { canDo, taskName, useFarm } from '../ui/farm'
+import JournalDay from '../ui/JournalDay.vue'
 import MonthStrip from '../ui/MonthStrip.vue'
 import OilDrop from '../ui/OilDrop.vue'
 import { nudge, slideIn } from '../ui/slide'
-import { useSwipe } from '../ui/swipe'
+import SwipeTrack from '../ui/SwipeTrack.vue'
 import TaskIcon from '../ui/TaskIcon.vue'
 import { showToast } from '../ui/toast'
 
@@ -49,7 +50,11 @@ const byDay = computed(() => {
 })
 
 const ym = computed(() => month.value.split('-').map(Number) as [number, number])
-const grid = computed(() => monthGrid(ym.value[0], ym.value[1]))
+/** The days of the shown month, or of the one `offset` months away (while dragging). */
+function gridFor(offset: number) {
+  const first = new Date(ym.value[0], ym.value[1] - 1 + offset, 1)
+  return monthGrid(first.getFullYear(), first.getMonth() + 1)
+}
 const days = useTemplateRef<HTMLElement>('days')
 /** Show another month; a month after today shows today's month instead. */
 function showMonth(year: number, monthNumber: number) {
@@ -64,8 +69,12 @@ function shiftMonth(delta: number) {
   }
   showMonth(dt.getFullYear(), dt.getMonth() + 1)
 }
-// Swiping the days sideways changes the month too (left: the next one); the days slide in.
-useSwipe(days, shiftMonth)
+
+/** Dragging the days sideways shows the next month (left) or the previous one (right). */
+function canShiftMonth(step: number) {
+  const next = new Date(ym.value[0], ym.value[1] - 1 + step, 1)
+  return !isFutureMonth(next.getFullYear(), next.getMonth() + 1, today)
+}
 watch(month, (shown, before) => slideIn(days.value, shown > before ? 1 : -1), {
   flush: 'post',
 })
@@ -186,37 +195,25 @@ function loggedBy(createdBy: string | undefined) {
       @pick="showMonth"
     />
     <section class="card calendar">
-      <div ref="days" class="cal-grid">
+      <div class="cal-grid cal-head">
         <span v-for="(w, i) in weekdays" :key="`w${i}`" class="cal-wd">{{ w }}</span>
-        <template v-for="(d, i) in grid" :key="d ?? `x${i}`">
-          <button
-            v-if="d"
-            type="button"
-            class="cal-day"
-            :class="[{ selected: d === date, today: d === today }]"
-            :aria-label="d"
-            :aria-current="d === date ? 'date' : undefined"
-            @click="setDate(d)"
-          >
-            <span class="day-number"
-              >{{ Number(d.slice(8)) }}
-              <small v-if="d === today" class="today-mark">{{
-                $t('journal.todayMark')
-              }}</small></span
-            >
-            <span class="dots" aria-hidden="true">
-              <i
-                v-for="x in dayTypes(d).slice(0, 3)"
-                :key="x.id"
-                :style="{ background: x.color }"
-              ></i>
-              <b v-if="dayTypes(d).length > 3">+</b>
-              <em v-if="extractionDays.has(d)" class="oil-mark"><OilDrop /></em>
-            </span>
-          </button>
-          <span v-else></span>
-        </template>
       </div>
+      <SwipeTrack :can-go="canShiftMonth" @step="shiftMonth">
+        <template #default="{ offset }">
+          <div :ref="offset === 0 ? 'days' : undefined" class="cal-grid">
+            <JournalDay
+              v-for="(d, i) in gridFor(offset)"
+              :key="d ?? `x${i}`"
+              :day="d"
+              :selected="d === date"
+              :is-today="d === today"
+              :types="d ? dayTypes(d) : []"
+              :oil="!!d && extractionDays.has(d)"
+              @pick="setDate"
+            />
+          </div>
+        </template>
+      </SwipeTrack>
     </section>
 
     <div class="day-nav">

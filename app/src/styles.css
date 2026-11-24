@@ -294,6 +294,8 @@ button, input, select, textarea { font: inherit; color: inherit; }
 .calendar { padding: 10px; }
 .cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 2px; text-align: center; }
 .cal-wd { font-size: 0.75rem; color: var(--muted); padding: 4px 0; }
+/* The weekday letters stay put while the days below are dragged to another month. */
+.cal-head { margin-bottom: 2px; }
 .cal-day {
   display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px;
   min-height: 44px; border: none; border-radius: 10px; background: transparent; cursor: pointer; font-size: 0.95rem;
@@ -319,7 +321,8 @@ button, input, select, textarea { font: inherit; color: inherit; }
   flex: none; display: inline-flex; align-items: center;
   border: 1px solid var(--line); border-radius: 999px; background: var(--card);
 }
-.year-step strong { min-width: 2.8em; text-align: center; font-size: 1.05rem; font-variant-numeric: tabular-nums; }
+.year-step .swipe-track { min-width: 3.2em; }
+.year-step strong { display: block; min-width: 2.8em; text-align: center; font-size: 1.05rem; font-variant-numeric: tabular-nums; }
 .year-step .icon-btn { width: 40px; min-width: 40px; height: var(--tap); }
 .year-step .icon-btn:disabled { opacity: 0.3; }
 .month-strip > .scroll-row { flex: 1; min-width: 0; }
@@ -457,6 +460,10 @@ button, input, select, textarea { font: inherit; color: inherit; }
   font: inherit; color: inherit; font-variant-numeric: tabular-nums;
 }
 .date-text:focus { outline: none; }
+/* The days either side while the date is dragged look like the date itself. */
+span.date-text { display: block; white-space: nowrap; }
+.date-track { align-self: stretch; display: flex; flex-direction: column; justify-content: center; }
+.date-track .swipe-strip { align-items: center; }
 .date-text { align-self: stretch; }
 .date-button {
   position: relative; display: inline-flex; align-items: center; justify-content: center;
@@ -480,7 +487,7 @@ button, input, select, textarea { font: inherit; color: inherit; }
 @supports (field-sizing: content) { .date-quick .date-text { width: auto; field-sizing: content; } }
 .modal .date-wrap, .modal .date-line, .modal .date-field { display: flex; width: 100%; }
 .modal .date-line .date-field { flex: 1; }
-.modal .date-text { flex: 1; }
+.modal .date-text, .modal .date-track { flex: 1; }
 
 /* Field picker: two rows that scroll sideways when there are more than four fields */
 .field-picker { position: relative; }
@@ -654,8 +661,9 @@ button, input, select, textarea { font: inherit; color: inherit; }
 .month-nav { display: flex; align-items: center; justify-content: space-between; gap: 4px; }
 .month-nav .nav-group { display: inline-flex; align-items: center; min-width: 0; }
 .month-nav .month-group { flex: 1; }
-.month-nav .nav-group > strong { text-align: center; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-size: 0.95rem; }
-.month-nav .month-group > strong { flex: 1; }
+.month-nav .month-group > .swipe-track { flex: 1; }
+.month-nav .year-group > .swipe-track { min-width: 3.6em; }
+.month-nav .nav-group strong { display: block; text-align: center; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-size: 0.95rem; }
 .month-nav .year-group > strong { min-width: 2.6em; font-variant-numeric: tabular-nums; }
 .calendar > .month-nav { margin: 0 -10px; }
 .calendar-pop > .month-nav { margin: 0 -8px; }
@@ -712,10 +720,17 @@ button, input, select, textarea { font: inherit; color: inherit; }
 .spinner { width: 40px; height: 40px; border: 4px solid var(--accent-soft); border-top-color: var(--accent); border-radius: 50%; animation: spin 0.9s linear infinite; }
 @keyframes spin { to { transform: rotate(360deg); } }
 /* Reduced motion: nothing slides or spins; the text says what is happening. */
-/* Swiping dates, months and years: sideways swipes are ours, up and down still scrolls. A new
-   value slides in from the side it comes from (later from the right, earlier from the left);
-   at the last value there is, the value gives a small push and springs back. */
-.swipeable { touch-action: pan-y; }
+/* Dragging dates, months and years (SwipeTrack): sideways drags are ours, up and down still
+   scrolls. While dragging, the neighbouring values sit either side, out of sight until the
+   finger brings them in. A value changed another way (arrow, calendar, button) slides in from
+   the side it comes from; at the last value there is, it stretches a little and springs back. */
+.swipe-track { position: relative; touch-action: pan-y; min-width: 0; }
+.swipe-track.moving { overflow: hidden; }
+.swipe-track { --swipe-gap: 16px; }
+.swipe-strip { display: flex; align-items: flex-start; gap: var(--swipe-gap); }
+/* A whole month of days moves like a page, with a clear space before the next one. */
+.swipe-track:has(.cal-grid) { --swipe-gap: 28px; }
+.swipe-panel { flex: 0 0 100%; min-width: 0; }
 .date-field, .quick-date { overflow: hidden; }
 .slide-next { animation: slide-from-right 0.22s ease-out; }
 .slide-prev { animation: slide-from-left 0.22s ease-out; }
