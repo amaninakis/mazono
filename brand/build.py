@@ -34,14 +34,20 @@ GROVE = '#8A9A5B'  # the olive in the icon and the wordmark
 SHINE = '#F2F5D6'
 CREAM = '#F6F1E7'  # text on dark backgrounds, light backgrounds
 
-# The mark, on a 130 × 130 grid: a green olive rising like a sun over a hill of olive oil,
-# with a big leaf, and a grove-green hill behind. No outlines: shapes and colour only.
+# The mark, on a 130 × 130 grid: a green olive with a big leaf, resting in the dip of a
+# wavy sea of olive oil that rises on both sides of it, and a longer, darker wave behind
+# that climbs to the right. No outlines: shapes and colour only.
 OLIVE = (65, 58, 22, 28)  # cx, cy, rx, ry, tilted −16°
 LEAF = 'M71 32Q80 4 118 6Q110 40 71 32Z'
 VEIN = 'M76 30Q94 18 114 8'
-BACK_HILL = 'M0 84Q40 66 75 80T130 76V130H0Z'
+# The olive and its leaf, lowered into the dip and leaning over to the left.
+FRUIT = 'translate(0 12) rotate(-17 65 58)'
+# Both waves are sine waves drawn as smooth curves (within 0.01 of the true wave):
+# the oil: middle 87, height 8, length 130, crest at x 12 (its dip lies under the olive);
+# behind: middle 78, height 9, length 176, crest at x −44.
 HILL = '#67654A'  # grove green at 55 % over ripe olive
-CREST = 'M0 92Q40 74 75 88T130 84'
+BACK_HILL = 'M0 78.00C5.42 79.74 10.83 81.48 16.25 82.93C21.67 84.39 27.08 85.56 32.50 86.25C37.92 86.95 43.33 87.16 48.75 86.87C54.17 86.58 59.58 85.77 65.00 84.59C70.42 83.40 75.83 81.84 81.25 80.15C86.67 78.46 92.08 76.65 97.50 75.01C102.92 73.36 108.33 71.90 113.75 70.84C119.17 69.79 124.58 69.15 130.00 69.02V130H0Z'
+CREST = 'M0 80.31C5.42 79.16 10.83 78.74 16.25 79.17C21.67 79.60 27.08 80.86 32.50 82.62C37.92 84.37 43.33 86.58 48.75 88.63C54.17 90.68 59.58 92.54 65.00 93.69C70.42 94.84 75.83 95.26 81.25 94.83C86.67 94.40 92.08 93.14 97.50 91.38C102.92 89.63 108.33 87.42 113.75 85.37C119.17 83.32 124.58 81.46 130.00 80.31'
 OIL_HILL = CREST + 'V130H0Z'
 
 
@@ -69,15 +75,15 @@ def fruit(small=False, inset=False):
     """The olive and its leaf. `inset` sinks them a little behind the hill so they fit the
     safe circle of phones that crop icons round."""
     vein = '' if small else f'<path d="{VEIN}" fill="none" stroke="{RIPE}" stroke-width="2" stroke-linecap="round" opacity="0.7"/>'
-    body = f'{olive(small)}<path d="{LEAF}" fill="{OIL}"/>{vein}'
+    body = f'<g transform="{FRUIT}">{olive(small)}<path d="{LEAF}" fill="{OIL}"/>{vein}</g>'
     if inset:
         body = f'<g transform="translate(65 88) scale(0.82) translate(-65 -88)">{body}</g>'
     return body
 
 
 def mark(small=False, inset=False, clip='tile'):
-    """The back hill, the olive and leaf, and the oil hill in front. `small` drops the
-    oil's surface line, the vein and the shine (16–32 px)."""
+    """The wave behind, the olive and leaf, and the oil in front. `small` drops the oil's
+    surface line, the vein and the shine (16–32 px)."""
     line = '' if small else f'<path d="{CREST}" fill="none" stroke="{SURFACE}" stroke-width="3"/>'
     return (
         f'<g clip-path="url(#{clip})"><path d="{BACK_HILL}" fill="{HILL}"/>{fruit(small, inset)}'
@@ -105,9 +111,9 @@ def monochrome(fill=RIPE):
     thin gap where the hill passes in front of the olive."""
     cx, cy, rx, ry = OLIVE
     shapes = (
-        f'<g transform="translate(65 88) scale(0.82) translate(-65 -88)">'
+        f'<g transform="translate(65 88) scale(0.82) translate(-65 -88)"><g transform="{FRUIT}">'
         f'<ellipse cx="{cx}" cy="{cy}" rx="{rx}" ry="{ry}" transform="rotate(-16 {cx} {cy})"/>'
-        f'<path d="{LEAF}"/></g><path d="{OIL_HILL}"/>'
+        f'<path d="{LEAF}"/></g></g><path d="{OIL_HILL}"/>'
     )
     body = (
         '<defs><clipPath id="safe"><rect x="8" y="8" width="114" height="114" rx="14"/></clipPath>'
