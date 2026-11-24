@@ -1,8 +1,8 @@
 <script setup lang="ts">
 import type { RouteLocationNormalizedLoaded } from 'vue-router'
-import { computed, onBeforeUnmount, ref, useTemplateRef } from 'vue'
+import { computed, nextTick, onBeforeUnmount, ref, useTemplateRef } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { neighbourTab } from '../core/pages'
+import { neighbourTab, tabOf } from '../core/pages'
 import { dragAxis, dragOffset, dragResult } from '../core/swipe'
 import PagePreview from './PagePreview.vue'
 
@@ -12,7 +12,8 @@ import PagePreview from './PagePreview.vue'
  * comes in beside it; let go past a third of the width, or flick, and it opens. Past the first
  * and last tab the page only stretches a little. Anything on the page that moves sideways
  * itself (dates, months, years, rows and tables that scroll), text boxes and open dialogs keep
- * their own gestures; up-and-down scrolls as usual, and a mouse doesn't swipe.
+ * their own gestures; up-and-down scrolls as usual, and a mouse doesn't swipe. On a phone, a
+ * tab chosen in the bottom menu slides in the same way, from its side (`open`).
  */
 const props = defineProps<{ tabs: string[] }>()
 
@@ -25,8 +26,21 @@ const offsetX = ref(0)
 /** How far the page is scrolled down, so the neighbours show their top in view. */
 const previewTop = ref(0)
 
-const before = computed(() => neighbourTab(route.path, props.tabs, -1))
-const after = computed(() => neighbourTab(route.path, props.tabs, 1))
+/** A tab chosen in the bottom menu, drawn on its side while it slides in. */
+const chosen = ref<{ path: string; side: -1 | 1 }>()
+
+/**
+ * The page beside this one on `side`: the chosen tab while one slides in, else the neighbour.
+ */
+function besideOn(side: -1 | 1) {
+  if (chosen.value) {
+    return chosen.value.side === side ? chosen.value.path : undefined
+  }
+
+  return neighbourTab(route.path, props.tabs, side)
+}
+const before = computed(() => besideOn(-1))
+const after = computed(() => besideOn(1))
 
 /** A neighbouring page as the router would open it. */
 function routeTo(path: string | undefined) {
@@ -35,7 +49,11 @@ function routeTo(path: string | undefined) {
 const beforeRoute = computed(() => routeTo(before.value))
 const afterRoute = computed(() => routeTo(after.value))
 
-const PAGE_GAP = 24
+/**
+ * Pages sit edge to edge, so their green hills join into one landscape (overlapping by a
+ * pixel, so no hairline shows between them).
+ */
+const PAGE_GAP = 0
 
 const stripStyle = computed(() => {
   if (phase.value === 'idle') {
@@ -43,7 +61,7 @@ const stripStyle = computed(() => {
   }
 
   return {
-    transform: `translateX(${offsetX.value}px)`,
+    transform: `translateX(${Math.round(offsetX.value)}px)`,
     transition: phase.value === 'settle' ? 'transform 0.25s ease-out' : 'none',
   }
 })
@@ -132,11 +150,12 @@ function reducedMotion() {
 function finish() {
   phase.value = 'idle'
   offsetX.value = 0
+  chosen.value = undefined
 }
 
 function settle(step: -1 | 0 | 1) {
   const target = { '-1': before.value, '0': undefined, '1': after.value }[step]
-  const width = (area.value?.offsetWidth ?? 0) + PAGE_GAP
+  const width = (area.value?.offsetWidth ?? 0) + PAGE_GAP - 1
   phase.value = 'settle'
   offsetX.value = target ? -step * width : 0
   clearTimeout(timer)
@@ -181,6 +200,41 @@ function onClick(event: MouseEvent) {
   }
 }
 
+/**
+ * Whether the bottom menu is the phone's (on a computer it is a side menu, and pages just
+ * open).
+ */
+function phoneLayout() {
+  return window.matchMedia?.('(max-width: 767px)').matches ?? true
+}
+
+/**
+ * Open a tab chosen in the bottom menu. On a phone it comes in from its side, drawn beside
+ * this page and sliding over as after a swipe (a tab further away comes in the same way,
+ * without the ones between). Within the same tab, on a computer or with reduced motion, it
+ * simply opens.
+ */
+async function open(path: string) {
+  const from = tabOf(route.path, props.tabs)
+  const to = tabOf(path, props.tabs)
+  if (phase.value !== 'idle' || from === -1 || to === -1 || from === to) {
+    void router.push(path)
+    return
+  }
+  if (!phoneLayout() || reducedMotion()) {
+    void router.push(path)
+    return
+  }
+  const side = to > from ? 1 : -1
+  chosen.value = { path, side }
+  previewTop.value = Math.max(0, -(area.value?.getBoundingClientRect().top ?? 0))
+  offsetX.value = 0
+  phase.value = 'drag'
+  await nextTick() // the chosen page is drawn beside this one first
+  requestAnimationFrame(() => settle(side))
+}
+
+defineExpose({ open })
 onBeforeUnmount(() => clearTimeout(timer))
 </script>
 
@@ -199,14 +253,14 @@ onBeforeUnmount(() => clearTimeout(timer))
         v-if="phase !== 'idle' && beforeRoute"
         class="page-preview before"
         :route="beforeRoute"
-        :style="{ top: `${previewTop}px`, right: `calc(100% + ${PAGE_GAP}px)` }"
+        :style="{ top: `${previewTop}px`, right: `calc(100% + ${PAGE_GAP - 1}px)` }"
       />
       <slot />
       <PagePreview
         v-if="phase !== 'idle' && afterRoute"
         class="page-preview after"
         :route="afterRoute"
-        :style="{ top: `${previewTop}px`, left: `calc(100% + ${PAGE_GAP}px)` }"
+        :style="{ top: `${previewTop}px`, left: `calc(100% + ${PAGE_GAP - 1}px)` }"
       />
     </div>
   </div>

@@ -67,9 +67,10 @@ button, input, select, textarea { font: inherit; color: inherit; }
 /* A settings section's row, with its back arrow, keeps the whole width on phones: the logo
    steps aside there. */
 .page > .row-between:first-child, .page.settings.in-section > .page-head { padding-right: 0; }
-/* Each page has its own small logo (.page-host), so it moves with the page when swiping. */
+/* The small logo stays put at the top right while pages swipe beneath it. Only the open page
+   (.page-host.current, not the ones shown beside it while swiping) decides whether it shows. */
 .page-host { position: relative; }
-.page-host:has(> .page > .row-between:first-child, > .page.settings.in-section) > .brand-bar { display: none; }
+.shell:has(.page-host.current > .page > .row-between:first-child, .page-host.current > .page.settings.in-section) > .brand-bar { display: none; }
 .page.settings > .page-head .back-link { min-width: var(--tap); margin-left: -12px; justify-content: center; }
 .page.settings > .page-head .back-text {
   position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap;
@@ -78,7 +79,9 @@ button, input, select, textarea { font: inherit; color: inherit; }
   content: ''; position: absolute; z-index: -1;
   top: calc(-1 * var(--page-top)); height: calc(var(--page-top) + var(--head-row) + 14px); left: calc(50% - 50vw); right: calc(50% - 50vw);
   background: var(--hill);
-  --hill-edge: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 400 18' preserveAspectRatio='none'%3E%3Cpath d='M0 0H400V7Q340 18 268 10Q190 1 110 11Q52 18 0 8Z'/%3E%3C/svg%3E");
+  /* The wave starts and ends at the same height, level, so the hills of pages side by side
+     (while swiping) join into one landscape. */
+  --hill-edge: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 400 18' preserveAspectRatio='none'%3E%3Cpath d='M0 0H400V9C360 9 330 17 280 15C230 13 190 3 140 5C90 7 40 9 0 9Z'/%3E%3C/svg%3E");
   -webkit-mask: var(--hill-edge) bottom / 100% 14px no-repeat, linear-gradient(#000 0 0) top / 100% calc(100% - 13px) no-repeat;
   mask: var(--hill-edge) bottom / 100% 14px no-repeat, linear-gradient(#000 0 0) top / 100% calc(100% - 13px) no-repeat;
 }
@@ -95,7 +98,13 @@ button, input, select, textarea { font: inherit; color: inherit; }
 .app-logo.large .app-logo-word { height: 43px; width: auto; }
 .app-logo.large { gap: 14px; }
 /* Phone: a quiet logo above each page. Computer: at the top of the side menu instead. */
-.brand-bar { position: absolute; top: var(--page-top); right: 14px; z-index: 1; display: flex; align-items: center; height: var(--head-row); }
+.brand-bar {
+  position: absolute; top: var(--page-top); right: 0; z-index: 2; display: flex; align-items: center;
+  height: var(--head-row); padding: 0 14px 0 22px;
+  pointer-events: none; /* only a picture: a swipe starting on it reaches the page */
+  /* On the hill's own green, so a title sliding past goes under it, fading at its left edge. */
+  background: linear-gradient(to right, transparent, var(--hill) 18px);
+}
 .nav-logo { display: none; }
 .welcome-logo { margin: 8px 0 4px; }
 .about { display: flex; flex-direction: column; align-items: center; gap: 6px; margin: 28px 0 8px; text-align: center; }

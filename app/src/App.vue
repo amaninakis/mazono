@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import type { IconName } from './ui/icons'
 import { useTranslation } from 'i18next-vue'
-import { computed, watch } from 'vue'
+import { computed, useTemplateRef, watch } from 'vue'
 import { RouterLink, RouterView, useRoute, useRouter } from 'vue-router'
 import { type Area, can, PRESETS } from './core/access'
 import { todayISO } from './core/dates'
@@ -211,6 +211,29 @@ const nav = computed(() =>
   ),
 )
 
+/** Whether a tab of the bottom menu is the one open (its own page or one opened from it). */
+function isOpen(item: NavItem) {
+  return item.exact ? route.path === '/' : route.path.startsWith(item.to)
+}
+
+const pageSwiper = useTemplateRef<InstanceType<typeof PageSwiper>>('pageSwiper')
+
+/**
+ * A tab chosen in the bottom menu slides in from its side, like a swipe. Ctrl- or middle-click
+ * still opens it in a new browser tab.
+ */
+function openTab(event: MouseEvent, to: string) {
+  if (event.button !== 0 || event.ctrlKey || event.metaKey || event.shiftKey || event.altKey) {
+    return
+  }
+  event.preventDefault()
+  if (pageSwiper.value) {
+    void pageSwiper.value.open(to)
+  } else {
+    void router.push(to)
+  }
+}
+
 /** Pages that need an area: opening one without access goes to the first page allowed. */
 const PAGE_ACCESS: { prefix: string; area: Area; level: 'see' | 'change' }[] = [
   { prefix: '/entry/', area: 'work', level: 'change' },
@@ -269,24 +292,26 @@ watch(
   </main>
   <SetupWizard v-else-if="state === 'setup'" />
   <div v-else class="shell">
-    <PageSwiper :tabs="nav.map((item) => item.to)">
-      <div class="page-host">
-        <header class="brand-bar"><AppLogo /></header>
+    <header class="brand-bar"><AppLogo /></header>
+    <PageSwiper ref="pageSwiper" :tabs="nav.map((item) => item.to)">
+      <div class="page-host current">
         <RouterView :key="route.path" />
       </div>
     </PageSwiper>
     <nav class="bottom-nav">
       <div class="nav-logo"><AppLogo /></div>
-      <RouterLink
-        v-for="item in nav"
-        :key="item.to"
-        :to="item.to"
-        :class="{ active: item.exact ? route.path === '/' : route.path.startsWith(item.to) }"
-      >
-        <span class="nav-icon" aria-hidden="true">
-          <AppIcon :name="item.icon" :size="24" />
-        </span>
-        <span>{{ item.label }}</span>
+      <RouterLink v-for="item in nav" :key="item.to" v-slot="{ href }" :to="item.to" custom>
+        <a
+          :href="href"
+          :class="{ active: isOpen(item) }"
+          :aria-current="isOpen(item) ? 'page' : undefined"
+          @click="openTab($event, item.to)"
+        >
+          <span class="nav-icon" aria-hidden="true">
+            <AppIcon :name="item.icon" :size="24" />
+          </span>
+          <span>{{ item.label }}</span>
+        </a>
       </RouterLink>
     </nav>
     <AppToast />
