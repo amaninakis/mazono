@@ -497,7 +497,21 @@
         "earlier": "at {{perUnit}}, from other years' weigh-ins",
         "user": "at {{perUnit}}, as set in Settings"
       },
-      "unknownWeight": "We don't know yet what {{units}} weigh. The first weigh-in will tell, or set roughly how many kg they are in Settings."
+      "unknownWeight": "We don't know yet what {{units}} weigh. The first weigh-in will tell, or set roughly how many kg they are in Settings.",
+      "madeAndExpected": "{{made}} made + about {{expected}} from the olives not weighed yet",
+      "oilTitle": "Olive oil to expect",
+      "oilFromWaiting": "From about {{olives}} of olives not weighed yet",
+      "oilAt": {
+        "thisYear": "at this year's yield, {{yield}}",
+        "earlier": "at the {{season}} yield, {{yield}}, until this year's first production"
+      },
+      "oilAfterCharges": "After the mill's charges",
+      "oilWholeYear": "The whole year",
+      "oilMadeAlready": "{{kg}} made already",
+      "oilNothingYet": "Once you record the year's first harvest, you'll see here how much olive oil to expect.",
+      "oilNeedsYield": "The estimate for the olive oil from the olives not weighed yet will appear here after your first production at the mill.",
+      "oilNeedsWeight": "The olive oil from {{units}} will be added as soon as we know what they weigh: at the first weigh-in, or set roughly how many kg they are in Settings.",
+      "expectedOnly": "about {{expected}} from the olives not weighed yet"
     }
   },
   "records": {

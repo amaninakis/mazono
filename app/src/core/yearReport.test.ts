@@ -4,6 +4,7 @@ import {
   averageCurve,
   cumulativeCurves,
   dayOfSeason,
+  oilEstimate,
   oliveEstimate,
   valueOnDay,
   yearSummary,
@@ -311,5 +312,91 @@ describe('oliveEstimate', () => {
     expect(result.pending).toEqual([
       { unitId: 'crate', amount: 6, kgPerUnit: 20, source: 'user', kg: 120 },
     ])
+  })
+})
+
+describe('oilEstimate', () => {
+  const none = {
+    weighedKg: 0,
+    estimatedKg: 0,
+    totalKg: 0,
+    weighIns: [],
+    pending: [],
+    unknown: {},
+  }
+
+  it('turns the olives not weighed yet into oil at this year’s yield', () => {
+    // This year: 1,500 kg olives gave 300 kg oil (1/5), 270 kg after the 10 % charge.
+    const result = oilEstimate({
+      season: 2026,
+      extractions: [pressing('a', '2026-11-06', 1500, 300)],
+      olives: { ...none, weighedKg: 1500, estimatedKg: 800, totalKg: 2300 },
+    })
+
+    expect(result.status).toBe('estimate')
+    expect(result.rate).toMatchObject({ source: 'thisYear', season: 2026, oilPerOlive: 0.2 })
+    expect(result.madeKg).toBe(300)
+    expect(result.expectedKg).toBeCloseTo(160)
+    expect(result.expectedNetKg).toBeCloseTo(144)
+    expect(result.missing).toEqual([])
+  })
+
+  it('uses the most recent earlier year until this year’s first production', () => {
+    const result = oilEstimate({
+      season: 2026,
+      extractions: [
+        pressing('old', '2023-11-06', 1000, 150),
+        pressing('last', '2025-11-25', 2500, 450),
+      ],
+      olives: { ...none, estimatedKg: 1000, totalKg: 1000 },
+    })
+
+    expect(result.rate).toMatchObject({ source: 'earlier', season: 2025 })
+    expect(result.expectedKg).toBeCloseTo(180)
+    expect(result.madeKg).toBe(0)
+  })
+
+  it('waits for a yield when there has never been a production', () => {
+    const result = oilEstimate({
+      season: 2026,
+      extractions: [],
+      olives: { ...none, estimatedKg: 1000, totalKg: 1000 },
+    })
+
+    expect(result.status).toBe('waiting')
+    expect(result.missing).toEqual(['yield'])
+    expect(result.expectedKg).toBe(0)
+  })
+
+  it('waits for what the units weigh, and still estimates the ones it knows', () => {
+    const waiting = oilEstimate({
+      season: 2026,
+      extractions: [pressing('last', '2025-11-25', 2500, 450)],
+      olives: { ...none, unknown: { crate: 6 } },
+    })
+
+    expect(waiting.status).toBe('waiting')
+    expect(waiting.missing).toEqual(['weight'])
+
+    const partly = oilEstimate({
+      season: 2026,
+      extractions: [pressing('last', '2025-11-25', 2500, 450)],
+      olives: { ...none, estimatedKg: 500, unknown: { crate: 6 } },
+    })
+
+    expect(partly.status).toBe('estimate')
+    expect(partly.missing).toEqual(['weight'])
+  })
+
+  it('knows when everything has been weighed, or nothing harvested yet', () => {
+    const extractions = [pressing('a', '2026-11-06', 1500, 300)]
+
+    expect(
+      oilEstimate({ season: 2026, extractions, olives: { ...none, weighedKg: 1500 } }).status,
+    ).toBe('allWeighed')
+
+    expect(oilEstimate({ season: 2026, extractions: [], olives: none }).status).toBe(
+      'nothingYet',
+    )
   })
 })
