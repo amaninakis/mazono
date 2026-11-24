@@ -11,11 +11,23 @@ function restart(element: HTMLElement | null | undefined, effect: string) {
   element.classList.add(effect)
 }
 
+/** When a drag last brought a new value in by itself (see SwipeTrack). */
+let draggedAt = 0
+
+/** A drag has just moved the new value into place: it needs no slide of its own. */
+export function markDragged() {
+  draggedAt = Date.now()
+}
+
 /**
  * Show that a value changed: the new value slides in from the right when it is later (step
- * > 0), from the left when it is earlier, the same way a swipe moves it.
+ * > 0), from the left when it is earlier, the same way a drag moves it. Not after a drag,
+ * which has already moved it.
  */
 export function slideIn(element: HTMLElement | null | undefined, step: number) {
+  if (Date.now() - draggedAt < 100) {
+    return
+  }
   restart(element, step > 0 ? 'slide-next' : 'slide-prev')
 }
 

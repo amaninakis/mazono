@@ -1,43 +1,38 @@
 <script setup lang="ts">
-import { computed, useTemplateRef, watch } from 'vue'
+import { useTemplateRef, watch } from 'vue'
 import { formatLocale } from '../i18n'
 import AppIcon from './AppIcon.vue'
-import { nudge, slideIn } from './slide'
-import { useSwipe } from './swipe'
+import { slideIn } from './slide'
+import SwipeTrack from './SwipeTrack.vue'
 
 /**
  * Calendar header: ‹ month › and ‹ year ›, each with its own arrows, so moving a whole year
- * is as obvious as moving a month. Emits how many months to move. Swiping the month or the
- * year sideways moves it one (left: the next one), and the new name slides in.
+ * is as obvious as moving a month. Emits how many months to move. Dragging the month or the
+ * year sideways brings in the next one (left) or the previous one, following the finger.
  */
 const props = defineProps<{ year: number; month: number; forwardDisabled?: boolean }>()
 const emit = defineEmits<{ shift: [months: number] }>()
 
-/** Month name as it stands alone ("Σεπτέμβριος", not "Σεπτεμβρίου"). */
-const monthName = computed(() => {
+/**
+ * Month name as it stands alone ("Σεπτέμβριος", not "Σεπτεμβρίου"), for the shown month or
+ * the one `offset` months away (while dragging).
+ */
+function monthName(offset: number) {
   const parts = new Intl.DateTimeFormat(formatLocale.value, {
     month: 'long',
     year: 'numeric',
-  }).formatToParts(new Date(props.year, props.month - 1, 1))
+  }).formatToParts(new Date(props.year, props.month - 1 + offset, 1))
 
   return parts.find((part) => part.type === 'month')?.value ?? ''
-})
+}
 
-const monthGroup = useTemplateRef<HTMLElement>('monthGroup')
-const yearGroup = useTemplateRef<HTMLElement>('yearGroup')
 const monthLabel = useTemplateRef<HTMLElement>('monthLabel')
 const yearLabel = useTemplateRef<HTMLElement>('yearLabel')
 
-function swipe(months: number, label: HTMLElement | null) {
-  if (months > 0 && props.forwardDisabled) {
-    nudge(label, 1)
-    return
-  }
-  emit('shift', months)
+/** Later months and years can be dragged in unless the calendar ends here. */
+function canGo(step: number) {
+  return step < 0 || !props.forwardDisabled
 }
-
-useSwipe(monthGroup, (step) => swipe(step, monthLabel.value))
-useSwipe(yearGroup, (step) => swipe(step * 12, yearLabel.value))
 
 watch(
   () => props.year * 12 + props.month,
@@ -54,7 +49,7 @@ watch(
 
 <template>
   <div class="month-nav">
-    <span ref="monthGroup" class="nav-group month-group">
+    <span class="nav-group month-group">
       <button
         type="button"
         class="icon-btn"
@@ -63,7 +58,13 @@ watch(
       >
         <AppIcon name="chevronLeft" :size="20" />
       </button>
-      <strong ref="monthLabel" class="cap">{{ monthName }}</strong>
+      <SwipeTrack :can-go="canGo" @step="(step) => emit('shift', step)">
+        <template #default="{ offset }">
+          <strong :ref="offset === 0 ? 'monthLabel' : undefined" class="cap">{{
+            monthName(offset)
+          }}</strong>
+        </template>
+      </SwipeTrack>
       <button
         type="button"
         class="icon-btn"
@@ -74,7 +75,7 @@ watch(
         <AppIcon name="chevronRight" :size="20" />
       </button>
     </span>
-    <span ref="yearGroup" class="nav-group year-group">
+    <span class="nav-group year-group">
       <button
         type="button"
         class="icon-btn"
@@ -83,7 +84,11 @@ watch(
       >
         <AppIcon name="chevronLeft" :size="20" />
       </button>
-      <strong ref="yearLabel">{{ year }}</strong>
+      <SwipeTrack :can-go="canGo" @step="(step) => emit('shift', step * 12)">
+        <template #default="{ offset }">
+          <strong :ref="offset === 0 ? 'yearLabel' : undefined">{{ year + offset }}</strong>
+        </template>
+      </SwipeTrack>
       <button
         type="button"
         class="icon-btn"

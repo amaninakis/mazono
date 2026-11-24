@@ -5,13 +5,13 @@ import { formatLocale } from '../i18n'
 import AppIcon from './AppIcon.vue'
 import ScrollRow from './ScrollRow.vue'
 import { nudge, slideIn } from './slide'
-import { useSwipe } from './swipe'
+import SwipeTrack from './SwipeTrack.vue'
 
 /**
  * The Journal's month chooser: ‹ year › with its own arrows, then the twelve months as chips
  * in a row that scrolls sideways (the same as the task chips). A dot marks months with work;
- * months after today cannot be chosen. Swiping the year sideways moves it one (left: the
- * next one). Emits the chosen year and month.
+ * months after today cannot be chosen. Dragging the year sideways brings in the next one
+ * (left) or the previous one, following the finger. Emits the chosen year and month.
  */
 const props = defineProps<{
   year: number
@@ -38,7 +38,6 @@ const months = computed(() =>
   })),
 )
 
-const yearGroup = useTemplateRef<HTMLElement>('yearGroup')
 const yearLabel = useTemplateRef<HTMLElement>('yearLabel')
 
 function stepYear(step: number) {
@@ -49,7 +48,6 @@ function stepYear(step: number) {
   emit('pick', props.year + step, props.month)
 }
 
-useSwipe(yearGroup, stepYear)
 watch(
   () => props.year,
   (shown, before) => slideIn(yearLabel.value, shown > before ? 1 : -1),
@@ -59,7 +57,7 @@ watch(
 
 <template>
   <div class="month-strip">
-    <span ref="yearGroup" class="year-step">
+    <span class="year-step">
       <button
         type="button"
         class="icon-btn"
@@ -68,7 +66,11 @@ watch(
       >
         <AppIcon name="chevronLeft" :size="20" />
       </button>
-      <strong ref="yearLabel">{{ year }}</strong>
+      <SwipeTrack :can-go="(step) => year + step <= thisYear" @step="stepYear">
+        <template #default="{ offset }">
+          <strong :ref="offset === 0 ? 'yearLabel' : undefined">{{ year + offset }}</strong>
+        </template>
+      </SwipeTrack>
       <button
         type="button"
         class="icon-btn"
