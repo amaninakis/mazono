@@ -1,3 +1,4 @@
+import { STORE_NAME } from './names'
 /**
  * Drafts: what someone typed into a form and has not saved yet, kept on the device so that a
  * phone call, a wrong tap or closing the app loses nothing.
@@ -40,7 +41,7 @@ export function changedValues(start: FormValues, current: FormValues): FormValue
 
 /** Where a form's draft is kept: per grove, per form and (when editing) per record. */
 export function draftKey(farmId: string, form: string, recordId?: string) {
-  return ['harvestlog.draft', farmId, form, recordId ?? 'new'].join(':')
+  return [`${STORE_NAME}.draft`, farmId, form, recordId ?? 'new'].join(':')
 }
 
 /** A stored draft if it can be read and is recent enough, else undefined. */

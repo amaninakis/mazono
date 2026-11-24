@@ -2,7 +2,7 @@ import type { Access } from '../core/access'
 import type { AccountInfo } from '../core/syncFormat'
 import { reactive } from 'vue'
 import { PRESETS } from '../core/access'
-import { db, onLocalChange } from '../db/db'
+import { localDb, onLocalChange } from '../db/db'
 import {
   ApiError,
   changePassword as changePasswordCall,
@@ -89,7 +89,7 @@ const SYNC_EVERY = 60_000
 
 /** Who is signed in and their groves, kept on the device so it also works offline. */
 async function storedAccount(): Promise<{ user: User; farms: GroveAccess[] } | undefined> {
-  const stored = await db.meta.get(ACCOUNT_KEY)
+  const stored = await localDb().meta.get(ACCOUNT_KEY)
   if (!stored) {
     return undefined
   }
@@ -108,8 +108,8 @@ async function rememberAccount(user: User | undefined, farms: GroveAccess[] = ac
   account.user = user
   account.farms = farms
   await (user
-    ? db.meta.put({ key: ACCOUNT_KEY, value: JSON.stringify({ user, farms }) })
-    : db.meta.delete(ACCOUNT_KEY))
+    ? localDb().meta.put({ key: ACCOUNT_KEY, value: JSON.stringify({ user, farms }) })
+    : localDb().meta.delete(ACCOUNT_KEY))
 }
 
 /* ---------- syncing ---------- */
@@ -131,22 +131,22 @@ async function syncEverything() {
   }
   const onServer = new Set(info.farms.map((farm) => farm.id))
   const toSync = new Set(onServer)
-  for (const farm of await db.farms.toArray()) {
-    const syncedBefore = (await syncedSeq(db, farm.id)) !== undefined
+  for (const farm of await localDb().farms.toArray()) {
+    const syncedBefore = (await syncedSeq(localDb(), farm.id)) !== undefined
     if (onServer.has(farm.id) || !syncedBefore) {
       toSync.add(farm.id) // includes groves new on this device: send them
     } else {
-      await removeLocalGrove(db, farm.id) // removed on the server
+      await removeLocalGrove(localDb(), farm.id) // removed on the server
     }
   }
 
   for (const farmId of toSync) {
-    await syncFarm(db, farmId, syncCall, accessTo(farmId))
+    await syncFarm(localDb(), farmId, syncCall, accessTo(farmId))
   }
   // The open grove was removed: open another one.
-  const current = (await db.meta.get('currentFarmId'))?.value
-  if (!current || !(await db.farms.get(current))) {
-    await chooseCurrentGrove(db)
+  const current = (await localDb().meta.get('currentFarmId'))?.value
+  if (!current || !(await localDb().farms.get(current))) {
+    await chooseCurrentGrove(localDb())
   }
 }
 
@@ -181,7 +181,7 @@ export async function syncNow(): Promise<boolean> {
       }
       account.sync = navigator.onLine ? 'error' : 'offline'
     } finally {
-      account.pending = await pendingCount(db)
+      account.pending = await pendingCount(localDb())
       running = undefined
     }
   })()
@@ -193,7 +193,7 @@ export async function syncNow(): Promise<boolean> {
 function syncSoon() {
   clearTimeout(timer)
   timer = setTimeout(() => void syncNow(), SYNC_DELAY)
-  void pendingCount(db).then((count) => (account.pending = count))
+  void pendingCount(localDb()).then((count) => (account.pending = count))
 }
 
 let listening = false
@@ -224,7 +224,7 @@ async function loadData(blocking: boolean) {
   if (ok) {
     // On opening the app or signing in: if the open grove is empty but another one has
     // data (e.g. a grove started by mistake while signing in), open that one.
-    await chooseCurrentGrove(db)
+    await chooseCurrentGrove(localDb())
   }
   if (blocking) {
     account.loading = ok || !account.user ? 'idle' : 'failed'
@@ -242,7 +242,7 @@ export async function retryLoad(): Promise<void> {
 export async function startAccount(): Promise<void> {
   const [status, stored] = await Promise.all([serverStatus(), storedAccount()])
   const user = stored?.user
-  account.pending = await pendingCount(db)
+  account.pending = await pendingCount(localDb())
   if (!status && !user) {
     account.mode = 'local'
     return
@@ -256,7 +256,7 @@ export async function startAccount(): Promise<void> {
   }
   startSyncing()
   // A signed-in device without data yet (e.g. its first load failed): load before showing.
-  const hasFarm = (await db.farms.count()) > 0
+  const hasFarm = (await localDb().farms.count()) > 0
   if (!status) {
     account.sync = 'offline' // signed in earlier, server out of reach: keep working
     account.loading = hasFarm ? 'idle' : 'failed'
@@ -303,6 +303,6 @@ export async function changePassword(current: string, next: string): Promise<voi
  */
 export async function signOut(): Promise<void> {
   await signOutCall().catch(() => undefined)
-  await db.delete()
+  await localDb().delete()
   location.replace('/')
 }

@@ -1,7 +1,8 @@
-import { mkdirSync, readdirSync, readFileSync, rmSync } from 'node:fs'
+import { existsSync, mkdirSync, readdirSync, readFileSync, rmSync } from 'node:fs'
 import { dirname, join, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { buildServer } from './app.ts'
+import { backupName, backupsToRemove } from './backups.ts'
 import { backupTo, openDatabase } from './database.ts'
 
 /*
@@ -16,26 +17,33 @@ const port = Number(process.env.PORT ?? 8080)
 const dataDir = resolve(process.env.DATA_DIR ?? join(here, '..', 'data'))
 const staticDir = resolve(process.env.STATIC_DIR ?? join(here, '..', 'dist'))
 const backupDir = join(dataDir, 'backups')
-/** Daily copies kept before the oldest is removed. */
-const BACKUPS_KEPT = 14
 
 mkdirSync(backupDir, { recursive: true })
-const database = openDatabase(join(dataDir, 'harvestlog.db'))
+/**
+ * The database file: mazono.db on new installs. A server set up before the rename keeps its
+ * harvestlog.db, so nothing has to be moved.
+ */
+const oldDatabaseFile = join(dataDir, 'harvestlog.db')
+const newDatabaseFile = join(dataDir, 'mazono.db')
+const databaseFile =
+  existsSync(oldDatabaseFile) && !existsSync(newDatabaseFile)
+    ? oldDatabaseFile
+    : newDatabaseFile
+const database = openDatabase(databaseFile)
 const pkg = JSON.parse(readFileSync(join(here, '..', 'package.json'), 'utf8')) as {
   version: string
 }
 
-/** One backup per day (harvestlog-2026-11-16.db), keeping the last two weeks. */
+/** One copy of the database a day, keeping the last two weeks (server/backups.ts). */
 function dailyBackup() {
-  const today = new Date().toISOString().slice(0, 10)
-  const name = `harvestlog-${today}.db`
-  const existing = readdirSync(backupDir).filter((file) => /^harvestlog-.*\.db$/.test(file))
-  if (!existing.includes(name)) {
+  const name = backupName(new Date())
+  const files = readdirSync(backupDir)
+  if (!files.includes(name)) {
     backupTo(database, join(backupDir, name))
-    existing.push(name)
+    files.push(name)
   }
 
-  for (const old of existing.sort().slice(0, -BACKUPS_KEPT)) {
+  for (const old of backupsToRemove(files)) {
     rmSync(join(backupDir, old))
   }
 }
@@ -55,7 +63,7 @@ async function start() {
   process.on('SIGINT', stop)
 
   await app.listen({ port, host: '0.0.0.0' })
-  process.stdout.write(`Mazono ${pkg.version} on port ${port}, data in ${dataDir}\n`)
+  process.stdout.write(`Mazono ${pkg.version} on port ${port}, data in ${databaseFile}\n`)
 }
 
 void start()

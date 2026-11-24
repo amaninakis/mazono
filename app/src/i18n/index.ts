@@ -2,6 +2,7 @@ import type { DateFormat, Language } from '../core/types'
 import i18n from 'i18next'
 import { computed, ref } from 'vue'
 import { formatLocaleFor, pickLanguage } from '../core/locale'
+import { STORE_NAME } from '../core/names'
 import el from './locales/el.json'
 import en from './locales/en.json'
 
@@ -19,7 +20,7 @@ export function deviceLanguage(): Language {
   return nav.toLowerCase().startsWith('el') ? 'el' : 'en'
 }
 
-const CHOSEN_KEY = 'harvestlog.language'
+const CHOSEN_KEY = `${STORE_NAME}.language`
 
 /** The language chosen on this phone, if any (kept when signing out). */
 export function chosenLanguage(): string | null {

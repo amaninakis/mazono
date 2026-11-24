@@ -1,6 +1,5 @@
-# Mazono (formerly HarvestLog): the app, sign-in and sync. The service and volume keep the
-# old name, so existing installs keep their data. Data (and 14 daily backups) live in the
-# harvestlog_data volume, at /data inside the container.
+# Mazono: the app, sign-in and sync. Data (and 14 daily backups) live in the mazono_data
+# volume, at /data inside the container.
 #
 # Home lab / private use (reach it through Tailscale):
 #   docker compose up -d
@@ -8,16 +7,22 @@
 #
 # Public server with your own domain and automatic HTTPS (Caddy in front):
 #   SITE_ADDRESS=harvest.example.com docker compose --profile https up -d
+#
+# Installed before the rename, when the app was called HarvestLog? Keep using your data
+# volume by naming it in a .env file next to this one (see "Upgrading from HarvestLog" in
+# the README), e.g.:  MAZONO_DATA_VOLUME=olive-harvest_harvestlog_data
+
+name: mazono
 
 services:
-  harvestlog:
+  mazono:
     build: .
-    image: harvestlog:latest
+    image: mazono:latest
     restart: unless-stopped
     ports:
       - "8080:8080"
     volumes:
-      - harvestlog_data:/data
+      - data:/data
 
   caddy:
     image: caddy:2-alpine
@@ -32,8 +37,10 @@ services:
       - ./deploy/Caddyfile:/etc/caddy/Caddyfile:ro
       - caddy_data:/data
     depends_on:
-      - harvestlog
+      - mazono
 
 volumes:
-  harvestlog_data:
+  data:
+    name: ${MAZONO_DATA_VOLUME:-mazono_data}
   caddy_data:
+    name: ${MAZONO_CADDY_VOLUME:-mazono_caddy_data}

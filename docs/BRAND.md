@@ -16,8 +16,10 @@ the same root as *λιομάζωμα*, the olive harvest.
   website and word of mouth all match.
 - Pronounced **ma-ZO-no**, stress on the middle syllable. In the wordmark the leaf over the
   olive marks that stress; in running text the name is written without an accent: Mazono.
-- Formerly HarvestLog. Internal names (the database, saved settings, the backup format, the
-  Docker service and volume) keep that first name, so existing installs lose nothing.
+- Formerly HarvestLog. Everything new is called Mazono, inside too (the phone's database, saved
+  settings, backup files, the server's files, Docker). Installs from before the rename keep the
+  old internal names where they already exist, so nothing has to be moved; backups made before
+  the rename still import.
 
 **Story (About screen)**
 

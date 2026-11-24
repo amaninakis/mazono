@@ -3,4 +3,4 @@
 {$SITE_ADDRESS}
 
 encode gzip zstd
-reverse_proxy harvestlog:8080
+reverse_proxy mazono:8080

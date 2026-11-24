@@ -10,7 +10,7 @@ import { formatLocaleFor } from '../core/locale'
 import { unitWeights } from '../core/oil'
 import { parseDecimal } from '../core/progress'
 import { taskIconName } from '../core/taskIcons'
-import { db } from '../db/db'
+import { localDb } from '../db/db'
 import { importFarm } from '../db/repo'
 import { chooseLanguage, formatLocale, LANGUAGES, locale } from '../i18n'
 import { account } from '../sync/account'
@@ -25,6 +25,9 @@ import TaskIcon from '../ui/TaskIcon.vue'
 import { showToast } from '../ui/toast'
 import ToggleSwitch from '../ui/ToggleSwitch.vue'
 import UsersCard from '../ui/UsersCard.vue'
+
+/** The grove data on this phone (picked before the app started). */
+const db = localDb()
 
 const { t: translate } = useTranslation()
 const farm = useFarm()
@@ -966,7 +969,7 @@ watch(
       <p class="muted small">{{ $t('settings.version', { version }) }}</p>
       <a
         class="source-link small"
-        href="https://github.com/amaninakis/olive-harvest"
+        href="https://github.com/amaninakis/mazono"
         target="_blank"
         rel="noopener"
         >{{ $t('settings.sourceCode') }}</a
