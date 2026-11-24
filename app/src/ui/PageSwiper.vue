@@ -22,6 +22,15 @@ const router = useRouter()
 const area = useTemplateRef<HTMLElement>('area')
 
 const phase = ref<'drag' | 'idle' | 'settle'>('idle')
+/**
+ * How the page slides into place: after a swipe it eases out from the finger's speed; a tab
+ * chosen in the bottom menu snaps over quicker, starting fast and landing softly.
+ */
+const SLIDES = {
+  swipe: { easing: 'ease-out', milliseconds: 250 },
+  tap: { easing: 'cubic-bezier(0.2, 0.8, 0.2, 1)', milliseconds: 170 },
+}
+const slide = ref(SLIDES.swipe)
 const offsetX = ref(0)
 /** How far the page is scrolled down, so the neighbours show their top in view. */
 const previewTop = ref(0)
@@ -62,7 +71,10 @@ const stripStyle = computed(() => {
 
   return {
     transform: `translateX(${Math.round(offsetX.value)}px)`,
-    transition: phase.value === 'settle' ? 'transform 0.25s ease-out' : 'none',
+    transition:
+      phase.value === 'settle'
+        ? `transform ${slide.value.milliseconds}ms ${slide.value.easing}`
+        : 'none',
   }
 })
 
@@ -153,9 +165,10 @@ function finish() {
   chosen.value = undefined
 }
 
-function settle(step: -1 | 0 | 1) {
+function settle(step: -1 | 0 | 1, how = SLIDES.swipe) {
   const target = { '-1': before.value, '0': undefined, '1': after.value }[step]
   const width = (area.value?.offsetWidth ?? 0) + PAGE_GAP - 1
+  slide.value = how
   phase.value = 'settle'
   offsetX.value = target ? -step * width : 0
   clearTimeout(timer)
@@ -168,7 +181,7 @@ function settle(step: -1 | 0 | 1) {
       // The new page takes the place of the one shown beside, in the same moment.
       void router.push(target).finally(finish)
     },
-    reducedMotion() ? 0 : 260,
+    reducedMotion() ? 0 : how.milliseconds + 10,
   )
 }
 
@@ -231,7 +244,7 @@ async function open(path: string) {
   offsetX.value = 0
   phase.value = 'drag'
   await nextTick() // the chosen page is drawn beside this one first
-  requestAnimationFrame(() => settle(side))
+  requestAnimationFrame(() => settle(side, SLIDES.tap))
 }
 
 defineExpose({ open })

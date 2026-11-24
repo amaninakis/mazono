@@ -58,10 +58,13 @@ button, input, select, textarea { font: inherit; color: inherit; }
    covers it and it grows with a title that wraps. On phones the small logo sits at the
    right end of that row. */
 .shell { position: relative; overflow-x: clip; }
+/* A field the browser scrolls to (when it is focused, say) stops below the title row. */
+html { scroll-padding-top: calc(var(--page-top) + var(--head-row) + 22px); }
 /* Every page's first row is the same height, so the hill and its wave sit at the same place
    on every tab. A title too long for the row ends in "…". Pages with controls (Journal's
-   months, Oil's year) put them in their own row below the wave, so every page shows the logo. */
-.page > :first-child { position: relative; min-height: var(--head-row); margin: 0 0 22px; padding-right: 116px;
+   months, Oil's year) put them in their own row below the wave, so every page shows the logo.
+   The row stays at the top while the page scrolls: the content passes under the hill. */
+.page > :first-child { position: sticky; top: var(--page-top); z-index: 3; min-height: var(--head-row); margin: 0 0 22px; padding-right: 116px;
   display: flex; flex-wrap: wrap; align-items: center; align-content: flex-start; column-gap: 8px; row-gap: 20px; }
 .page > :first-child h1 { margin: 0; min-width: 0; line-height: var(--head-row); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 /* A settings section's row, with its back arrow, keeps the whole width on phones: the logo
@@ -99,7 +102,8 @@ button, input, select, textarea { font: inherit; color: inherit; }
 .app-logo.large { gap: 14px; }
 /* Phone: a quiet logo above each page. Computer: at the top of the side menu instead. */
 .brand-bar {
-  position: absolute; top: var(--page-top); right: 0; z-index: 2; display: flex; align-items: center;
+  /* Stays at the top right of the app's column while the page scrolls, above the title row. */
+  position: fixed; top: var(--page-top); right: max(0px, calc((100vw - 560px) / 2)); z-index: 4; display: flex; align-items: center;
   height: var(--head-row); padding: 0 14px 0 22px;
   pointer-events: none; /* only a picture: a swipe starting on it reaches the page */
   /* On the hill's own green, so a title sliding past goes under it, fading at its left edge. */
