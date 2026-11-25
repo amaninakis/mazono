@@ -12,6 +12,7 @@ import { formatLocaleFor } from '../core/locale'
 import { unitWeights } from '../core/oil'
 import { parseDecimal } from '../core/progress'
 import { taskIconName } from '../core/taskIcons'
+import { unitInUse } from '../core/units'
 import { localDb } from '../db/db'
 import { importFarm } from '../db/repo'
 import { chooseLanguage, formatLocale, LANGUAGES, locale } from '../i18n'
@@ -121,6 +122,34 @@ async function moveField(index: number, step: -1 | 1) {
 onBeforeUnmount(() => clearTimeout(movedTimer))
 
 const unitList = computed(() => visible(farm.value.units))
+/** Units some work or pressing uses: those can only be archived, the rest can be deleted. */
+const unitsInUse = computed(
+  () =>
+    new Set(
+      farm.value.units
+        .filter((unit) => unitInUse(unit.id, farm.value.entries, farm.value.extractions))
+        .map((unit) => unit.id),
+    ),
+)
+
+/** A new name drops a plural typed for the old one: the plural is made from the name. */
+async function renameUnit(id: string, typed: string) {
+  const name = typed.trim()
+  if (name) {
+    await repo.value.update('units', id, { name, pluralName: undefined })
+  }
+}
+
+async function deleteUnit(id: string, name: string) {
+  await repo.value.softDelete('units', id)
+  showToast({
+    title: translate('settings.unitDeleted', { name }),
+    action: {
+      label: translate('common.undo'),
+      run: () => void repo.value.restore('units', id),
+    },
+  })
+}
 const typeList = computed(() =>
   visible(farm.value.taskTypes).sort((left, right) => left.order - right.order),
 )
@@ -700,18 +729,7 @@ watch(
               class="input"
               :aria-label="$t('common.name')"
               :value="u.name"
-              @blur="
-                (e) => val(e).trim() && repo.update('units', u.id, { name: val(e).trim() })
-              "
-            />
-            <SettingInput
-              class="input"
-              :aria-label="$t('setup.pluralName')"
-              :placeholder="$t('setup.pluralName')"
-              :value="u.pluralName ?? ''"
-              @blur="
-                (e) => repo.update('units', u.id, { pluralName: val(e).trim() || undefined })
-              "
+              @blur="(e) => renameUnit(u.id, val(e))"
             />
             <SettingInput
               class="input small"
@@ -744,6 +762,17 @@ watch(
               <span>{{ $t('setup.default') }}</span>
             </label>
             <button
+              v-if="!unitsInUse.has(u.id) && !u.isDefault"
+              type="button"
+              class="btn ghost small archive-btn"
+              :aria-label="$t('settings.deleteUnit', { name: u.name })"
+              @click="deleteUnit(u.id, u.name)"
+            >
+              <AppIcon name="trash" :size="20" />
+              <span class="wide-only">{{ $t('common.delete') }}</span>
+            </button>
+            <button
+              v-else
               type="button"
               class="btn ghost small archive-btn"
               :disabled="u.isDefault && !u.archived"

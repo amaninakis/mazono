@@ -87,7 +87,11 @@ watch(
             p.finished
               ? $t('today.finished')
               : p.remaining != null
-                ? $t('today.treesLeft', { left: p.remaining, total: p.field.trees })
+                ? $t('today.treesLeft', {
+                    left: p.remaining,
+                    total: p.field.trees,
+                    count: p.remaining,
+                  })
                 : '\u00A0'
           }}
         </span>

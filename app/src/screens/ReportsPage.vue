@@ -12,7 +12,7 @@ import {
   yearEconomics,
   yieldThroughSeason,
 } from '../core/reports'
-import { unitLabel } from '../core/units'
+import { unitLabel, unitPlural } from '../core/units'
 import { formatLocale } from '../i18n'
 import AppIcon from '../ui/AppIcon.vue'
 import { usePrefersDark } from '../ui/colorScheme'
@@ -142,9 +142,9 @@ const unitCaption = computed(() => {
     return translate('reports.yieldCaption')
   }
   const unit = onlyUnit.value
-  const unitsName = (
-    unit ? (unit.pluralName ?? unit.name) : translate('reports.units')
-  ).toLocaleLowerCase(formatLocale.value)
+  const unitsName = (unit ? unitPlural(unit) : translate('reports.units')).toLocaleLowerCase(
+    formatLocale.value,
+  )
   const isOil = fieldMetric.value === 'oil' || fieldMetric.value === 'oilPerTree'
   const name = isOil ? translate('reports.kgOil') : unitsName
   const perTree = fieldMetric.value === 'unitsPerTree' || fieldMetric.value === 'oilPerTree'
@@ -342,7 +342,10 @@ function exportCsv() {
         translate('reports.col.yield'),
         translate('reports.treesCounted'),
         translate('reports.oilPerTree'),
-        ...unitIds.map((id) => unitById(id)?.pluralName ?? unitById(id)?.name ?? '?'),
+        ...unitIds.map((id) => {
+          const unit = unitById(id)
+          return unit ? unitPlural(unit) : '?'
+        }),
       ],
       fieldReport.value.rows.flatMap((row) =>
         Object.entries(row.cells).map(([year, cell]) => [

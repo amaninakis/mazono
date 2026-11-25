@@ -6,7 +6,6 @@ import { useFarm } from './farm'
 const emit = defineEmits<{ close: []; created: [id: string] }>()
 const farm = useFarm()
 const name = ref('')
-const plural = ref('')
 
 async function create() {
   if (!name.value.trim()) {
@@ -14,7 +13,6 @@ async function create() {
   }
   const row = await farm.value.repo.addUnit({
     name: name.value.trim(),
-    pluralName: plural.value.trim() || undefined,
     isDefault: false,
     archived: false,
   })
@@ -27,8 +25,6 @@ async function create() {
   <AppModal :title="$t('today.newUnit')" @close="emit('close')">
     <label class="label" for="nu-name">{{ $t('today.newUnitName') }}</label>
     <input id="nu-name" v-model="name" class="input" autofocus />
-    <label class="label" for="nu-plural">{{ $t('setup.pluralName') }}</label>
-    <input id="nu-plural" v-model="plural" class="input" />
     <div class="actions">
       <button type="button" class="btn ghost" @click="emit('close')">
         {{ $t('common.cancel') }}
