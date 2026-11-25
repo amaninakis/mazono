@@ -31,7 +31,7 @@ export class ApiError extends Error {
 export interface ServerStatus {
   // The server says which app it serves: "mazono", or the app's first name on servers (and
   // phones) from before the rename. Both are accepted.
-  app: 'harvestlog' | 'mazono'
+  app: 'mazono'
   version: string
   needsSetup: boolean
 }
@@ -77,7 +77,7 @@ export async function serverStatus(): Promise<ServerStatus | undefined> {
 
   try {
     const status = await call<ServerStatus>('/api/status', undefined, 5000)
-    return status?.app === 'harvestlog' || status?.app === 'mazono' ? status : undefined
+    return status?.app === 'mazono' ? status : undefined
   } catch {
     return undefined
   }

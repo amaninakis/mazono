@@ -1,6 +1,6 @@
 import type { AccountInfo, SyncResponse } from '../src/core/syncFormat.ts'
 import { beforeEach, describe, expect, it } from 'vitest'
-import { buildServer, OLD_SESSION_COOKIE, SESSION_COOKIE } from './app.ts'
+import { buildServer, SESSION_COOKIE } from './app.ts'
 import { openDatabase } from './database.ts'
 
 let clock = 1_800_000_000_000
@@ -123,27 +123,11 @@ describe('signing in', () => {
     expect((await app.inject({ url: '/api/me', cookies })).statusCode).toBe(401)
   })
 
-  it('keeps people signed in with the cookie from before the rename', async () => {
-    const { cookies } = await setUp()
-
-    expect(SESSION_COOKIE).toBe('mazono_session')
-    const old = { [OLD_SESSION_COOKIE]: cookies[SESSION_COOKIE] }
-
-    expect((await app.inject({ url: '/api/me', cookies: old })).statusCode).toBe(200)
-    const logout = await app.inject({ method: 'POST', url: '/api/logout', cookies: old })
-
-    expect(logout.cookies.map((cookie) => cookie.name).sort()).toEqual([
-      OLD_SESSION_COOKIE,
-      SESSION_COOKIE,
-    ])
-
-    expect((await app.inject({ url: '/api/me', cookies: old })).statusCode).toBe(401)
-  })
-
-  it('still tells older phones it is their server', async () => {
+  it('tells phones it is a Mazono server', async () => {
     const status = await app.inject({ url: '/api/status' })
 
-    expect(status.json()).toMatchObject({ app: 'harvestlog' })
+    expect(SESSION_COOKIE).toBe('mazono_session')
+    expect(status.json()).toMatchObject({ app: 'mazono' })
   })
 
   it('changes the password', async () => {

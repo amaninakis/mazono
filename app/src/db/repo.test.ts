@@ -64,7 +64,7 @@ describe('farm repo', () => {
 
     const db2 = new HarvestDB(`test-${Math.random()}`)
 
-    expect(await importFarm({ ...backup, format: 'harvestlog-export' }, db2)).toBe(row.farmId)
+    expect(await importFarm(backup, db2)).toBe(row.farmId)
     expect((await db2.fields.toArray()).map((field) => field.name)).toEqual(['Ρυάκι'])
     await expect(importFarm({ ...backup, format: 'other-app' }, db2)).rejects.toThrow()
   })

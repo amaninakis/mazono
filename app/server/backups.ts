@@ -7,14 +7,11 @@ export function backupName(day: Date) {
 }
 
 /**
- * Which backup files to remove so only the newest `kept` days stay. Copies from before the
- * rename (harvestlog-….db) count too, by their date, so they go in turn as they get old.
- * Other files in the folder are never touched.
+ * Which backup files to remove so only the newest `kept` days stay. Other files in the
+ * folder are never touched.
  */
 export function backupsToRemove(files: string[], kept = BACKUPS_KEPT) {
-  const backups = files.filter((file) =>
-    /^(?:mazono|harvestlog)-\d{4}-\d{2}-\d{2}\.db$/.test(file),
-  )
+  const backups = files.filter((file) => /^mazono-\d{4}-\d{2}-\d{2}\.db$/.test(file))
   const byDay = backups.sort(
     (first, second) =>
       dayOf(first).localeCompare(dayOf(second)) || first.localeCompare(second),
