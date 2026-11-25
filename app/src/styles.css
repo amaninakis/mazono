@@ -376,7 +376,6 @@ html { scroll-padding-top: calc(var(--page-top) + var(--head-row) + 22px); }
 /* Oil: "+ New production" and the year share one row below the wave. */
 .oil-bar { display: flex; align-items: center; justify-content: flex-end; gap: 8px; margin-bottom: 12px; }
 .oil-bar .btn { flex: 1; min-width: 0; white-space: nowrap; padding: 0 12px; }
-.oil-bar .year-picker .icon-btn { width: 36px; min-width: 36px; }
 .entries { list-style: none; padding: 0; margin: 8px 0; display: flex; flex-direction: column; gap: 8px; }
 .entry {
   display: flex; align-items: center; background: var(--card); border: 1px solid var(--line);
@@ -452,7 +451,6 @@ html { scroll-padding-top: calc(var(--page-top) + var(--head-row) + 22px); }
 .btn.danger { color: var(--danger); margin-top: 10px; }
 
 /* Oil page */
-.season-select { width: auto; min-height: 40px; }
 .btn.block { display: flex; width: 100%; margin-bottom: 12px; }
 .kv { width: 100%; border-collapse: collapse; }
 .kv th { text-align: left; font-weight: 500; color: var(--muted); padding: 6px 8px 6px 0; vertical-align: top; }
@@ -717,9 +715,10 @@ span.date-text { display: block; white-space: nowrap; }
 }
 
 /* Year selector with « » */
-.year-picker { display: inline-flex; align-items: center; gap: 2px; }
-.year-picker .icon-btn { width: var(--tap); min-width: var(--tap); }
-.year-picker .icon-btn:disabled { opacity: 0.3; }
+/* The year in Money and Oil (YearPicker): looks like the Journal's; the list of years lies
+   invisibly over the number, so tapping it opens the list. */
+.year-choice { position: relative; display: block; }
+.year-list { position: absolute; inset: 0; width: 100%; opacity: 0; cursor: pointer; font-size: 16px; }
 .value-places { display: flex; flex-direction: column; gap: 4px; margin-top: 8px; }
 .unit-caption { margin: 2px 0 6px; font-size: 0.875rem; font-weight: 600; color: var(--ink); }
 .heat-table thead tr:first-child th.unit-over-years { white-space: normal; text-align: right; color: var(--ink); font-size: 0.875rem; font-weight: 600; padding-bottom: 0; }
