@@ -57,6 +57,14 @@ function gridFor(offset: number) {
 }
 const days = useTemplateRef<HTMLElement>('days')
 /** Show another month; a month after today shows today's month instead. */
+/** The first year with any work: the Journal's list of years starts there. */
+const firstYear = computed(() =>
+  farm.value.entries.reduce(
+    (first, entry) => Math.min(first, Number(entry.date.slice(0, 4))),
+    Number(today.slice(0, 4)),
+  ),
+)
+
 function showMonth(year: number, monthNumber: number) {
   month.value = shownMonth(year, monthNumber, today)
 }
@@ -192,6 +200,7 @@ function loggedBy(createdBy: string | undefined) {
       :month="ym[1]"
       :today="today"
       :with-work="monthsWithDots"
+      :first-year="firstYear"
       @pick="showMonth"
     />
     <section class="card calendar">

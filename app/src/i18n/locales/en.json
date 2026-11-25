@@ -154,7 +154,8 @@
     "loggedBy": "Logged by {{name}}",
     "month": "Month",
     "hasWork": "has entries",
-    "todayMark": "today"
+    "todayMark": "today",
+    "year": "Year"
   },
   "settings": {
     "title": "Settings",
