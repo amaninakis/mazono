@@ -187,7 +187,7 @@ The app opens here. Everything for one entry sits on a single scrollable page wi
 
 The trees counter cannot go above the trees left in the field. Reaching the last tree switches "field finished" on automatically (and off again if the number goes back down, unless the user set the switch by hand).
 
-Units have a singular and an optional plural name ("1 τσουβάλι", "8,5 τσουβάλια"); the plural is used for amounts above one. The presets come with plurals in every language.
+Units have a name ("1 τσουβάλι"); the plural for amounts above one ("8,5 τσουβάλια") is made from it, so nobody is asked for it (`pluralOf` in `core/units.ts`): Greek names follow the endings of Greek nouns and adjectives word by word up to a joining word ("Μισό τσουβάλι" → "Μισά τσουβάλια", "Κάσα με λαβές" → "Κάσες με λαβές"), names in Latin letters get an English plural on the last word. A plural saved with an older unit is kept until the unit is renamed. A unit no work or pressing uses can be deleted (with undo); a used one can only be archived.
 
 Every kind also has a "field finished" toggle and notes. Workers and hours appear only with the Labour module on. Users can create their own task types (spraying, irrigation, tilling…) by choosing one of these four kinds; no new code is needed.
 
@@ -297,7 +297,7 @@ Ideas for later: harvest progress compared with last season; kg per unit over ti
 - **Language**: chosen per phone and open to everyone, whatever their permissions; it is kept when signing out. The grove's language is only the starting point for a phone that has not chosen one (and is updated when someone who may change settings picks a language). *(v0.5b)*
 - **General**: season start month, yield format (1/x or %), farm name. *(v0.1)*
 - **Date and number format**: Automatic, Greek (15/11/2026 · 1.234,5), British or American, separate from the language. Browsers do not pass on the operating system's region setting (e.g. macOS English with region Greece), so "Automatic" also looks at the time zone. Date fields show dates in this format rather than the browser's. *(v0.2)*
-- **Fields, units, task types**: add, edit, archive (never delete fields with history), colours, icons, active months. *(v0.1)*
+- **Fields, units, task types**: add, edit, archive (never delete fields with history; an unused unit can be deleted), colours, icons, active months. *(v0.1)*
 - **Optional modules**, off by default and set per farm: Labour (workers, hours; wages and costs later). *(v0.1)*
 - **Data**: JSON backup export/restore *(v0.1)*; CSV export, spreadsheet import, sync status, automatic backups *(later)*.
 - **Mill and charges**: mills, charge types with default %, storage locations. *(v0.2)*

@@ -79,7 +79,6 @@
     "restore": "Restore from a backup file",
     "saveFailed": "Something went wrong while saving. Please try again.",
     "notSecure": "This address doesn't start with https, so the app can't work offline or be added to the home screen. Everything else works. Ask the person who set it up to give you the https address.",
-    "pluralName": "Plural (optional)",
     "fieldsOrder": "Enter them in the order you usually work them: this is the order they will appear in throughout the app. You can change it later in Settings."
   },
   "today": {
@@ -91,7 +90,6 @@
     "field": "Field",
     "noFields": "You have no fields yet.",
     "addFields": "Add fields",
-    "treesLeft": "{{left}} of {{total}} left",
     "finished": "Finished",
     "treesHarvested": "Trees harvested",
     "treesPruned": "Trees pruned",
@@ -127,7 +125,9 @@
     "prevFields": "Previous fields",
     "swipeForMore": "{{count}} fields · swipe for more ›",
     "allFieldsCount": "{{count}} fields",
-    "clearTrees": "Clear trees"
+    "clearTrees": "Clear trees",
+    "treesLeft_one": "{{left}} of {{total}} trees remaining",
+    "treesLeft_other": "{{left}} of {{total}} trees remaining"
   },
   "inputKind": {
     "harvest": "Trees and collection units",
@@ -237,7 +237,9 @@
     "changeOrderHelp": "Tap the arrows to move a field up or down. It is saved straight away.",
     "moveUp": "Move up: {{name}}",
     "moveDown": "Move down: {{name}}",
-    "orderDone": "Done"
+    "orderDone": "Done",
+    "deleteUnit": "Delete {{name}}",
+    "unitDeleted": "“{{name}}” deleted"
   },
   "chargeType": {
     "millFee": "Mill fee",
