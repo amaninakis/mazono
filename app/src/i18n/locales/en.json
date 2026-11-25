@@ -260,7 +260,7 @@
     "oil": "Olive oil",
     "yield": "Yield",
     "charges": "Charges",
-    "net": "Net",
+    "net": "Delivered",
     "acidity": "Acidity",
     "stored": "Stored",
     "total": "Total",
@@ -272,7 +272,8 @@
     "movements": "Movements",
     "fieldsEstimate": "Olive oil per field (≈)",
     "perTree": "≈ {{kg}} kg per tree",
-    "saleLine": "{{kg}} kg sold to {{party}}"
+    "saleLine": "{{kg}} kg sold to {{party}}",
+    "netDelivered": "Net delivered quantity of olive oil"
   },
   "extraction": {
     "title": "Mill extraction",
@@ -286,7 +287,7 @@
     "yieldValue": "Yield {{value}}",
     "acidity": "Acidity % (optional)",
     "chargesTitle": "Charges kept in olive oil",
-    "chargesHelp": "What the mill kept in olive oil instead of money. Set a usual % in Settings to fill these in for you.",
+    "chargesHelp": "What the mill kept in olive oil instead of money. You can set a usual % in Settings to fill these in for you.",
     "addCharge": "Add charge",
     "newChargeName": "Name of the charge",
     "percentOfOil": "{{value}} of the olive oil",
@@ -295,7 +296,7 @@
     "rest": "the rest",
     "storedTooMuch": "More olive oil is stored than the net olive oil. Lower the amounts under “Where the olive oil went”.",
     "harvestTitle": "Harvest days in this batch",
-    "harvestHelp": "Tick the harvest days whose olives went to the mill this time. Use “Part” if only some of a day’s olives went.",
+    "harvestHelp": "Tick the harvest days whose olives belong to this pressing. Use “Part” to split off an amount if only part of a day’s olives went.",
     "noHarvest": "No harvest days are waiting for the mill.",
     "part": "Split",
     "of": "of {{total}}",
