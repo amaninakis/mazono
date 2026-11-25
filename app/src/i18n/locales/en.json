@@ -356,7 +356,9 @@
     "uncategorised": "No category",
     "yearHint": "Calendar year",
     "feeLine": "fees {{fee}}",
-    "stockValueCounts": "Counts olive oil at:"
+    "stockValueCounts": "Counts olive oil at:",
+    "taxBase": "Worked out on {{amount}}, leaving out entries not for tax",
+    "notForTax": "not for tax"
   },
   "tx": {
     "newExpense": "New expense",
@@ -391,7 +393,8 @@
     "fee": "Fee (optional)",
     "received": "You receive",
     "feeShort": "Fee",
-    "acidity": "Acidity % (optional)"
+    "acidity": "Acidity % (optional)",
+    "countsForTax": "Counts towards the tax estimate"
   },
   "reports": {
     "tab": {

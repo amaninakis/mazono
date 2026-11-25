@@ -11,6 +11,7 @@ import {
   partyNames,
   saleAmounts,
   stockForValue,
+  taxChoiceFor,
   taxEstimate,
 } from './money'
 import { isUntrackedSale, stockLevels, trackedVintages } from './oil'
@@ -275,5 +276,58 @@ describe('stockForValue', () => {
     expect(stockForValue(stock, ['home'])).toBe(60)
     expect(stockForValue(stock, ['mill', 'village'])).toBe(360)
     expect(stockForValue(stock, [])).toBe(0)
+  })
+})
+
+describe('tax estimate choice', () => {
+  const year = { kind: 'year' as const, year: 2025 }
+
+  it('leaves out what does not count from the taxable net only', () => {
+    const totals = moneyTotals(
+      [
+        tx({ kind: 'sale', amount: 1000, kg: 200 }),
+        tx({ kind: 'income', amount: 300, taxCounted: false }),
+        tx({ kind: 'expense', amount: 200 }),
+        tx({ kind: 'expense', amount: 50, taxCounted: false }),
+        tx({ kind: 'expense', amount: 10, taxCounted: true }),
+      ],
+      year,
+    )
+
+    expect(totals.net).toBe(1040)
+    expect(totals.taxableNet).toBe(790)
+  })
+
+  it('counts by default', () => {
+    expect(taxChoiceFor([], 'expense', 'Agrocoop', 'fuel')).toBe(true)
+    expect(taxChoiceFor([tx({ party: 'Agrocoop' })], 'expense', 'Agrocoop')).toBe(true)
+  })
+
+  it('remembers the choice for the same business, buyer or source', () => {
+    const past = [
+      tx({ party: 'Kalogridis', taxCounted: false, date: '2025-05-01' }),
+      tx({ party: 'kalogridis ', taxCounted: true, date: '2025-03-01' }),
+      tx({ kind: 'sale', party: 'Kalogridis', taxCounted: true }),
+    ]
+
+    expect(taxChoiceFor(past, 'expense', 'KALOGRIDIS')).toBe(false)
+    expect(taxChoiceFor(past, 'sale', 'Kalogridis')).toBe(true)
+  })
+
+  it('otherwise remembers it for the same category', () => {
+    const past = [tx({ party: 'Home shop', categoryId: 'fuel', taxCounted: false })]
+
+    expect(taxChoiceFor(past, 'expense', 'Other shop', 'fuel')).toBe(false)
+    expect(taxChoiceFor(past, 'expense', 'Other shop', 'tools')).toBe(true)
+    // The business's own choice comes first.
+    const both = [...past, tx({ party: 'Other shop', categoryId: 'tools', taxCounted: true })]
+
+    expect(taxChoiceFor(both, 'expense', 'Other shop', 'fuel')).toBe(true)
+  })
+
+  it('ignores deleted entries', () => {
+    const past = [tx({ party: 'A', taxCounted: false, deletedAt: 1 })]
+
+    expect(taxChoiceFor(past, 'expense', 'A')).toBe(true)
   })
 })

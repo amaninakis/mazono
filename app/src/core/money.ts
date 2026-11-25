@@ -35,6 +35,38 @@ export interface MoneyTotals {
   byCategory: Record<string, number>
   /** Average € per kg of the oil sold (price before fees). */
   averagePrice?: number
+  /** The net result of only what counts in the tax estimate (see countsForTax). */
+  taxableNet: number
+}
+
+/** Whether a sale, income or expense counts in the tax estimate (yes unless turned off). */
+export function countsForTax(tx: Pick<Transaction, 'taxCounted'>): boolean {
+  return tx.taxCounted !== false
+}
+
+/**
+ * Whether a new entry should count in the tax estimate: as the last one with the same buyer,
+ * business or source, else as the last one of the same category (expense or income type),
+ * else yes.
+ */
+export function taxChoiceFor(
+  transactions: Transaction[],
+  kind: TransactionKind,
+  party: string,
+  categoryId?: string,
+): boolean {
+  const key = party.trim().toLowerCase()
+  const sameKind = live(transactions)
+    .filter((tx) => tx.kind === kind && tx.taxCounted != null)
+    .sort((left, right) => (left.date < right.date ? 1 : -1))
+  const sameParty = key
+    ? sameKind.find((tx) => tx.party.trim().toLowerCase() === key)
+    : undefined
+  const sameCategory = categoryId
+    ? sameKind.find((tx) => tx.categoryId === categoryId)
+    : undefined
+
+  return (sameParty ?? sameCategory)?.taxCounted ?? true
 }
 
 export function moneyTotals(
@@ -52,11 +84,16 @@ export function moneyTotals(
     expenses: 0,
     net: 0,
     byCategory: {},
+    taxableNet: 0,
   }
+  let taxable = 0
 
   for (const tx of live(transactions)) {
     if (!inPeriod(tx.date, period, seasonStartMonth)) {
       continue
+    }
+    if (countsForTax(tx)) {
+      taxable += tx.kind === 'expense' ? -tx.amount : tx.amount
     }
     if (tx.kind === 'sale') {
       totals.sales += tx.amount
@@ -79,6 +116,7 @@ export function moneyTotals(
   totals.expenses = round2(totals.expenses)
   totals.income = round2(totals.sales + totals.otherIncome)
   totals.net = round2(totals.income - totals.expenses)
+  totals.taxableNet = round2(taxable)
   if (totals.salesKg > 0) {
     totals.averagePrice = round2(salesGross / totals.salesKg)
   }
