@@ -221,6 +221,11 @@ export interface Transaction extends BaseRecord {
   locationId?: string
   /** Acidity % of the oil sold (optional). */
   acidity?: number
+  /**
+   * Whether it counts in the tax estimate (Settings → Money). Not set on older records and
+   * when no tax estimate is used: it counts.
+   */
+  taxCounted?: boolean
   // expenses
   invoiceNo?: string
   fieldId?: string

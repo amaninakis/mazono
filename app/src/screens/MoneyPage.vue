@@ -63,7 +63,9 @@ const period = computed<Period>(() => ({
 const totals = computed(() =>
   moneyTotals(farm.value.transactions, period.value, startMonth.value),
 )
-const tax = computed(() => taxEstimate(totals.value.net, farm.value.settings.taxPercent))
+const tax = computed(() =>
+  taxEstimate(totals.value.taxableNet, farm.value.settings.taxPercent),
+)
 const stock = computed(() =>
   stockLevels(
     farm.value.extractions,
@@ -216,6 +218,9 @@ const canEditSettings = computed(() => canDo(farm.value, 'settings', 'change'))
                     percent: formatNumber(farm.settings.taxPercent, formatLocale, 1),
                   })
                 }}
+                <small v-if="totals.taxableNet !== totals.net" class="muted block-line">{{
+                  $t('money.taxBase', { amount: eur(totals.taxableNet) })
+                }}</small>
               </th>
               <td>− {{ eur(tax) }}</td>
             </tr>
@@ -317,7 +322,10 @@ const canEditSettings = computed(() => canDo(farm.value, 'settings', 'change'))
               <strong>{{ x.party || detail(x) }}</strong>
               <small class="muted"
                 >{{ day(x.date)
-                }}<template v-if="x.party && detail(x)"> · {{ detail(x) }}</template></small
+                }}<template v-if="x.party && detail(x)"> · {{ detail(x) }}</template
+                ><template v-if="farm.settings.taxPercent && x.taxCounted === false">
+                  · {{ $t('money.notForTax') }}</template
+                ></small
               >
             </span>
             <span class="tx-amount"

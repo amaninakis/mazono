@@ -8,11 +8,13 @@ import { seasonLabel, seasonOf, todayISO } from '../core/dates'
 import { formatMoney, formatNumber } from '../core/format'
 import {
   categoryForParty,
+  countsForTax,
   defaultSaleSource,
   feeForBuyer,
   lastSaleAcidity,
   partyNames,
   saleAmounts,
+  taxChoiceFor,
 } from '../core/money'
 import { stockLevels, trackedVintages } from '../core/oil'
 import { formatLocale } from '../i18n'
@@ -57,6 +59,28 @@ let categoryChosen = !!editing?.categoryId
 const amount = ref<number | null>(editing && kind !== 'sale' ? editing.amount : null)
 const invoiceNo = ref(editing?.invoiceNo ?? '')
 const notes = ref(editing?.notes ?? '')
+/**
+ * Counts in the tax estimate (shown only when one is set in Settings). A new entry starts as
+ * the last one with this buyer, business or source, else of this category; once the user
+ * ticks or unticks it, it stays as they left it.
+ */
+const taxEnabled = computed(() => !!farm.value.settings.taxPercent)
+const taxCounted = ref(
+  editing
+    ? countsForTax(editing)
+    : taxChoiceFor(farm.value.transactions, kind, '', categoryId.value || undefined),
+)
+let taxChosen = !!editing
+function rememberedTaxChoice() {
+  if (!taxChosen) {
+    taxCounted.value = taxChoiceFor(
+      farm.value.transactions,
+      kind,
+      party.value,
+      kind === 'sale' ? undefined : categoryId.value || undefined,
+    )
+  }
+}
 const error = ref('')
 const newCategory = ref(false)
 const newCategoryName = ref('')
@@ -107,16 +131,17 @@ function onPartyChange() {
       feeKind.value = lastFee.kind
       feeValue.value = lastFee.value
     }
+    rememberedTaxChoice()
 
     return
   }
-  if (categoryChosen) {
-    return
-  }
-  const lastCategory = categoryForParty(farm.value.transactions, party.value, kind)
+  const lastCategory = categoryChosen
+    ? undefined
+    : categoryForParty(farm.value.transactions, party.value, kind)
   if (lastCategory) {
     categoryId.value = lastCategory
   }
+  rememberedTaxChoice()
 }
 
 function onCategoryChange(event: Event) {
@@ -129,6 +154,7 @@ function onCategoryChange(event: Event) {
   }
   categoryId.value = sel.value
   categoryChosen = true
+  rememberedTaxChoice()
 }
 
 async function addCategory() {
@@ -144,6 +170,7 @@ async function addCategory() {
   })
   categoryId.value = category.id
   categoryChosen = true
+  rememberedTaxChoice()
   newCategory.value = false
   newCategoryName.value = ''
 }
@@ -285,6 +312,7 @@ const draft = useDraft({
     kg: kg.value,
     price: price.value,
     acidity: acidity.value,
+    taxCounted: taxChosen ? taxCounted.value : undefined,
   }),
   restore: restoreValues,
 })
@@ -310,6 +338,10 @@ async function restoreValues(values: FormValues) {
   if (typeof values.notes === 'string') {
     notes.value = values.notes
   }
+  if (typeof values.taxCounted === 'boolean') {
+    taxCounted.value = values.taxCounted
+    taxChosen = true
+  }
   if (values.feeKind === 'percent' || values.feeKind === 'euro') {
     feeKind.value = values.feeKind
     feeChosen = true
@@ -330,6 +362,7 @@ async function restoreValues(values: FormValues) {
   if ('acidity' in values) {
     acidity.value = values.acidity as number | null
   }
+  rememberedTaxChoice()
 }
 
 /* ---------- save ---------- */
@@ -382,6 +415,7 @@ async function saveTransaction() {
     invoiceNo: kind === 'expense' ? invoiceNo.value.trim() || undefined : undefined,
     fieldId: editing?.fieldId, // no longer asked; kept on older entries
     notes: notes.value.trim() || undefined,
+    taxCounted: taxEnabled.value ? taxCounted.value : editing?.taxCounted,
   })
   draft.clear()
   showPeriodOf(date.value, translate('tx.saved'))
@@ -554,6 +588,10 @@ async function remove() {
     </section>
 
     <section class="card">
+      <label v-if="taxEnabled" class="check tax-check">
+        <input v-model="taxCounted" type="checkbox" @change="taxChosen = true" />
+        <span>{{ $t('tx.countsForTax') }}</span>
+      </label>
       <label class="label" for="tx-notes">{{ $t('common.notes') }}</label>
       <textarea id="tx-notes" v-model="notes" class="input" rows="2"></textarea>
       <button v-if="editing" type="button" class="btn ghost small danger" @click="remove">
