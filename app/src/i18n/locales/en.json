@@ -273,7 +273,7 @@
     "fieldsEstimate": "Olive oil per field (≈)",
     "perTree": "≈ {{kg}} kg per tree",
     "saleLine": "{{kg}} kg sold to {{party}}",
-    "netDelivered": "Net delivered quantity of olive oil"
+    "netDelivered": "Net delivered olive oil"
   },
   "extraction": {
     "title": "Mill extraction",
