@@ -154,7 +154,8 @@
     "loggedBy": "Καταχωρίστηκε από {{name}}",
     "month": "Μήνας",
     "hasWork": "έχει εγγραφές",
-    "todayMark": "σήμερα"
+    "todayMark": "σήμερα",
+    "year": "Έτος"
   },
   "settings": {
     "title": "Ρυθμίσεις",

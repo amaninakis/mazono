@@ -11,13 +11,15 @@ import SwipeTrack from './SwipeTrack.vue'
  * The Journal's month chooser: ‹ year › with its own arrows, then the twelve months as chips
  * in a row that scrolls sideways (the same as the task chips). A dot marks months with work;
  * months after today cannot be chosen. Dragging the year sideways brings in the next one
- * (left) or the previous one, following the finger. Emits the chosen year and month.
+ * (left) or the previous one, following the finger; tapping it opens the list of years, from
+ * the first year with work (`firstYear`) to this one. Emits the chosen year and month.
  */
 const props = defineProps<{
   year: number
   month: number
   today: string
   withWork: Set<number>
+  firstYear?: number
 }>()
 const emit = defineEmits<{ pick: [year: number, month: number] }>()
 
@@ -37,6 +39,24 @@ const months = computed(() =>
     future: isFutureMonth(props.year, i + 1, props.today),
   })),
 )
+
+/** The years in the list, newest first. */
+const yearOptions = computed(() => {
+  const list: number[] = []
+  for (
+    let year = thisYear.value;
+    year >= Math.min(props.firstYear ?? props.year, props.year);
+    year--
+  ) {
+    list.push(year)
+  }
+
+  return list
+})
+
+function chooseYear(event: Event) {
+  emit('pick', Number((event.target as HTMLSelectElement).value), props.month)
+}
 
 const yearLabel = useTemplateRef<HTMLElement>('yearLabel')
 
@@ -68,7 +88,21 @@ watch(
       </button>
       <SwipeTrack :can-go="(step) => year + step <= thisYear" @step="stepYear">
         <template #default="{ offset }">
-          <strong :ref="offset === 0 ? 'yearLabel' : undefined">{{ year + offset }}</strong>
+          <span v-if="offset === 0" ref="yearLabel" class="year-choice">
+            <strong>{{ year }}</strong>
+            <!-- Invisible over the year: tapping it opens the list of years. -->
+            <select
+              class="year-list"
+              :value="year"
+              :aria-label="$t('journal.year')"
+              @change="chooseYear"
+            >
+              <option v-for="option in yearOptions" :key="option" :value="option">
+                {{ option }}
+              </option>
+            </select>
+          </span>
+          <strong v-else>{{ year + offset }}</strong>
         </template>
       </SwipeTrack>
       <button
