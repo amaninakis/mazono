@@ -154,7 +154,6 @@ export class FarmRepo {
     }
 
     return {
-      // Backups from before the rename say "harvestlog-export"; both are read (isBackupFormat).
       format: BACKUP_FORMAT,
       version: 3,
       exportedAt: new Date().toISOString(),
@@ -259,7 +258,7 @@ export async function importFarm(
   const backup = data as Awaited<ReturnType<FarmRepo['exportAll']>> &
     Partial<Record<FarmTable, object[]>>
   if (!isBackupFormat(backup?.format) || !backup.farm) {
-    throw new Error('Not a Mazono (or HarvestLog) backup file')
+    throw new Error('Not a Mazono backup file')
   }
   const farmId = backup.farm.id
   const tables = FARM_TABLES.map((tableName) => database[tableName])

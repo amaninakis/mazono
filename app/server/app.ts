@@ -38,7 +38,6 @@ import { inTransaction, nextSeq } from './database.ts'
 
 export const SESSION_COOKIE = 'mazono_session'
 /** The sign-in cookie from before the rename: still accepted, so nobody is signed out. */
-export const OLD_SESSION_COOKIE = 'harvestlog_session'
 /** A device stays signed in for 90 days after it was last used. */
 const SESSION_DAYS = 90
 const DAY = 86_400_000
@@ -159,7 +158,7 @@ export async function buildServer(options: ServerOptions) {
 
   /** The signed-in user, or a 401 reply. Keeps the session alive while it is used. */
   function signedInUser(request: FastifyRequest, reply: FastifyReply): UserRow | undefined {
-    const token = request.cookies[SESSION_COOKIE] ?? request.cookies[OLD_SESSION_COOKIE]
+    const token = request.cookies[SESSION_COOKIE]
     const session =
       token &&
       (database
@@ -202,7 +201,7 @@ export async function buildServer(options: ServerOptions) {
     reply.send({
       // Still the app's first name for now: phones running a version from before the rename
       // only recognise this server by it. Newer versions accept both (see src/sync/api.ts).
-      app: 'harvestlog',
+      app: 'mazono',
       version: options.version ?? '',
       needsSetup: userCount() === 0,
     }),
@@ -262,15 +261,12 @@ export async function buildServer(options: ServerOptions) {
   })
 
   app.post('/api/logout', (request, reply) => {
-    const token = request.cookies[SESSION_COOKIE] ?? request.cookies[OLD_SESSION_COOKIE]
+    const token = request.cookies[SESSION_COOKIE]
     if (token) {
       database.prepare('DELETE FROM sessions WHERE token_hash = ?').run(hashToken(token))
     }
 
-    return reply
-      .clearCookie(SESSION_COOKIE, { path: '/' })
-      .clearCookie(OLD_SESSION_COOKIE, { path: '/' })
-      .send({ ok: true })
+    return reply.clearCookie(SESSION_COOKIE, { path: '/' }).send({ ok: true })
   })
 
   app.get('/api/me', async (request, reply) => {

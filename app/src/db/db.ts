@@ -15,7 +15,7 @@ import type {
 } from '../core/types'
 import Dexie, { type Transaction as DexieTransaction, type EntityTable } from 'dexie'
 import { BUILTIN_CATEGORIES, BUILTIN_CHARGES, BUILTIN_LOCATIONS } from '../core/defaults'
-import { OLD_STORE_NAME, STORE_NAME } from '../core/names'
+import { STORE_NAME } from '../core/names'
 import { SYNC_TABLES, type SyncTable } from '../core/syncFormat'
 import { presetPlural } from '../core/units'
 import { uuid } from '../core/uuid'
@@ -223,25 +223,14 @@ export class HarvestDB extends Dexie {
 }
 
 /**
- * The grove data on this phone. New installs keep it under the Mazono name; a phone that
- * already has it under the app's first name keeps using that, so nothing has to be moved.
- * `openLocalDatabase()` picks between them once, before the app starts; `localDb()` is the
- * one picked.
+ * The grove data on this phone. `openLocalDatabase()` opens it once, before the app starts;
+ * `localDb()` is the one opened.
  */
 let chosen: HarvestDB | undefined
 
 export async function openLocalDatabase() {
-  let name = STORE_NAME
-  try {
-    if (await Dexie.exists(OLD_STORE_NAME)) {
-      name = OLD_STORE_NAME
-    }
-  } catch {
-    // The browser could not tell: use the Mazono name, as on a new install.
-  }
-  chosen = new HarvestDB(name)
-
-  return chosen
+  chosen = new HarvestDB(STORE_NAME)
+  return await Promise.resolve(chosen)
 }
 
 export function localDb() {

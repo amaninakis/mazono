@@ -1,4 +1,4 @@
-import { existsSync, mkdirSync, readdirSync, readFileSync, rmSync } from 'node:fs'
+import { mkdirSync, readdirSync, readFileSync, rmSync } from 'node:fs'
 import { dirname, join, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { buildServer } from './app.ts'
@@ -19,16 +19,7 @@ const staticDir = resolve(process.env.STATIC_DIR ?? join(here, '..', 'dist'))
 const backupDir = join(dataDir, 'backups')
 
 mkdirSync(backupDir, { recursive: true })
-/**
- * The database file: mazono.db on new installs. A server set up before the rename keeps its
- * harvestlog.db, so nothing has to be moved.
- */
-const oldDatabaseFile = join(dataDir, 'harvestlog.db')
-const newDatabaseFile = join(dataDir, 'mazono.db')
-const databaseFile =
-  existsSync(oldDatabaseFile) && !existsSync(newDatabaseFile)
-    ? oldDatabaseFile
-    : newDatabaseFile
+const databaseFile = join(dataDir, 'mazono.db')
 const database = openDatabase(databaseFile)
 const pkg = JSON.parse(readFileSync(join(here, '..', 'package.json'), 'utf8')) as {
   version: string
