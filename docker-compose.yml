@@ -8,9 +8,8 @@
 # Public server with your own domain and automatic HTTPS (Caddy in front):
 #   SITE_ADDRESS=harvest.example.com docker compose --profile https up -d
 #
-# Installed before the rename, when the app was called HarvestLog? Keep using your data
-# volume by naming it in a .env file next to this one (see "Upgrading from HarvestLog" in
-# the README), e.g.:  MAZONO_DATA_VOLUME=olive-harvest_harvestlog_data
+# To keep the data in a Docker volume you already have, name it in a .env file next to this
+# one, e.g.:  MAZONO_DATA_VOLUME=my_existing_volume
 
 name: mazono
 
