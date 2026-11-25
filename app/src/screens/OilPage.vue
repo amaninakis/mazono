@@ -304,7 +304,7 @@ async function removeAnyway() {
             <td>{{ chargeKg(c.kg) }} {{ $t('common.kg') }} · {{ pct(c.kg, totals.oilKg) }}</td>
           </tr>
           <tr class="strong">
-            <th>{{ $t('oil.net') }}</th>
+            <th>{{ $t('oil.netDelivered') }}</th>
             <td>{{ fmt(totals.netKg) }} {{ $t('common.kg') }}</td>
           </tr>
         </tbody>
