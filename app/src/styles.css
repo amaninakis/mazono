@@ -316,6 +316,12 @@ html { scroll-padding-top: calc(var(--page-top) + var(--head-row) + 22px); }
 .order-arrow:disabled { opacity: 0.3; cursor: default; }
 .unit-row, .field-row { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
 .unit-row .check { flex: 1; min-width: 140px; }
+/* In Settings a row can wrap onto two lines on a phone (name and weight, then "default" and
+   archive), so rows are split by a thin line with room on both sides: each row reads as one. */
+.settings .list:has(> .unit-row) { gap: 0; }
+.settings .list > .unit-row { padding: 14px 0; border-top: 1px solid var(--line); }
+.settings .list > .unit-row:first-child { padding-top: 4px; border-top: 0; }
+.settings .list > .unit-row:last-child { padding-bottom: 4px; }
 .unit-row > .input:first-child, .field-row > .input:first-child { flex: 1; min-width: 140px; }
 .off { opacity: 0.55; }
 .inline-add { display: flex; gap: 8px; }
