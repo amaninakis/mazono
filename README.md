@@ -5,95 +5,86 @@
 > **Harvesting olives is hard work. Managing your grove shouldn't be.**
 
 Named after *μαζώνω* (ma-ZO-no), the word olive growers on the Greek island of Crete have used
-for generations for harvesting their olives. (Formerly HarvestLog; see [the brand guide](docs/BRAND.md).)
+for generations for harvesting their olives (see [the brand guide](docs/BRAND.md)).
 
 Open-source, self-hosted app for olive growers: log field work in seconds, follow olive oil
 production season by season, and compare fields and years.
 
 Available in **English** and **Ελληνικά**. Works offline on your phone as an installable web app (PWA).
 
-> Status: **v0.5b – people and permissions**. Next: Android/iOS apps and more (see [Roadmap](#roadmap)).
-
 ## What it does
-
-### People and permissions (v0.5b)
-
-- Administrators add people in **Settings → People** with a temporary password (type your own
-  or press *Suggest*). At their first sign-in they choose their own password.
-- Choose what each person may **see** or **change**: Work (Today, Journal), Oil, Money, Reports and
-  Settings, or pick a ready-made set: **Worker**, **Family** or **Accountant**.
-- The server checks every change, and data someone may not see never reaches their phone.
-- The Journal shows **who logged** each entry. Give a new temporary password or remove someone
-  at any time; what they logged stays.
-- The installation owner can also create someone who **starts their own grove**.
-- The owner sees **every account on the server** (without other people's data) and can give
-  anyone a new temporary password or delete an account.
-
-### Server, sign-in and sync (v0.5a)
-
-- Run the server once (Docker) and every phone or computer signs in to the same data.
-- The **first account** is the administrator. The data already on that phone is uploaded.
-- Phones keep working **without signal**; changes are sent when they are back online, and
-  arrive on the other devices within a minute (or with "Sync now" in Settings).
-- If two phones change the same record, the newer change wins (phone clocks that are off are
-  corrected by the server).
-- Stay signed in for 90 days of not using the app; the phone's password manager can remember
-  the password. Wrong passwords are slowed down after 10 tries.
-- The server keeps **14 daily backups** of its database.
 
 Work is grouped by **farming year**: from the spring work (1 March) to the end of the harvest and
 the last mill visit (February), named by its year. Money is counted per calendar year.
 
-### Reports (v0.4)
+### Field work
 
-- **Fields by year**: olives collected, oil, olives per tree or oil per tree for every field and year,
-  with the unit named above the table, shaded so good and poor years (alternate bearing) stand out.
-- **Years side by side**: olives, oil, oil after charges or yield per year as a labelled bar chart,
-  with the same figures in a table.
-- **Yield through the year**: the yield of each mill visit by date, for up to three chosen years,
-  to help decide when to harvest.
-- **Records**: all-time bests (best year, best field, biggest harvest day, lowest acidity, best price…),
-  milestone badges with progress, and lifetime totals.
-- **Cost of your oil**: per calendar year, income, expenses and net result set against the oil of the
-  same year, giving the cost per kg and the break-even price.
-- **CSV export** of every report, ready for Excel (Greek or English number style).
+- **Quick setup**: language, collection units (sack, half sack, crate, pallet bin… or your own,
+  with an optional approximate weight) and your fields with tree counts, in the order you usually
+  work them.
+- **Today screen**: the task for the season is preselected (harvest, pruning, fertilizer,
+  weed whacking, or your own task types), and so is the field you worked last while it still has
+  trees left. Each field shows how many trees are left; finished fields go to the end.
+- **Harvest**: trees harvested and the units collected (mix several units, half steps). After saving
+  you see units per tree for the day and the year's yield per tree. Entering trees is optional.
+- **Field order**: set your own order in Settings, or let the app learn it for each task from the
+  order you worked the fields in earlier years.
+- **Journal**: day by day, with a month calendar showing a coloured dot for each task type.
+  Tap an entry to change it; delete with undo.
+- Swipe dates, months and years to step through them, and swipe between pages.
 
-### Money (v0.3)
+### Mill and oil
+
+- **Mill visits**: olives and oil kg with live yield (1/4.3 or %), acidity, receipt number and mill.
+- **Charges kept in oil** (mill fee, bug spraying, VAT, or your own), each shown as % of the oil and
+  filled in from your usual % if you set one. The net delivered oil is calculated for you.
+- **Where the oil went**: split it between the mill, home or your own places.
+- **Harvest days → mill visit**: tick the harvest days whose olives went to the mill (pre-ticked since
+  the last visit), or only part of a day. Oil is shared between fields in proportion to the olives,
+  and the weight of each unit (e.g. per sack) is learned from your visits.
+- **Oil page**: year totals, every mill visit, oil per field and per tree, and **oil in stock**
+  by year and place, with transfers (mill → home) and own use / gifts.
+
+### Money
 
 - **Expenses** with business name (remembered, with its category), amount, category and invoice no.
-- **Oil sales**: buyer, kg and € per kg → total, with an optional fee (% or €, remembered per buyer). The oil is taken out of stock, by default from the oldest
-  season at the mill, and you cannot sell more than you have.
+- **Oil sales**: buyer, kg and € per kg → total, with an optional fee (% or €, remembered per buyer).
+  The oil is taken out of stock, by default from the oldest year at the mill, and you cannot sell
+  more than you have.
 - **Other income** such as subsidies (ΟΠΕΚΕΠΕ) or VAT refunds.
 - **Totals** by calendar year: oil sales (kg and average price), other income, expenses,
-  net result, an optional tax estimate, and the value of the oil still in stock at your last sale price.
+  net result, an optional tax estimate, and the value of the oil still in stock.
 
-### Mill and oil stock (v0.2)
+### Reports
 
-- **Mill extraction form**: olives and oil kg with live yield (1/4.3 or %), acidity, receipt number and mill.
-- **Charges kept in oil** (mill fee, bug spraying, VAT, or your own), each shown as % of the oil and
-  filled in from your usual % if you set one. Net oil is calculated for you.
-- **Where the oil went**: split the net oil between the mill, home or your own places.
-- **Harvest days → extraction**: tick the harvest days that went to the mill (pre-ticked since the last
-  visit); send only part of a day when needed. Oil is shared between fields in proportion to the olives,
-  and kg per unit (e.g. per sack) is learned from your extractions.
-- **Oil page**: season totals, every extraction, oil per field (≈) and per tree, and **oil in stock**
-  by season and place, with transfers (mill → home) and own use / gifts.
+- **This year**: the year so far, including the olive oil still to come from olives not yet
+  taken to the mill.
+- **Fields by year**: olives, oil, per tree or yield for every field and year, shaded so good and
+  poor years stand out (yield is compared with usual olive oil yields).
+- **Years side by side**: olives, oil, net oil or yield per year as a bar chart and a table.
+- **Yield through the year**: the yield of each mill visit by date, for up to three years, to help
+  decide when to harvest.
+- **Records**: all-time bests, milestone badges with progress, and lifetime totals.
+- **Cost of your oil**: income, expenses and net result set against the oil of the same year,
+  giving the cost per kg and the break-even price.
+- **CSV export** of every report, ready for Excel (Greek or English number style).
 
-### Field log (v0.1)
+### People, sync and backups
 
-- **First-run setup**: language, collection units (sack, half sack, crate, pallet bin… or your own,
-  with an optional approximate weight) and your fields with tree counts.
-- **Today screen**: the task for the season is preselected (harvest, pruning, fertilizer,
-  weed whacking, or your own task types). The field you worked last is preselected while it still
-  has trees left. Steppers with ± buttons, or type the number (comma or dot decimals).
-- **Harvest**: trees harvested, trees left in the field, collected units (mix several units,
-  0.5 steps). After saving you see units per tree for the day, and the season's yield per harvested
-  tree and per tree in the field. Entering trees is optional; the field's tree count is used instead.
-- **Journal**: day by day, with a month calendar showing a coloured dot for each task type.
-  Tap an entry to edit it; delete with undo.
-- **Settings**: fields, units, task types (colour, icon, suggested months), farming year start (March),
-  optional labour tracking, JSON backup export / restore.
-- Data is stored on the device (IndexedDB) and the app works without signal.
+- Run the server once (Docker) and every phone or computer signs in to the same data. The **first
+  account** is the administrator.
+- Phones keep working **without signal**; changes are sent when they are back online and reach the
+  other devices within a minute (or with "Sync now" in Settings). If two phones change the same
+  record, the newer change wins.
+- Administrators add people with a temporary password and choose what each may **see** or
+  **change** (Work, Oil, Money, Reports, Settings), or pick **Worker**, **Family** or **Accountant**.
+  The server checks every change, and data someone may not see never reaches their phone.
+- The Journal shows **who logged** each entry; what someone logged stays when they are removed.
+- One installation can hold more than one grove. The owner sees every account on the server
+  (without other people's data).
+- Stay signed in for 90 days; wrong passwords are slowed down after 10 tries.
+- The server keeps **14 daily backups** of its database, and any phone can save or restore a
+  backup file (Settings → Data).
 
 ## Run it
 
@@ -118,22 +109,9 @@ Data lives in the `mazono_data` Docker volume (`/data` in the container): the da
 `mazono.db` and the last 14 daily copies in `backups/`. To back up elsewhere, copy the newest
 file from `backups/`. Never run `docker compose down -v`: `-v` deletes the data volume.
 
-**Upgrading from HarvestLog** (installed before the app was renamed to Mazono): your data is in a
-volume with the old name, so tell the new setup to use it. Nothing is moved or copied:
-
-1. Find the volume: `docker volume ls | grep harvestlog`, e.g. `olive-harvest_harvestlog_data`.
-2. Next to `docker-compose.yml`, add it to a file called `.env`:
-   `MAZONO_DATA_VOLUME=olive-harvest_harvestlog_data` (and, if you use the `https` profile,
-   `MAZONO_CADDY_VOLUME=olive-harvest_caddy_data`, from `docker volume ls | grep caddy`).
-3. Stop the old setup: `docker compose -p olive-harvest down` (the name of the folder it ran
-   from; this keeps the volumes).
-4. `git pull`, then `docker compose up -d --build`. Docker warns that the volume "was created for
-   project olive-harvest": that is expected. The server keeps using its `harvestlog.db`, phones
-   keep their data and stay signed in, and old backup files still import.
-
-**Upgrading from v0.4 or earlier** (app only, no server): run `docker compose up -d --build`
-again and open the app on the phone that has your data. It asks you to create the administrator
-account, then uploads everything that phone holds.
+**Using it on one phone first?** If you used the app on its own before setting up the server, open
+it on that phone after `docker compose up -d --build`: it asks you to create the administrator
+account, then uploads everything the phone holds.
 
 Hardware needs are tiny: any Raspberry Pi 3/4/5, NAS or the smallest VPS is enough.
 
@@ -179,18 +157,9 @@ A test checks that every language has the same keys as English.
 
 ## Roadmap
 
-1. **v0.1 – Field log** ✅
-2. **v0.2 – Mill and stock** ✅: extractions, yield (1/x or %), oil charges (mill fee, bug spraying,
-   VAT…), linking harvest days to extractions (with splits), oil stock by season and location
-3. **v0.3 – Money** ✅: expenses, oil sales, subsidies and other income, totals by calendar year
-4. **v0.4 – Reports** ✅: field × season comparison, season totals, yield through the season, cost of
-   your oil per year, CSV export
-5. **v0.5a – Server and sync** ✅: server, administrator account, sign-in, offline sync between
-   devices, daily backups
-6. **v0.5b – Users** ✅: more people with per-area access (see / change), temporary first
-   password, more groves per installation
-7. **v1.0+**: Android/iOS apps (Capacitor), daily reminders, location-aware default field,
-   equipment log, tasks per tree (numbered or NFC-tagged trees), weather integration, labour reports, spreadsheet import
+Next: Android/iOS apps (Capacitor), daily reminders, location-aware default field, equipment log,
+tasks per tree (numbered or NFC-tagged trees), weather, labour reports and spreadsheet import.
+See [docs/DESIGN.md](docs/DESIGN.md) for details.
 
 ## Licence
 
@@ -201,10 +170,12 @@ Mazono is free software: you can use, change and share it under the
 If you run a changed version for other people, for example on a public server, you must offer them
 its source code under the same licence.
 
-- **Name and logo:** "Mazono" and its logo are not covered by the AGPL. Forks are welcome under their
-  own name and logo; see [TRADEMARKS.md](TRADEMARKS.md).
+- **Name and logo:** "Mazono" and its logo are not covered by the AGPL; see
+  [TRADEMARKS.md](TRADEMARKS.md). You may run your own unchanged copy under the name, and say that
+  your work is based on Mazono. A changed version (fork) must be published under its own name and
+  logo. Ask first before offering Mazono as a service to others under its name.
 - **Contributing:** contributors accept the [Contributor Licence Agreement](CLA.md) once, in their
   first pull request. You keep the copyright in your work; the CLA lets the project also offer
   commercial plans and app-store releases.
-- **Earlier versions:** Mazono (then HarvestLog) was MIT-licensed up to version 0.12.0. Copies of those
-  versions stay under MIT; everything after them is AGPL-3.0-or-later.
+- **Earlier versions:** versions up to 0.12.0 were MIT-licensed. Copies of those versions stay under
+  MIT; everything after them is AGPL-3.0-or-later.

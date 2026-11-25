@@ -19,7 +19,7 @@ It covers that contribution and every later contribution you make to Mazono.
 - **"Contribution"**: any code, documentation, translation, artwork or other material that You submit
   to the Mazono repositories (for example as a pull request, patch or issue attachment), except
   material You clearly mark as "Not a Contribution" when You submit it.
-- **"Project"**: the Mazono software and its documentation, formerly called HarvestLog.
+- **"Project"**: the Mazono software and its documentation.
 
 ## 2. Copyright licence
 

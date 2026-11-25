@@ -181,7 +181,7 @@
     "export": "Export backup (JSON)",
     "import": "Restore from backup",
     "importDone": "Backup restored",
-    "importFailed": "Could not read this file. Choose a Mazono backup (.json) file. Older HarvestLog backups open too.",
+    "importFailed": "Could not read this file. Choose a Mazono backup (.json) file.",
     "importConfirm": "Restoring adds the farm from the file to this device and switches to it. Continue?",
     "about": "Named after μαζώνω (ma-ZO-no), the word olive growers on the Greek island of Crete have used for generations for harvesting their olives.",
     "version": "Version {{version}} · open source (AGPL-3.0)",
