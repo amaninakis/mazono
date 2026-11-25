@@ -10,6 +10,7 @@ import {
   seasonHistory,
   toCsv,
   yearEconomics,
+  yieldShare,
   yieldThroughSeason,
 } from '../core/reports'
 import { unitLabel, unitPlural } from '../core/units'
@@ -36,12 +37,7 @@ const startMonth = computed(() => farm.value.settings.seasonStartMonth)
 const REPORTS: ReportKey[] = ['year', 'fields', 'seasons', 'yield', 'money', 'records']
 const report = ref<ReportKey>('year')
 const prefersDark = usePrefersDark()
-/** The fields table describes its shades, which are lighter for more on the dark theme. */
-const aboutText = computed(() =>
-  report.value === 'fields' && prefersDark.value
-    ? translate('reports.about.fieldsDark')
-    : translate(`reports.about.${report.value}`),
-)
+const aboutText = computed(() => translate(`reports.about.${report.value}`))
 
 function fmt(value: number, decimals = 1) {
   return formatNumber(value, formatLocale.value, decimals)
@@ -212,15 +208,43 @@ const fieldMax = computed(() =>
     0,
   ),
 )
-/** Stronger shades for better values (darker on the light theme, lighter on the dark one). */
+/** Every yield the farm has had, in any year shown or not: they can widen the yield scale. */
+const farmYields = computed(() =>
+  fieldReport.value.rows.flatMap((row) =>
+    fieldReport.value.seasons
+      .map((year) => metricValue(row.cells[year], 'yield'))
+      .filter((value): value is number => value != null),
+  ),
+)
+/**
+ * Stronger shades for better values (darker on the light theme, lighter on the dark one).
+ * Yield is placed on a fixed scale of usual yields (see yieldShare), so a good year looks good
+ * on its own; the other figures are compared with the highest in the table.
+ */
 function cellShade(cell: FieldSeasonCell | undefined) {
   const value = metricValue(cell, fieldMetric.value)
-  if (!value || !fieldMax.value) {
+  if (!value) {
+    return undefined
+  }
+  let share: number
+  if (fieldMetric.value === 'yield') {
+    share = yieldShare(value, farmYields.value)
+  } else if (fieldMax.value) {
+    share = value / fieldMax.value
+  } else {
     return undefined
   }
 
-  return { '--shade': `${Math.round(10 + (value / fieldMax.value) * 55)}%` }
+  return { '--shade': `${Math.round(10 + share * 55)}%` }
 }
+/** The legend under the fields table: which way is better, for this theme and figure. */
+const shadeLegend = computed(() => {
+  const better = prefersDark.value ? 'lighter' : 'darker'
+
+  return fieldMetric.value === 'yield'
+    ? translate(`reports.shadeLegend.${better}Yield`)
+    : translate(`reports.shadeLegend.${better}`)
+})
 
 /* ---------- 2. seasons ---------- */
 const history = computed(() => seasonHistory(farm.value.extractions, startMonth.value))
@@ -549,6 +573,9 @@ const visibleReports = computed(() =>
             </tbody>
           </table>
         </div>
+        <p class="shade-legend">
+          <span class="shade-swatch" aria-hidden="true"></span>{{ shadeLegend }}
+        </p>
         <p v-if="cellInfo" class="chart-tooltip" role="status">{{ cellInfo }}</p>
         <p class="muted small">{{ $t('reports.fieldsNote') }}</p>
       </template>
