@@ -411,8 +411,7 @@
       "year": "This year"
     },
     "about": {
-      "fields": "How the fields performed each year. Darker cells mean better results, so good and poor years stand out.",
-      "fieldsDark": "How the fields performed each year. Lighter cells mean better results, so good and poor years stand out.",
+      "fields": "How the fields performed each year, so good and poor years stand out.",
       "seasons": "Each year’s totals. Choose what the chart shows.",
       "yield": "The yield of each mill visit, by date. Use it to see when the olives give the most olive oil.",
       "money": "Expenses and income of each calendar year, set against the olive oil of the same year.",
@@ -527,6 +526,12 @@
       "oilNeedsYield": "The estimate for the olive oil from the olives not weighed yet will appear here after your first production at the mill.",
       "oilNeedsWeight": "The olive oil from {{units}} will be added as soon as we know what they weigh: at the first weigh-in, or set roughly how many kg they are in Settings.",
       "expectedOnly": "about {{expected}} from the olives not weighed yet"
+    },
+    "shadeLegend": {
+      "lighter": "Lighter: better",
+      "darker": "Darker: better",
+      "lighterYield": "Lighter: better yield",
+      "darkerYield": "Darker: better yield"
     }
   },
   "records": {

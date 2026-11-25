@@ -114,6 +114,26 @@ export function fieldSeasonReport(
 
 /* ---------- 2. season totals over the years ---------- */
 
+/**
+ * Usual oil yields, as oil ÷ olives: about 7 kg of olives for 1 kg of oil (1/7, 14%) is a poor
+ * yield, 4 kg (1/4, 25%) a very good one (common guidance: 3–7 kg per kg of oil; Koroneiki
+ * 4–5 kg when harvested at the right time).
+ */
+export const USUAL_YIELD = { low: 1 / 7, high: 1 / 4 }
+
+/**
+ * Where a yield sits, from 0 (poor) to 1 (very good), on a fixed scale: the usual yields,
+ * widened to the farm's own lowest and highest when those go further. So the same yield always
+ * looks the same, and a good year shows as good everywhere instead of being compared only with
+ * the other cells of the table.
+ */
+export function yieldShare(value: number, farmYields: number[]): number {
+  const low = Math.min(USUAL_YIELD.low, ...farmYields)
+  const high = Math.max(USUAL_YIELD.high, ...farmYields)
+
+  return Math.min(1, Math.max(0, (value - low) / (high - low)))
+}
+
 export interface SeasonHistoryRow {
   season: number
   extractions: number

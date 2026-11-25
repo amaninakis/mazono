@@ -609,6 +609,10 @@ span.date-text { display: block; white-space: nowrap; }
 .report-table th[scope='row'], .heat-table th[scope='row'], .report-table thead th:first-child, .heat-table thead th:first-child { text-align: left; }
 .report-table thead th, .heat-table thead th { color: var(--muted); font-weight: 500; font-size: 0.8rem; }
 .heat-table td { border-radius: 6px; background: var(--bg); }
+.shade-legend { display: flex; align-items: center; gap: 8px; margin: 8px 0 0; color: var(--muted); font-size: 0.85rem; }
+/* From a weak to a strong shade, the same mix as the cells. */
+.shade-swatch { flex: none; width: 56px; height: 12px; border-radius: 4px;
+  background: linear-gradient(to right, color-mix(in srgb, var(--grow) 10%, var(--card)), color-mix(in srgb, var(--grow) 65%, var(--card))); }
 .heat-table td.shaded { background: color-mix(in srgb, var(--grow) var(--shade), var(--card)); }
 .year-card { border-top: 1px solid var(--line); padding: 12px 0 4px; }
 .year-card:first-of-type { border-top: 0; padding-top: 4px; }

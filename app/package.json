@@ -2,7 +2,7 @@
   "name": "mazono-app",
   "private": true,
   "license": "AGPL-3.0-or-later",
-  "version": "0.23.3",
+  "version": "0.24.0",
   "type": "module",
   "scripts": {
     "dev": "vite",

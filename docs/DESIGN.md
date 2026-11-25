@@ -286,7 +286,7 @@ Totals per **calendar year**: income, expenses, net result, and the value of rem
 
 How they work:
 - All reports are on one Reports page (in the bottom bar), one tab each, with a short plain-words explanation and an empty-state hint.
-- Field oil is the field's share of each extraction by olive weight (the same estimate as the Oil page). "Per tree" uses the trees entered as harvested, or the field's tree count when none were entered. Cells are shaded darker for bigger values; tapping a cell shows its details.
+- Field oil is the field's share of each extraction by olive weight (the same estimate as the Oil page). "Per tree" uses the trees entered as harvested, or the field's tree count when none were entered. Cells are shaded stronger for better values (darker on the light theme, lighter on the dark one), with a one-line legend under the table. Kilos are compared with the highest cell in the table. Yield is placed on a fixed scale of usual yields, 1/7 (poor) to 1/4 (very good), widened to the farm's own lowest and highest when those go further (`yieldShare`), so a good year looks good on its own. Tapping a cell shows its details.
 - Charts are plain SVG (no chart library): bars for season totals, lines for yield (up to three seasons, each season keeping its colour). Every mark can be tapped for its numbers; tables carry the same data.
 - CSV export of each report: `;` columns and decimal commas in Greek number style, `,` and decimal points otherwise, UTF-8 with BOM so Excel shows Greek text.
 

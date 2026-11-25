@@ -5,6 +5,7 @@ import {
   seasonHistory,
   toCsv,
   yearEconomics,
+  yieldShare,
   yieldThroughSeason,
 } from './reports'
 
@@ -175,5 +176,31 @@ describe('toCsv', () => {
     expect(toCsv(['Field', 'Oil'], [['Upper, old', 240.5]], 'en-US')).toBe(
       'Field,Oil\r\n"Upper, old",240.5',
     )
+  })
+})
+
+describe('yieldShare', () => {
+  it('places a yield between the usual poor and very good yields', () => {
+    expect(yieldShare(1 / 7, [])).toBe(0)
+    expect(yieldShare(1 / 4, [])).toBe(1)
+    expect(yieldShare(1 / 5, [])).toBeCloseTo((1 / 5 - 1 / 7) / (1 / 4 - 1 / 7))
+  })
+
+  it('keeps yields past the usual ones at the ends', () => {
+    expect(yieldShare(1 / 9, [])).toBe(0)
+    expect(yieldShare(1 / 3.5, [])).toBe(1)
+  })
+
+  it("widens the scale to the farm's own lowest and highest", () => {
+    expect(yieldShare(1 / 9, [1 / 9, 1 / 5])).toBe(0)
+    expect(yieldShare(1 / 7, [1 / 9])).toBeGreaterThan(0)
+    expect(yieldShare(1 / 4, [1 / 3])).toBeLessThan(1)
+  })
+
+  it('does not depend on the other cells: good years all look good', () => {
+    const goodYears = [1 / 4.2, 1 / 4.1, 1 / 4]
+    for (const value of goodYears) {
+      expect(yieldShare(value, goodYears)).toBeGreaterThan(0.85)
+    }
   })
 })
