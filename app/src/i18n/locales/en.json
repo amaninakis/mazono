@@ -628,7 +628,12 @@
     "temporaryPassword": "Temporary password",
     "savePassword": "Save my password",
     "errorSameAsTemporary": "Choose a password different from the temporary one.",
-    "errorTemporary": "The temporary password is wrong."
+    "errorTemporary": "The temporary password is wrong.",
+    "setupCode": "Setup code",
+    "setupCodeHelp": "Whoever installed the server finds it in its log (docker compose logs mazono). Only needed this once.",
+    "errorCodeMissing": "Enter the setup code.",
+    "errorCode": "The setup code is not right. Check it in the server’s log.",
+    "errorCommon": "This password is easy to guess. Choose something more your own, e.g. three words together."
   },
   "users": {
     "title": "People",
@@ -901,5 +906,17 @@
     "bug": "Insect",
     "axe": "Axe",
     "clipboard-list": "List"
+  },
+  "devices": {
+    "title": "Signed-in devices",
+    "help": "The phones and computers signed in to your account. If you lose a phone or stop using one, sign it out here.",
+    "browserOn": "{{browser}} on {{system}}",
+    "unknown": "Unknown device",
+    "thisOne": "This device",
+    "usedToday": "Used today",
+    "usedYesterday": "Used yesterday",
+    "usedOn": "Last used {{date}}",
+    "signOut": "Sign out",
+    "signedOut": "“{{name}}” signed out"
   }
 }

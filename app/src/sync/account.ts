@@ -279,8 +279,12 @@ async function afterSignIn(info: AccountInfo, password: string) {
 }
 
 /** Create the first account (the installation owner) and send this device's data. */
-export async function createAdministrator(username: string, password: string): Promise<void> {
-  await afterSignIn(await createOwner(username, password), password)
+export async function createAdministrator(
+  username: string,
+  password: string,
+  setupCode: string,
+): Promise<void> {
+  await afterSignIn(await createOwner(username, password, setupCode), password)
 }
 
 export async function signIn(username: string, password: string): Promise<void> {

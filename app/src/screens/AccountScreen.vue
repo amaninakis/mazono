@@ -6,6 +6,7 @@ import { chooseLanguage, LANGUAGES } from '../i18n'
 import { account, createAdministrator, signIn } from '../sync/account'
 import { ApiError } from '../sync/api'
 import { useFieldChecks } from '../ui/fieldChecks'
+import { passwordMessage } from '../ui/passwordMessage'
 
 /**
  * Sign in, or (on a new server) create the administrator account. Browsers and phones can
@@ -13,6 +14,7 @@ import { useFieldChecks } from '../ui/fieldChecks'
  */
 const { t: translate, i18next } = useTranslation()
 const creating = computed(() => account.needsSetup)
+const setupCode = ref('')
 const username = ref('')
 const password = ref('')
 const repeat = ref('')
@@ -22,14 +24,13 @@ const error = ref('')
 
 /** Only a new account has rules to check; signing in just tries the server. */
 const checks = useFieldChecks({
+  code: () =>
+    creating.value && !setupCode.value.trim() ? translate('account.errorCodeMissing') : '',
   username: () =>
     creating.value && !isValidUsername(username.value.trim())
       ? translate('account.errorUsername')
       : '',
-  password: () =>
-    creating.value && password.value.length < MIN_PASSWORD_LENGTH
-      ? translate('account.errorShort', { count: MIN_PASSWORD_LENGTH })
-      : '',
+  password: () => (creating.value ? passwordMessage(password.value, username.value) : ''),
   repeat: () =>
     creating.value && repeat.value !== password.value ? translate('account.errorRepeat') : '',
 })
@@ -38,6 +39,8 @@ const ERRORS: Record<string, string> = {
   'wrong-credentials': 'account.errorWrong',
   'too-many-tries': 'account.errorTooMany',
   'password-short': 'account.errorShort',
+  'password-common': 'account.errorCommon',
+  'setup-code': 'account.errorCode',
   'username': 'account.errorUsername',
   'already-set-up': 'account.errorAlreadySetUp',
 }
@@ -54,7 +57,7 @@ async function submit() {
 
   try {
     await (creating.value
-      ? createAdministrator(name, password.value)
+      ? createAdministrator(name, password.value, setupCode.value)
       : signIn(name, password.value))
   } catch (caught) {
     if (caught instanceof ApiError) {
@@ -97,6 +100,27 @@ async function submit() {
     <p class="muted">{{ creating ? $t('account.createHelp') : $t('account.signInHelp') }}</p>
 
     <form class="card" novalidate @submit.prevent="submit">
+      <template v-if="creating">
+        <label class="label" for="acc-code">{{ $t('account.setupCode') }}</label>
+        <input
+          id="acc-code"
+          v-model="setupCode"
+          :aria-invalid="!!checks.errors.code"
+          :aria-describedby="checks.errors.code ? 'acc-code-error' : 'acc-code-help'"
+          class="input setup-code"
+          autocomplete="one-time-code"
+          autocapitalize="characters"
+          spellcheck="false"
+          placeholder="ABC-123-XYZ"
+          required
+          @blur="checks.leave('code')"
+          @input="checks.edit('code')"
+        />
+        <p v-if="checks.errors.code" id="acc-code-error" class="field-error">
+          {{ checks.errors.code }}
+        </p>
+        <p id="acc-code-help" class="hint">{{ $t('account.setupCodeHelp') }}</p>
+      </template>
       <label class="label" for="acc-username">{{ $t('account.username') }}</label>
       <input
         id="acc-username"

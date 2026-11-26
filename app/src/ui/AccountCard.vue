@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import { useTranslation } from 'i18next-vue'
 import { computed, ref } from 'vue'
-import { MIN_PASSWORD_LENGTH } from '../core/syncFormat'
 import { localDb } from '../db/db'
 import { formatLocale } from '../i18n'
 import { account, changePassword, signOut, syncNow } from '../sync/account'
@@ -9,6 +8,7 @@ import { ApiError, removeFarm } from '../sync/api'
 import { groveHasData, removeLocalGrove } from '../sync/groves'
 import AppModal from './AppModal.vue'
 import { useLiveQuery } from './live'
+import { passwordMessage } from './passwordMessage'
 import { showToast } from './toast'
 
 /** The grove data on this phone (picked before the app started). */
@@ -51,8 +51,9 @@ const passwordError = ref('')
 
 async function savePassword() {
   passwordError.value = ''
-  if (next.value.length < MIN_PASSWORD_LENGTH) {
-    passwordError.value = translate('account.errorShort', { count: MIN_PASSWORD_LENGTH })
+  const weak = passwordMessage(next.value, account.user?.username)
+  if (weak) {
+    passwordError.value = weak
     return
   }
   if (next.value !== repeat.value) {
@@ -69,10 +70,20 @@ async function savePassword() {
     showToast({ title: translate('account.passwordChanged') })
   } catch (caught) {
     passwordError.value =
-      caught instanceof ApiError && caught.code === 'wrong-password'
-        ? translate('account.errorCurrent')
+      caught instanceof ApiError
+        ? apiPasswordError(caught.code)
         : translate('account.errorOffline')
   }
+}
+
+function apiPasswordError(code: string) {
+  if (code === 'wrong-password') {
+    return translate('account.errorCurrent')
+  }
+
+  return code === 'password-common'
+    ? translate('account.errorCommon')
+    : translate('account.errorServer')
 }
 
 /* ---------- groves ---------- */

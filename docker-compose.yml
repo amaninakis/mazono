@@ -5,11 +5,16 @@
 #   docker compose up -d
 #   tailscale serve --bg 8080        # gives you https://<machine>.<tailnet>.ts.net
 #
+# On the first start the log shows the setup code and where to open the app:
+#   docker compose logs mazono
+#
 # Public server with your own domain and automatic HTTPS (Caddy in front):
 #   SITE_ADDRESS=harvest.example.com docker compose --profile https up -d
 #
-# To keep the data in a Docker volume you already have, name it in a .env file next to this
-# one, e.g.:  MAZONO_DATA_VOLUME=my_existing_volume
+# Optional settings, in a .env file next to this one:
+#   MAZONO_PORT=8080                        the port on this computer (8080)
+#   MAZONO_URL=https://elies.example.org    the address people open, shown in the log
+#   MAZONO_DATA_VOLUME=my_existing_volume   keep the data in a Docker volume you already have
 
 name: mazono
 
@@ -19,7 +24,10 @@ services:
     image: mazono:latest
     restart: unless-stopped
     ports:
-      - "8080:8080"
+      - "${MAZONO_PORT:-8080}:8080"
+    environment:
+      MAZONO_PORT: ${MAZONO_PORT:-8080}
+      MAZONO_URL: ${MAZONO_URL:-}
     volumes:
       - data:/data
 

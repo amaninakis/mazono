@@ -82,7 +82,8 @@ the last mill visit (February), named by its year. Money is counted per calendar
 - The Journal shows **who logged** each entry; what someone logged stays when they are removed.
 - One installation can hold more than one grove. The owner sees every account on the server
   (without other people's data).
-- Stay signed in for 90 days; wrong passwords are slowed down after 10 tries.
+- Stay signed in for 90 days, and see or sign out your **signed-in devices** in Settings.
+  Wrong passwords are slowed down, and passwords that are easy to guess are turned down.
 - The server keeps **14 daily backups** of its database, and any phone can save or restore a
   backup file (Settings → Data).
 
@@ -96,7 +97,11 @@ cd mazono
 docker compose up -d --build
 ```
 
-The app is now on port **8080**. Open it and create the administrator account. Browsers only
+The app is now on port **8080**. Run `docker compose logs mazono` to see the **setup code**:
+open the app, enter the code and create the administrator account. The code is only needed
+this once and only works until the administrator exists. To use another port, or to have the
+log show your own address, set `MAZONO_PORT` or `MAZONO_URL` in a `.env` file (see
+`docker-compose.yml`). Browsers only
 allow offline mode, "Install app" and secure sign-in over HTTPS, so:
 
 - **Home lab with Tailscale** (nothing opened to the internet):

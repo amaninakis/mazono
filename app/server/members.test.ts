@@ -75,7 +75,7 @@ async function changePassword(cookies: Record<string, string>, current: string, 
 async function memberWith(username: string, permissions: object, role = 'user') {
   await addMember({ username, password: 'temporary-1', role, permissions })
   const { cookies } = await signIn(username, 'temporary-1')
-  await changePassword(cookies, 'temporary-1', `${username}-own-password`)
+  await changePassword(cookies, 'temporary-1', 'vouno-petra-fetos')
 
   return cookies
 }
@@ -115,7 +115,7 @@ describe('adding people', () => {
     expect(first.status).toBe(200)
     expect((await sync(first.cookies)).statusCode).toBe(403)
     expect(
-      (await changePassword(first.cookies, 'elia-vouno-42', 'my-own-pass')).statusCode,
+      (await changePassword(first.cookies, 'elia-vouno-42', 'kalo-ladi-fetos')).statusCode,
     ).toBe(200)
 
     expect((await sync(first.cookies)).statusCode).toBe(200)
@@ -244,7 +244,7 @@ describe('a grove of their own', () => {
   it('lets the owner add someone who starts their own grove, once', async () => {
     await addMember({ username: 'nikos', password: 'temporary-1', ownGrove: true })
     const { cookies } = await signIn('nikos', 'temporary-1')
-    await changePassword(cookies, 'temporary-1', 'nikos-own-pass')
+    await changePassword(cookies, 'temporary-1', 'kalo-ladi-fetos')
 
     expect((await sync(cookies, [], 'grove')).statusCode).toBe(403) // not in Andreas's grove
     expect((await sync(cookies, [], 'nikos-grove')).statusCode).toBe(200)
@@ -285,7 +285,7 @@ describe('removing someone', () => {
     })
 
     expect(accountOf(await accounts(), 'testuser')).toBeUndefined()
-    expect((await signIn('testuser', 'testuser-own-password')).status).toBe(401)
+    expect((await signIn('testuser', 'vouno-petra-fetos')).status).toBe(401)
 
     const again = await addMember({ username: 'testuser', password: 'temporary-2' })
 
@@ -298,7 +298,7 @@ describe('every account, for the installation owner', () => {
     await memberWith('giannis', PRESETS.worker)
     await addMember({ username: 'nikos', password: 'temporary-1', ownGrove: true })
     const { cookies } = await signIn('nikos', 'temporary-1')
-    await changePassword(cookies, 'temporary-1', 'nikos-own-pass')
+    await changePassword(cookies, 'temporary-1', 'kalo-ladi-fetos')
     await sync(cookies, [row('farms', 'nikos-grove', { name: 'Secret grove' })], 'nikos-grove')
     const list = await accounts()
 
@@ -343,7 +343,7 @@ describe('every account, for the installation owner', () => {
   it('deletes an account with the groves nobody else uses', async () => {
     await addMember({ username: 'nikos', password: 'temporary-1', ownGrove: true })
     const { cookies } = await signIn('nikos', 'temporary-1')
-    await changePassword(cookies, 'temporary-1', 'nikos-own-pass')
+    await changePassword(cookies, 'temporary-1', 'kalo-ladi-fetos')
     await sync(cookies, [row('fields', 'n1', { name: 'Theirs' })], 'nikos-grove')
     const id = accountOf(await accounts(), 'nikos').userId
 
@@ -359,7 +359,7 @@ describe('every account, for the installation owner', () => {
   it('keeps an only administrator while others use their grove, and the owner', async () => {
     await addMember({ username: 'nikos', password: 'temporary-1', ownGrove: true })
     const { cookies } = await signIn('nikos', 'temporary-1')
-    await changePassword(cookies, 'temporary-1', 'nikos-own-pass')
+    await changePassword(cookies, 'temporary-1', 'kalo-ladi-fetos')
     await sync(cookies, [], 'nikos-grove')
     await app.inject({
       method: 'POST',

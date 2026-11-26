@@ -3,13 +3,16 @@ import { dirname, join, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { buildServer } from './app.ts'
 import { backupName, backupsToRemove } from './backups.ts'
-import { backupTo, openDatabase } from './database.ts'
+import { backupTo, openDatabase, readMeta, writeMeta } from './database.ts'
+import { newSetupCode, setupBanner } from './setup.ts'
 
 /*
  * Starts the Mazono server. Settings (all optional):
- *   PORT        port to listen on (8080)
- *   DATA_DIR    where the database and its daily backups live (/data, or ./data outside Docker)
- *   STATIC_DIR  the built web app (../dist)
+ *   PORT         port to listen on (8080)
+ *   DATA_DIR     where the database and its daily backups live (/data, or ./data outside Docker)
+ *   STATIC_DIR   the built web app (../dist)
+ *   MAZONO_PORT  the port people open it on, when Docker publishes it on another one (PORT)
+ *   MAZONO_URL   the address people open it at, e.g. https://elies.example.org, shown in the log
  */
 
 const here = dirname(fileURLToPath(import.meta.url))
@@ -39,8 +42,42 @@ function dailyBackup() {
   }
 }
 
+/**
+ * While there are no accounts, the setup code (kept in the database, so it stays the same
+ * across restarts) and where to open the app are printed in the log.
+ */
+const needsSetup =
+  (database.prepare('SELECT COUNT(*) AS count FROM users').get() as { count: number })
+    .count === 0
+let setupCode = readMeta(database, 'setupCode')
+if (needsSetup && !setupCode) {
+  setupCode = newSetupCode()
+  writeMeta(database, 'setupCode', setupCode)
+}
+const addressesSeen = new Set<string>()
+
+function setupOpened(address: string) {
+  if (!addressesSeen.has(address)) {
+    addressesSeen.add(address)
+    process.stdout.write(`The setup page was opened at ${address}\n`)
+  }
+}
+
+function setUp() {
+  writeMeta(database, 'setupCode', undefined)
+  setupCode = undefined
+  process.stdout.write('Mazono is set up: the setup code is no longer needed.\n')
+}
+
 async function start() {
-  const app = await buildServer({ database, staticDir, version: pkg.version })
+  const app = await buildServer({
+    database,
+    staticDir,
+    version: pkg.version,
+    setupCode: needsSetup ? setupCode : undefined,
+    onSetupOpened: setupOpened,
+    onSetUp: setUp,
+  })
   dailyBackup()
   setInterval(dailyBackup, 60 * 60_000).unref()
 
@@ -55,6 +92,15 @@ async function start() {
 
   await app.listen({ port, host: '0.0.0.0' })
   process.stdout.write(`Mazono ${pkg.version} on port ${port}, data in ${databaseFile}\n`)
+  if (needsSetup && setupCode) {
+    process.stdout.write(
+      setupBanner({
+        code: setupCode,
+        port: Number(process.env.MAZONO_PORT || port),
+        url: process.env.MAZONO_URL,
+      }),
+    )
+  }
 }
 
 void start()

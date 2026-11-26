@@ -18,6 +18,7 @@ import {
 import AppModal from './AppModal.vue'
 import { useFarm } from './farm'
 import { useFieldChecks } from './fieldChecks'
+import { passwordMessage } from './passwordMessage'
 import PermissionsEditor from './PermissionsEditor.vue'
 
 /**
@@ -34,6 +35,7 @@ const ERRORS: Record<string, string> = {
   'username-taken': 'users.errorTaken',
   'already-member': 'users.errorAlreadyMember',
   'password-short': 'account.errorShort',
+  'password-common': 'account.errorCommon',
   'last-admin': 'users.errorLastAdmin',
   'owner-stays-admin': 'users.errorOwner',
   'not-allowed': 'users.errorNotAllowed',
@@ -102,10 +104,7 @@ const handOver = ref<{ username: string; password: string; ownGrove: boolean } |
 const checks = useFieldChecks({
   name: () =>
     isValidUsername(newName.value.trim()) ? '' : translate('account.errorUsername'),
-  password: () =>
-    newPassword.value.length < MIN_PASSWORD_LENGTH
-      ? translate('account.errorShort', { count: MIN_PASSWORD_LENGTH })
-      : '',
+  password: () => passwordMessage(newPassword.value, newName.value),
 })
 
 function suggestPassword() {
