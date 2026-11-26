@@ -91,34 +91,86 @@ the last mill visit (February), named by its year. Money is counted per calendar
 
 ### With Docker (home lab or server)
 
+Hardware needs are tiny: any Raspberry Pi 3/4/5, NAS or the smallest VPS is enough. You need
+Git and Docker (with Docker Compose).
+
+**1. Install and start**
+
 ```bash
 git clone https://github.com/amaninakis/mazono.git
 cd mazono
 docker compose up -d --build
 ```
 
-The app is now on port **8080**. Run `docker compose logs mazono` to see the **setup code**:
-open the app, enter the code and create the administrator account. The code is only needed
-this once and only works until the administrator exists. To use another port, or to have the
-log show your own address, set `MAZONO_PORT` or `MAZONO_URL` in a `.env` file (see
-`docker-compose.yml`). Browsers only
-allow offline mode, "Install app" and secure sign-in over HTTPS, so:
+The app now runs on port **8080** of this computer.
+
+**2. Make it reachable over HTTPS.** Browsers only allow offline use, "Install app" on the
+home screen and secure sign-in over HTTPS. Choose one:
 
 - **Home lab with Tailscale** (nothing opened to the internet):
-  `tailscale serve --bg 8080` → open `https://<machine-name>.<tailnet>.ts.net` on your phone.
-- **Public server with a domain**: point the domain's DNS to the server, then
-  `SITE_ADDRESS=harvest.example.com docker compose --profile https up -d --build`.
+  `tailscale serve --bg 8080`, then use `https://<machine-name>.<tailnet>.ts.net` on your
+  phones (each phone needs the Tailscale app).
+- **Public server with a domain:** point the domain's DNS to the server, then
+  `SITE_ADDRESS=elies.example.org docker compose --profile https up -d --build`.
   Caddy runs in front and gets an HTTPS certificate automatically.
+- **Just trying it out:** `http://<server-ip>:8080` works too, without offline use or
+  installing.
 
-Data lives in the `mazono_data` Docker volume (`/data` in the container): the database
-`mazono.db` and the last 14 daily copies in `backups/`. To back up elsewhere, copy the newest
-file from `backups/`. Never run `docker compose down -v`: `-v` deletes the data volume.
+**3. Create the administrator with the setup code.** A new server only lets someone in who can
+see its log, so a stranger cannot take it over:
 
-**Using it on one phone first?** If you used the app on its own before setting up the server, open
-it on that phone after `docker compose up -d --build`: it asks you to create the administrator
-account, then uploads everything the phone holds.
+```bash
+docker compose logs mazono
+```
 
-Hardware needs are tiny: any Raspberry Pi 3/4/5, NAS or the smallest VPS is enough.
+```
+ Mazono is ready to set up.
+ Open it in a browser:
+   http://<server-ip>:8080
+ Setup code:  RM6-GCH-9TT
+```
+
+Open the app, enter the setup code, then choose your username and password. The code stays the
+same across restarts and stops working once the administrator exists. Once someone opens the
+setup page, the log also shows the address they used. Set `MAZONO_URL` (below) to have the log
+show your own address instead of `<server-ip>`.
+
+**4. Add your data.** On the welcome screen after creating the administrator, either set up your
+fields and collection units, or tap **Restore from a backup file** and choose a Mazono backup
+(made with Settings → Data → Export backup). Everything goes to the server.
+
+**5. Add people** in Settings → People: each person gets a temporary password, chooses their own
+at first sign-in, and sees only what you allow.
+
+**Settings** (optional), in a `.env` file next to `docker-compose.yml`:
+
+| Setting | What it does |
+| --- | --- |
+| `MAZONO_PORT=8080` | The port on this computer (8080 if not set). |
+| `MAZONO_URL=https://elies.example.org` | The address people open; shown in the log at setup. |
+| `MAZONO_DATA_VOLUME=my_volume` | Keep the data in a Docker volume you already have. |
+| `SITE_ADDRESS=elies.example.org` | The domain for the HTTPS front (`--profile https`). |
+
+After changing `.env`, run `docker compose up -d` again.
+
+**Updating**
+
+```bash
+cd mazono
+git pull
+docker compose up -d --build
+```
+
+Phones pick up the new version by themselves the next time the app is opened.
+
+**Data and backups.** Data lives in the `mazono_data` Docker volume (`/data` in the
+container): the database `mazono.db` and the last 14 daily copies in `backups/`. To keep a copy
+elsewhere, copy the newest file from `backups/`, or save a backup file from any phone
+(Settings → Data → Export backup). Never run `docker compose down -v`: `-v` deletes the data volume.
+
+**Using it on one phone first?** If you used the app on its own before setting up the server,
+open it on that phone at step 3: after the administrator is created it uploads everything the
+phone holds.
 
 ### For development
 
