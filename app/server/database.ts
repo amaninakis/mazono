@@ -7,6 +7,11 @@ import { DatabaseSync } from 'node:sqlite'
  */
 
 const SCHEMA = [
+  // Small server settings, such as the setup code while there are no accounts.
+  `CREATE TABLE IF NOT EXISTS meta (
+    key TEXT PRIMARY KEY,
+    value TEXT NOT NULL
+  )`,
   `CREATE TABLE IF NOT EXISTS users (
     id TEXT PRIMARY KEY,
     username TEXT NOT NULL UNIQUE COLLATE NOCASE,
@@ -101,4 +106,23 @@ export function inTransaction<T>(database: DatabaseSync, work: () => T): T {
 /** A consistent copy of the database to `path` (for the daily backup). */
 export function backupTo(database: DatabaseSync, path: string): void {
   database.prepare('VACUUM INTO ?').run(path)
+}
+
+export function readMeta(database: DatabaseSync, key: string): string | undefined {
+  const row = database.prepare('SELECT value FROM meta WHERE key = ?').get(key) as
+    { value: string } | undefined
+
+  return row?.value
+}
+
+export function writeMeta(database: DatabaseSync, key: string, value: string | undefined) {
+  if (value === undefined) {
+    database.prepare('DELETE FROM meta WHERE key = ?').run(key)
+  } else {
+    database
+      .prepare(
+        'INSERT INTO meta (key, value) VALUES (?, ?) ON CONFLICT(key) DO UPDATE SET value = excluded.value',
+      )
+      .run(key, value)
+  }
 }

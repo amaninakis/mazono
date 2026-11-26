@@ -22,6 +22,7 @@ const ERRORS: Record<string, string> = {
   'only-admin': 'serverAccounts.errorOnlyAdmin',
   'not-allowed': 'users.errorNotAllowed',
   'password-short': 'account.errorShort',
+  'password-common': 'account.errorCommon',
 }
 
 function explain(caught: unknown) {

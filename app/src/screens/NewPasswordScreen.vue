@@ -5,6 +5,7 @@ import { MIN_PASSWORD_LENGTH } from '../core/syncFormat'
 import { account, changePassword } from '../sync/account'
 import { ApiError } from '../sync/api'
 import { useFieldChecks } from '../ui/fieldChecks'
+import { passwordMessage } from '../ui/passwordMessage'
 
 /** After signing in with a temporary password: choose your own before anything else. */
 const { t: translate } = useTranslation()
@@ -23,14 +24,25 @@ function temporaryPassword() {
 
 const checks = useFieldChecks({
   next: () => {
-    if (next.value.length < MIN_PASSWORD_LENGTH) {
-      return translate('account.errorShort', { count: MIN_PASSWORD_LENGTH })
+    const weak = passwordMessage(next.value, account.user?.username)
+    if (weak) {
+      return weak
     }
 
     return next.value === temporaryPassword() ? translate('account.errorSameAsTemporary') : ''
   },
   repeat: () => (repeat.value === next.value ? '' : translate('account.errorRepeat')),
 })
+
+function apiError(code: string) {
+  if (code === 'wrong-password') {
+    return translate('account.errorTemporary')
+  }
+
+  return code === 'password-common'
+    ? translate('account.errorCommon')
+    : translate('account.errorServer')
+}
 
 async function save() {
   error.value = ''
@@ -46,9 +58,7 @@ async function save() {
     await changePassword(temporary, next.value)
   } catch (caught) {
     error.value =
-      caught instanceof ApiError && caught.code === 'wrong-password'
-        ? translate('account.errorTemporary')
-        : translate('account.errorOffline')
+      caught instanceof ApiError ? apiError(caught.code) : translate('account.errorOffline')
   } finally {
     busy.value = false
   }

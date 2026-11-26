@@ -5,6 +5,7 @@ import type {
   AccountInfo,
   Member,
   ServerAccount,
+  SignedInDevice,
   SyncRecord,
   SyncRequest,
   SyncResponse,
@@ -21,12 +22,8 @@ import {
   readableTables,
   writableTables,
 } from '../src/core/access.ts'
-import {
-  isValidUsername,
-  MIN_PASSWORD_LENGTH,
-  rowId,
-  SYNC_TABLES,
-} from '../src/core/syncFormat.ts'
+import { passwordProblem } from '../src/core/passwords.ts'
+import { isValidUsername, rowId, SYNC_TABLES } from '../src/core/syncFormat.ts'
 import {
   hashPassword,
   hashToken,
@@ -35,9 +32,30 @@ import {
   verifyPassword,
 } from './auth.ts'
 import { inTransaction, nextSeq } from './database.ts'
+import { setupCodeMatches } from './setup.ts'
 
 export const SESSION_COOKIE = 'mazono_session'
-/** The sign-in cookie from before the rename: still accepted, so nobody is signed out. */
+/**
+ * What browsers may load and run on the app's pages: only its own files and calls to its own
+ * server. Styles may be inline (the app sets sizes and colours on elements); icons and charts
+ * use data: images.
+ */
+const CONTENT_SECURITY_POLICY = [
+  "default-src 'self'",
+  "script-src 'self'",
+  "style-src 'self' 'unsafe-inline'",
+  "img-src 'self' data: blob:",
+  "font-src 'self' data:",
+  "connect-src 'self'",
+  "worker-src 'self'",
+  "manifest-src 'self'",
+  "object-src 'none'",
+  "base-uri 'self'",
+  "form-action 'self'",
+  "frame-ancestors 'none'",
+].join('; ')
+/** Characters of a session's hash shown to its owner as its id (never the token itself). */
+const SESSION_ID_LENGTH = 16
 /** A device stays signed in for 90 days after it was last used. */
 const SESSION_DAYS = 90
 const DAY = 86_400_000
@@ -51,6 +69,15 @@ export interface ServerOptions {
   /** Folder with the built web app (dist); not served when missing (e.g. in tests). */
   staticDir?: string
   version?: string
+  /**
+   * Needed to create the administrator on a new server (see server/setup.ts). Always set by
+   * main.ts while there are no accounts; tests leave it out.
+   */
+  setupCode?: string
+  /** Called with the address the setup page was opened at, e.g. http://192.168.1.20:8080. */
+  onSetupOpened?: (address: string) => void
+  /** Called once the administrator has been created. */
+  onSetUp?: () => void
   /** For tests. */
   now?: () => number
 }
@@ -79,13 +106,26 @@ export async function buildServer(options: ServerOptions) {
   const { database } = options
   const now = options.now ?? Date.now
   const limiter = new SignInLimiter()
+  /**
+   * Wrong passwords for one account from anywhere: someone with many addresses can still not
+   * guess quickly. Higher than the per-address limit, so a person mistyping is never stopped
+   * by it; devices already signed in keep working either way.
+   */
+  const accountLimiter = new SignInLimiter(30)
   const app = Fastify({ trustProxy: true, bodyLimit: 20 * 1024 * 1024 })
   await app.register(fastifyCookie)
 
-  app.addHook('onRequest', (_request, reply, done) => {
+  app.addHook('onRequest', (request, reply, done) => {
     reply.header('X-Content-Type-Options', 'nosniff')
     reply.header('Referrer-Policy', 'strict-origin-when-cross-origin')
     reply.header('X-Frame-Options', 'DENY')
+    reply.header('Content-Security-Policy', CONTENT_SECURITY_POLICY)
+    reply.header('Permissions-Policy', 'camera=(), microphone=(), geolocation=(self)')
+    // Only over HTTPS: tells browsers to keep using HTTPS for this address. A server reached
+    // over plain http (a home network) never sends it, so it keeps working there.
+    if (request.protocol === 'https') {
+      reply.header('Strict-Transport-Security', 'max-age=31536000')
+    }
     done()
   })
 
@@ -197,24 +237,35 @@ export async function buildServer(options: ServerOptions) {
 
   /* ---------- accounts ---------- */
 
-  app.get('/api/status', (_request, reply) =>
-    reply.send({
-      // Still the app's first name for now: phones running a version from before the rename
-      // only recognise this server by it. Newer versions accept both (see src/sync/api.ts).
-      app: 'mazono',
-      version: options.version ?? '',
-      needsSetup: userCount() === 0,
-    }),
-  )
+  app.get('/api/status', (request, reply) => {
+    const needsSetup = userCount() === 0
+    if (needsSetup) {
+      options.onSetupOpened?.(`${request.protocol}://${request.host}`)
+    }
+
+    return reply.send({ app: 'mazono', version: options.version ?? '', needsSetup })
+  })
 
   /** Create the first account (the installation owner). Only while there are no accounts. */
   app.post('/api/setup', async (request, reply) => {
+    if (options.setupCode !== undefined && userCount() === 0) {
+      const key = `setup|${request.ip}`
+      if (limiter.isBlocked(key, now())) {
+        return await reply.code(429).send({ error: 'too-many-tries' })
+      }
+      const typed = (request.body as { setupCode?: unknown } | undefined)?.setupCode
+      if (!setupCodeMatches(typed, options.setupCode)) {
+        limiter.fail(key, now())
+        return await reply.code(403).send({ error: 'setup-code' })
+      }
+    }
     const given = credentials(request.body)
     if (!given || !isValidUsername(given.username)) {
       return await reply.code(400).send({ error: 'username' })
     }
-    if (given.password.length < MIN_PASSWORD_LENGTH) {
-      return await reply.code(400).send({ error: 'password-short' })
+    const setupProblem = passwordProblem(given.password, given.username)
+    if (setupProblem) {
+      return await reply.code(400).send({ error: setupProblem })
     }
     const passwordHash = await hashPassword(given.password)
     const user = inTransaction(database, () => {
@@ -233,6 +284,7 @@ export async function buildServer(options: ServerOptions) {
     if (!user) {
       return await reply.code(409).send({ error: 'already-set-up' })
     }
+    options.onSetUp?.()
     startSession(request, reply, user)
 
     return accountInfo(user)
@@ -243,8 +295,9 @@ export async function buildServer(options: ServerOptions) {
     if (!given) {
       return await reply.code(400).send({ error: 'credentials' })
     }
-    const key = `${request.ip}|${given.username.toLowerCase()}`
-    if (limiter.isBlocked(key, now())) {
+    const accountKey = given.username.toLowerCase()
+    const key = `${request.ip}|${accountKey}`
+    if (limiter.isBlocked(key, now()) || accountLimiter.isBlocked(accountKey, now())) {
       return await reply.code(429).send({ error: 'too-many-tries' })
     }
     const user = findUser(given.username)
@@ -252,9 +305,12 @@ export async function buildServer(options: ServerOptions) {
       !!user && !user.disabled && (await verifyPassword(given.password, user.password_hash))
     if (!ok || !user) {
       limiter.fail(key, now())
+      accountLimiter.fail(accountKey, now())
+
       return await reply.code(401).send({ error: 'wrong-credentials' })
     }
     limiter.succeed(key)
+    accountLimiter.succeed(accountKey)
     startSession(request, reply, user)
 
     return accountInfo(user)
@@ -274,6 +330,54 @@ export async function buildServer(options: ServerOptions) {
     return user ? accountInfo(user) : await reply
   })
 
+  /** The devices signed in to this account, most recently used first. */
+  app.get('/api/sessions', async (request, reply) => {
+    const user = signedInUser(request, reply)
+    if (!user) {
+      return await reply
+    }
+    const currentHash = hashToken(request.cookies[SESSION_COOKIE] ?? '')
+    const rows = database
+      .prepare(
+        'SELECT token_hash, device, created_at, last_used FROM sessions WHERE user_id = ? AND expires_at > ? ORDER BY last_used DESC',
+      )
+      .all(user.id, now()) as unknown as {
+      token_hash: string
+      device: string | null
+      created_at: number
+      last_used: number
+    }[]
+    const devices: SignedInDevice[] = rows.map((row) => ({
+      id: row.token_hash.slice(0, SESSION_ID_LENGTH),
+      device: row.device ?? '',
+      signedInAt: row.created_at,
+      lastUsed: row.last_used,
+      current: row.token_hash === currentHash,
+    }))
+
+    return devices
+  })
+
+  /** Signs one of this account's devices out (it has to sign in again). */
+  app.post<{ Params: { id: string } }>(
+    '/api/sessions/:id/sign-out',
+    async (request, reply) => {
+      const user = signedInUser(request, reply)
+      if (!user) {
+        return await reply
+      }
+      const { id } = request.params
+      if (!/^[0-9a-f]+$/.test(id) || id.length !== SESSION_ID_LENGTH) {
+        return await reply.code(400).send({ error: 'session' })
+      }
+      database
+        .prepare('DELETE FROM sessions WHERE user_id = ? AND substr(token_hash, 1, ?) = ?')
+        .run(user.id, SESSION_ID_LENGTH, id)
+
+      return await reply.send({ ok: true })
+    },
+  )
+
   app.post('/api/password', async (request, reply) => {
     const user = signedInUser(request, reply)
     if (!user) {
@@ -286,8 +390,9 @@ export async function buildServer(options: ServerOptions) {
     if (!(await verifyPassword(current, user.password_hash))) {
       return await reply.code(403).send({ error: 'wrong-password' })
     }
-    if (next.length < MIN_PASSWORD_LENGTH) {
-      return await reply.code(400).send({ error: 'password-short' })
+    const nextProblem = passwordProblem(next, user.username)
+    if (nextProblem) {
+      return await reply.code(400).send({ error: nextProblem })
     }
     database
       .prepare('UPDATE users SET password_hash = ?, must_change_password = 0 WHERE id = ?')
@@ -573,8 +678,9 @@ export async function buildServer(options: ServerOptions) {
         // Their password stays as it is: the admin must not hand out a temporary one.
         return await reply.send({ members: members(farmId), existingAccount: true })
       }
-      if (password.length < MIN_PASSWORD_LENGTH) {
-        return await reply.code(400).send({ error: 'password-short' })
+      const newProblem = passwordProblem(password, username)
+      if (newProblem) {
+        return await reply.code(400).send({ error: newProblem })
       }
       const id = randomUUID()
       const passwordHash = await hashPassword(password)
@@ -651,8 +757,10 @@ export async function buildServer(options: ServerOptions) {
         return await reply.code(403).send({ error: 'not-allowed' })
       }
       const { password } = (request.body ?? {}) as { password?: unknown }
-      if (typeof password !== 'string' || password.length < MIN_PASSWORD_LENGTH) {
-        return await reply.code(400).send({ error: 'password-short' })
+      const resetProblem =
+        typeof password === 'string' ? passwordProblem(password) : 'password-short'
+      if (typeof password !== 'string' || resetProblem) {
+        return await reply.code(400).send({ error: resetProblem })
       }
       const passwordHash = await hashPassword(password)
       database
@@ -856,8 +964,10 @@ export async function buildServer(options: ServerOptions) {
         return await reply.code(403).send({ error: 'not-allowed' })
       }
       const { password } = (request.body ?? {}) as { password?: unknown }
-      if (typeof password !== 'string' || password.length < MIN_PASSWORD_LENGTH) {
-        return await reply.code(400).send({ error: 'password-short' })
+      const resetProblem =
+        typeof password === 'string' ? passwordProblem(password) : 'password-short'
+      if (typeof password !== 'string' || resetProblem) {
+        return await reply.code(400).send({ error: resetProblem })
       }
       const passwordHash = await hashPassword(password)
       const changed = database

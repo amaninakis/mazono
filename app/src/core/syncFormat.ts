@@ -78,6 +78,18 @@ export interface Member {
  * An account as the installation owner sees it, to help people. Grove names only for groves
  * the owner is in: the owner does not see other people's data.
  */
+/** A device signed in to someone's account (Settings → Account → Signed-in devices). */
+export interface SignedInDevice {
+  /** Short id of the sign-in, used to sign it out. */
+  id: string
+  /** The browser's own description (user agent); see deviceName(). */
+  device: string
+  signedInAt: number
+  lastUsed: number
+  /** The device asking. */
+  current: boolean
+}
+
 export interface ServerAccount {
   userId: string
   username: string

@@ -21,6 +21,7 @@ import AccountCard from '../ui/AccountCard.vue'
 import AppIcon from '../ui/AppIcon.vue'
 import AppLogo from '../ui/AppLogo.vue'
 import AppModal from '../ui/AppModal.vue'
+import DevicesCard from '../ui/DevicesCard.vue'
 import { canDo, categoryName, chargeName, locationName, taskName, useFarm } from '../ui/farm'
 import ServerAccountsCard from '../ui/ServerAccountsCard.vue'
 import SettingInput from '../ui/SettingInput.vue'
@@ -477,6 +478,7 @@ watch(
     </header>
 
     <AccountCard v-if="section === 'account' && account.mode === 'server' && account.user" />
+    <DevicesCard v-if="section === 'account' && account.mode === 'server' && account.user" />
     <UsersCard v-if="section === 'people' && account.mode === 'server' && isAdmin" />
 
     <section v-if="!section" class="card">

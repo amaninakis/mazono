@@ -3,6 +3,7 @@ import type {
   AccountInfo,
   Member,
   ServerAccount,
+  SignedInDevice,
   SyncRequest,
   SyncResponse,
 } from '../core/syncFormat'
@@ -83,8 +84,8 @@ export async function serverStatus(): Promise<ServerStatus | undefined> {
   }
 }
 
-export async function createOwner(username: string, password: string) {
-  return await call<AccountInfo>('/api/setup', { username, password })
+export async function createOwner(username: string, password: string, setupCode: string) {
+  return await call<AccountInfo>('/api/setup', { username, password, setupCode })
 }
 
 export async function signIn(username: string, password: string) {
@@ -157,6 +158,14 @@ export async function removeMember(farmId: string, userId: string) {
 }
 
 /* ---------- every account, for the installation owner ---------- */
+
+export async function listDevices() {
+  return await call<SignedInDevice[]>('/api/sessions')
+}
+
+export async function signOutDevice(id: string) {
+  return await call<{ ok: boolean }>(`/api/sessions/${id}/sign-out`, {})
+}
 
 export async function listAccounts() {
   return await call<ServerAccount[]>('/api/accounts')
