@@ -6,10 +6,10 @@ import { RouterLink, useRoute, useRouter } from 'vue-router'
 import { addDays, monthGrid, parseISODate, todayISO } from '../core/dates'
 import { formatNumber } from '../core/format'
 import { isFutureMonth, monthsWithWork, shownMonth } from '../core/months'
-import { unitLabel } from '../core/units'
 import { formatLocale } from '../i18n'
 import { account } from '../sync/account'
 import AppIcon from '../ui/AppIcon.vue'
+import { entryDetails } from '../ui/entryDetails'
 import { canDo, taskName, useFarm } from '../ui/farm'
 import JournalDay from '../ui/JournalDay.vue'
 import MonthStrip from '../ui/MonthStrip.vue'
@@ -143,10 +143,6 @@ async function remove(entry: TaskEntry) {
   })
 }
 
-function unitById(id: string) {
-  return farm.value.units.find((unit) => unit.id === id)
-}
-
 function fieldName(id: string) {
   return (
     farm.value.fields.find((field) => field.id === id)?.name ??
@@ -155,30 +151,7 @@ function fieldName(id: string) {
 }
 
 function details(entry: TaskEntry) {
-  const loc = formatLocale.value
-  const parts: string[] = []
-  if (entry.trees) {
-    parts.push(translate('journal.trees', { count: entry.trees }))
-  }
-
-  for (const quantity of entry.quantities ?? []) {
-    parts.push(
-      `${formatNumber(quantity.amount, loc)} ${unitLabel(unitById(quantity.unitId), quantity.amount)}`,
-    )
-  }
-  if (entry.amount) {
-    parts.push(
-      `${entry.product ? `${entry.product} · ` : ''}${formatNumber(entry.amount, loc)} ${entry.amountUnit ?? ''}`,
-    )
-  }
-  if (entry.workers) {
-    parts.push(`${entry.workers} × ${formatNumber(entry.hours ?? 0, loc)} h`)
-  }
-  if (entry.fieldFinished) {
-    parts.push(translate('journal.fieldFinished'))
-  }
-
-  return parts.join(' · ')
+  return entryDetails(entry, farm.value.units, translate, formatLocale.value)
 }
 
 /** Read-only for people who may only see the Journal. */
@@ -277,7 +250,7 @@ function loggedBy(createdBy: string | undefined) {
 
     <div v-if="dayEntries.length === 0" class="empty">
       <p class="muted">{{ $t('journal.noEntries') }}</p>
-      <RouterLink v-if="canEditWork" class="btn" :to="{ path: '/', query: { date } }"
+      <RouterLink v-if="canEditWork" class="btn" :to="{ path: '/new', query: { date } }"
         >+ {{ $t('journal.logTask') }}</RouterLink
       >
     </div>
@@ -319,7 +292,7 @@ function loggedBy(createdBy: string | undefined) {
         </button>
       </li>
       <li v-if="canEditWork">
-        <RouterLink class="btn ghost small" :to="{ path: '/', query: { date } }"
+        <RouterLink class="btn ghost small" :to="{ path: '/new', query: { date } }"
           >+ {{ $t('journal.logTask') }}</RouterLink
         >
       </li>

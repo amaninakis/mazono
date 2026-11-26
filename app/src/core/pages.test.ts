@@ -22,6 +22,15 @@ describe('swiping between pages', () => {
     expect(neighbourTab('/settings/fields', tabs, 1)).toBeUndefined()
   })
 
+  it('counts the task form and, without its own tab, the journal as the home tab', () => {
+    const phone = ['/', '/oil', '/money', '/reports']
+
+    expect(tabOf('/new', phone)).toBe(0)
+    expect(tabOf('/journal', phone)).toBe(0)
+    expect(neighbourTab('/journal', phone, 1)).toBe('/oil')
+    expect(tabOf('/settings', phone)).toBe(-1)
+  })
+
   it('follows the tabs this person can see', () => {
     const fewer = ['/journal', '/reports', '/settings']
 

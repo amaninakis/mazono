@@ -5,6 +5,8 @@
  */
 export const ICONS = {
   today: 'lucide:circle-plus',
+  home: 'lucide:house',
+  check: 'lucide:check',
   history: 'lucide:calendar-days',
   oil: 'lucide:droplet',
   money: 'lucide:euro',

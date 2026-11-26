@@ -525,6 +525,14 @@ const canEditSettings = computed(() => canDo(farm.value, 'settings', 'change'))
 <template>
   <main class="page today">
     <header class="page-head">
+      <RouterLink
+        :to="editing ? { path: '/journal', query: { date: editing.date } } : '/'"
+        class="back-link"
+      >
+        <AppIcon name="chevronLeft" :size="24" /><span class="back-text">{{
+          editing ? $t('nav.journal') : $t('nav.home')
+        }}</span>
+      </RouterLink>
       <h1>{{ editing ? $t('today.editTitle') : $t('today.title') }}</h1>
     </header>
     <DraftNotice
