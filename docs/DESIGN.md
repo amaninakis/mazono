@@ -91,7 +91,8 @@ The app is a TypeScript PWA with a local database on the device and a small sync
 - **Icons**: [Lucide](https://lucide.dev) line icons (`ui/AppIcon.vue`, `ui/icons.ts`) in the text colour, so the app looks the same on every phone. Nuxt Icon's Vite plugin (`@nuxt/icon/vite`) bundles every icon the app uses into the build, so they work offline and never come from the internet. Icons Lucide lacks (the olive, the sack) are drawn in the same style in `src/assets/icons/` (prefix `mazono:`).
   - **Task types** keep the emoji they were saved with (database, backups, sync), and the app draws each as a line icon (`core/taskIcons.ts`, `ui/TaskIcon.vue`): in the task's colour on the task page and the journal, white on the selected chip, the text colour at night. An emoji without an icon is shown as it is. In Settings → Task types the grower picks one of the ten icons from a grid.
   - Emoji stay only in the records board.
-- **Computer and tablet** (768 px and wider): the bottom bar becomes a side menu; forms stay a 640 px column; from 1024 px Money, Oil and History put the summary or calendar on the left and the list on the right.
+- **Menu**: on phones a bottom bar with Home, Oil, + (raised, in the middle), Money and Reports; the journal (History) is opened from the home page's week and latest work, Settings from its gear. Swiping moves between these four tabs.
+- **Computer and tablet** (768 px and wider): the bottom bar becomes a side menu with the logo, "Καταγραφή εργασίας", every page and Settings at the bottom; forms stay a 640 px column; from 1024 px Money, Oil and History put the summary or calendar on the left and the list on the right.
 - Deleting work, a production, a move or a money entry is undone from the toast, not confirmed first (fast and forgiving). A question first only for what cannot be undone: deleting an account or a grove, removing a person, or a change that would leave oil missing.
 - Store quantities in base units (kg, trees, units) and format them only for display.
 - Every user-facing string goes through i18n, in both `en.json` and `el.json`.
@@ -166,11 +167,27 @@ Tree yield shows how productive the bearing trees were. Field yield shows what t
 
 Users join farms through a membership with a role; one person can belong to several farms. Harvest entries link to extractions through an **allocation** record, so one day's harvest can feed several mill batches.
 
-## Today screen (home) — v0.1
+## Home page — v0.29
+
+The first tab ("/", **Αρχική** / **Home**): the season at a glance, so the grower sees the work adding up (logic in `core/home.ts`, page in `screens/HomePage.vue`).
+
+- **Top**: the hill with the full logo and a settings gear; below it "Καλημέρα, <name>". Outside the harvest the date is shown under the greeting (in the harvest it is left out to save room).
+- **The season card** changes with the time of year (each task type's active months):
+  - in the harvest: a ring of trees harvested out of the farm's trees, fields finished, and the field to carry on in with its trees left;
+  - one other task in season: a ring for a task counted in trees, or a checklist of fields for a task that is only done (summer weed whacking);
+  - several tasks in season (spring): a small ring each in "Εργασίες εποχής";
+  - outside the harvest, when it is less than 20 weeks away, a countdown card on top ("in about 11 weeks", from the day last year's harvest started).
+- **Two figures**: in the harvest the olives (kg weighed at the mill, or the units picked before any production) and the oil (with the yield); the rest of the year the oil in stock (in how many places, which years) and the oil sold this calendar year (kg, with € and €/kg for those who may see money).
+- **This week**: Monday to Sunday with a dot per kind of work done; a day opens it in the journal. **Ημερολόγιο ›** opens the journal.
+- **Latest**: the last four entries and productions, each opening its form; **Όλες οι εργασίες ›** opens the journal.
+- **Computer** (1024 px and wider): the greeting is the title on the hill; the season, figures and latest work on the left, this month's calendar on the right.
+- Each part shows only to those who may see it.
+
+## Task page — v0.1
 
 
 The trees box starts with the trees of a usual day of that work: the average trees per work day for the task (tasks counted together count together, and a day's fields add up), from this farming year's days, or all earlier years' before the first one, and 0 with no days at all. It is never more than the trees still left in the chosen field (if the field has a tree count). It follows the field, task and date until the user changes the number. A × button beside the box (shown above 0) sets it to 0 without opening the keyboard.
-The app opens here. Everything for one entry sits on a single scrollable page with a sticky **Save** button.
+Opened from the raised **+** in the middle of the phone's bottom bar ("Καταγραφή εργασίας" under the logo on a computer), at "/new", with a back arrow to the home page. Everything for one entry sits on a single scrollable page with a sticky **Save** button.
 
 **Shared top area**
 
@@ -201,8 +218,10 @@ An installed app always starts at its home address, also after the phone closed 
 
 1. a new production being entered (unsaved draft): back to that form, values restored;
 2. a new task being entered (unsaved draft): the task page;
-3. work already entered for today, or the harvest finished in every field this farming year: Reports, on "This year";
+3. work already entered for today, or the harvest finished in every field this farming year: the home page;
 4. otherwise: the task page.
+
+Someone who may not enter work always opens on the home page.
 
 Opening a link to another page is left alone.
 

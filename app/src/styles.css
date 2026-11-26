@@ -74,8 +74,8 @@ html { scroll-padding-top: calc(var(--page-top) + var(--head-row) + 22px); }
    (.page-host.current, not the ones shown beside it while swiping) decides whether it shows. */
 .page-host { position: relative; }
 .shell:has(.page-host.current > .page > .row-between:first-child, .page-host.current > .page.settings.in-section) > .brand-bar { display: none; }
-.page.settings > .page-head .back-link { min-width: var(--tap); margin-left: -12px; justify-content: center; }
-.page.settings > .page-head .back-text {
+.page.settings > .page-head .back-link, .page.today > .page-head .back-link { min-width: var(--tap); margin-left: -12px; justify-content: center; }
+.page.settings > .page-head .back-text, .page.today > .page-head .back-text, .sr-only {
   position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap;
 }
 .page > :first-child::before {
@@ -948,3 +948,118 @@ fieldset.plain:disabled .btn, fieldset.plain:disabled .input { opacity: 0.7; }
 .device-list li { display: flex; align-items: center; gap: 12px; padding: 12px 0; border-top: 1px solid var(--line); }
 .device-list li:first-child { border-top: 0; padding-top: 4px; }
 .device-name { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+
+/* ---------- Home page (screens/HomePage.vue) ----------
+   The hill carries the full logo and the settings gear on phones; the greeting sits below it.
+   On a computer the side menu has the logo, so the hill carries the greeting instead. */
+.shell:has(.page-host.current > .page.home) > .brand-bar { display: none; }
+.page.home > .home-head { padding-right: 0; flex-wrap: nowrap; justify-content: space-between; }
+.home-logo .app-logo-icon { width: 30px; height: 30px; }
+.home-logo .app-logo-word { height: 24px; width: auto; }
+.home-logo { gap: 10px; }
+.home-title { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }
+.home-settings { width: var(--tap); height: var(--tap); margin-right: -10px; color: var(--accent); }
+.home-greeting { margin: 0 2px 14px; }
+.home-greeting p { margin: 0; }
+.home-greeting .muted::first-letter { text-transform: uppercase; }
+.home-hello { font-size: 1.35rem; font-weight: 600; }
+.page.home h2 { margin: 0; font-size: 1rem; }
+.page.home .card { display: block; margin-bottom: 12px; color: var(--ink); text-decoration: none; }
+.home-big-line { display: block; margin: 2px 0; font-size: 1.2rem; font-weight: 600; }
+.home-checklist-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 10px; }
+.home-checklist-head p { margin: 0; }
+.home-link { display: inline-flex; align-items: center; min-height: var(--tap); margin: -12px -4px -12px 0; padding: 0 4px; font-weight: 500; text-decoration: none; }
+.inline-icon { display: inline-block; vertical-align: -2px; color: var(--grow); }
+
+/* A ring fills up as the work gets done (green: growth). */
+.ring-track { fill: none; stroke: var(--accent-soft); stroke-width: 10; }
+.ring-fill { fill: none; stroke: var(--grow); stroke-width: 10; stroke-linecap: round; transition: stroke-dasharray 0.4s ease-out; }
+.ring-text { fill: var(--ink); font-size: 20px; font-weight: 600; text-anchor: middle; dominant-baseline: central; }
+.page.home .home-ring { display: flex; align-items: center; gap: 16px; }
+.home-ring .ring { flex: none; }
+.home-ring-text { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+
+.home-task-dot { display: inline-grid; place-items: center; flex: none; width: 40px; height: 40px; border-radius: 12px;
+  background: color-mix(in srgb, var(--c, var(--accent)) 16%, transparent); color: var(--c, var(--accent)); }
+.home-task-dot.mini { width: 32px; height: 32px; border-radius: 10px; }
+.home-task-dot.oil { --c: #c9a227; font-size: 1.25rem; }
+@media (prefers-color-scheme: dark) { .home-task-dot { color: var(--ink); } }
+.page.home .home-countdown { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.home-countdown p { margin: 0; }
+
+/* Several tasks in season: a small ring each, side by side. */
+.home-small-rings { display: grid; grid-template-columns: repeat(auto-fit, minmax(92px, 1fr)); gap: 8px; }
+.home-small-ring { display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 4px 0; color: var(--ink); text-align: center; text-decoration: none; }
+.home-small-ring-art { position: relative; display: grid; place-items: center; margin-bottom: 4px; }
+.home-small-ring-art .ring-track, .home-small-ring-art .ring-fill { stroke-width: 7; }
+.home-small-ring-art .home-task-dot { position: absolute; }
+
+/* Work done per field: a checklist of the fields. */
+.home-fields { display: flex; flex-wrap: wrap; gap: 6px; margin: 0 0 8px; padding: 0; list-style: none; }
+.home-fields li { display: inline-flex; align-items: center; gap: 6px; min-height: 36px; padding: 0 12px; border: 1px solid var(--line); border-radius: 999px; font-size: 0.9rem; }
+.home-fields li.done { border-color: transparent; background: color-mix(in srgb, var(--grow) 16%, transparent); color: var(--ink); }
+.home-fields li.done .app-icon { color: var(--grow); }
+.home-open-dot { width: 10px; height: 10px; border: 2px solid var(--muted); border-radius: 50%; }
+.home-checklist > p:last-child { margin: 0; }
+
+/* Two figures side by side. */
+.home-tiles { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.page.home .home-tile { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.home-figure { font-size: 1.6rem; font-weight: 600; line-height: 1.2; font-variant-numeric: tabular-nums; }
+.home-figure small { font-size: 0.9rem; font-weight: 500; color: var(--muted); }
+
+/* This week: seven days, a dot for each kind of work done. */
+.home-days { display: grid; grid-template-columns: repeat(7, 1fr); gap: 2px; }
+.home-day, .home-cal-day { display: flex; flex-direction: column; align-items: center; gap: 2px; min-height: var(--tap); padding: 6px 0; border: 0; border-radius: 10px; background: none; cursor: pointer; }
+.home-day .muted { font-size: 0.75rem; }
+.home-day.today, .home-cal-day.today { background: var(--accent-soft); box-shadow: inset 0 0 0 2px var(--accent); }
+.home-day.future, .home-cal-day.future { opacity: 0.4; cursor: default; }
+.home-dots { display: flex; gap: 3px; height: 6px; }
+.home-dots i { width: 6px; height: 6px; border-radius: 50%; }
+.page.home > .home-month { display: none; }
+.home-calendar { display: grid; grid-template-columns: repeat(7, 1fr); gap: 2px; text-align: center; }
+.home-calendar > .muted { padding: 4px 0; }
+
+/* The latest work and productions. */
+.home-latest .card { padding: 4px 14px; }
+.home-list { margin: 0; padding: 0; list-style: none; }
+.home-list li + li { border-top: 1px solid var(--line); }
+.home-row { display: flex; align-items: center; gap: 12px; min-height: 60px; padding: 8px 0; color: var(--ink); text-decoration: none; }
+.home-row-text { display: flex; flex-direction: column; min-width: 0; }
+.home-row-text strong, .home-row-text small { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.home-row-text small { font-size: 0.8125rem; }
+
+/* Phone bar: Home · Oil · + · Money · Reports, the + raised in the middle. */
+.bottom-nav > * { order: var(--phone-order, 0); }
+.bottom-nav .computer-only, .nav-new-text { display: none; }
+.bottom-nav a.nav-new { flex: 1; display: flex; justify-content: center; min-width: 0; text-decoration: none; }
+.nav-new-button { display: grid; place-items: center; width: 60px; height: 60px; margin-top: -22px; border: 4px solid var(--bg);
+  border-radius: 50%; background: var(--accent); color: var(--on-accent); box-shadow: 0 4px 12px rgba(42, 26, 38, 0.22); }
+.nav-new.router-link-active .nav-new-button { box-shadow: 0 0 0 3px var(--grow), 0 4px 12px rgba(42, 26, 38, 0.22); }
+
+@media (min-width: 768px) {
+  .bottom-nav > * { order: 0; }
+  .bottom-nav .computer-only { display: flex; }
+  .bottom-nav .computer-only[href='/settings'] { margin-top: auto; }
+  .bottom-nav a.nav-new { flex: none; flex-direction: row; justify-content: flex-start; align-items: center; gap: 10px; min-height: var(--tap);
+    margin: 0 0 12px; padding: 0 10px 0 12px; border-radius: 12px; background: var(--accent); color: var(--on-accent); font-weight: 600; white-space: nowrap; }
+  .bottom-nav a.nav-new:hover { color: var(--on-accent); }
+  .bottom-nav a.nav-new > span:last-child { white-space: nowrap; font-size: 0.875rem; }
+  .bottom-nav a.nav-new .app-icon { width: 22px; height: 22px; }
+  .nav-new-button { width: auto; height: auto; margin: 0; border: 0; background: none; color: inherit; box-shadow: none; }
+  .nav-new.router-link-active .nav-new-button { box-shadow: none; }
+  .nav-new-text { display: inline; }
+  .bottom-nav a.nav-new.router-link-active { box-shadow: 0 0 0 3px var(--accent-soft); }
+
+  /* Computer: the greeting is the page's title, on the hill; the gear is in the side menu. */
+  .home-logo, .home-settings, .home-hello { display: none; }
+  .home-title { position: static; width: auto; height: auto; overflow: visible; clip-path: none; }
+}
+@media (min-width: 1024px) {
+  /* The season, figures and latest work on the left; this month on the right. */
+  .page.home { max-width: 1040px; display: grid; grid-template-columns: minmax(0, 1fr) 380px; grid-auto-flow: row dense; column-gap: 24px; align-items: start; }
+  .page.home > * { grid-column: 1; }
+  .page.home > .home-head { grid-column: 1 / -1; }
+  .page.home > .home-week { display: none; }
+  .page.home > .home-month { display: block; grid-column: 2; grid-row: 2 / span 20; }
+}

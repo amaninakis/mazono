@@ -177,7 +177,6 @@ watch(
       may: {
         enterWork: can(grove.access, 'work', 'change'),
         enterOil: can(grove.access, 'oil', 'change'),
-        seeReports: can(grove.access, 'reports', 'see'),
       },
     })
     if (to !== '/') {
@@ -187,29 +186,55 @@ watch(
   { immediate: true },
 )
 
-/** Bottom bar: only the pages this person may use (Settings always, for their account). */
+/**
+ * The menu: only the pages this person may use. On phones it is a bar at the bottom with the
+ * home page, Oil, Money and Reports, and a raised + in the middle for logging work; History
+ * is opened from the home page and Settings from its gear. On a computer it is a side menu
+ * with every page, and "Log work" under the logo.
+ */
 interface NavItem {
   to: string
   icon: IconName
   label: string
   exact?: boolean
-  /** Needed to see the page in the bar (none: always there). */
+  /** Needed to see the page in the menu (none: always there). */
   area?: Area
   level?: 'see' | 'change'
+  /** Only in the computer's side menu, not in the phone's bar (and not swiped to). */
+  computerOnly?: boolean
 }
 const NAV: NavItem[] = [
-  { to: '/', icon: 'today', label: 'nav.today', exact: true, area: 'work', level: 'change' },
-  { to: '/journal', icon: 'history', label: 'nav.journal', area: 'work', level: 'see' },
+  { to: '/', icon: 'home', label: 'nav.home', exact: true },
+  {
+    to: '/journal',
+    icon: 'history',
+    label: 'nav.journal',
+    area: 'work',
+    level: 'see',
+    computerOnly: true,
+  },
   { to: '/oil', icon: 'oil', label: 'nav.oil', area: 'oil', level: 'see' },
   { to: '/money', icon: 'money', label: 'nav.money', area: 'money', level: 'see' },
   { to: '/reports', icon: 'reports', label: 'nav.reports', area: 'reports', level: 'see' },
-  { to: '/settings', icon: 'settings', label: 'nav.settings' },
+  { to: '/settings', icon: 'settings', label: 'nav.settings', computerOnly: true },
 ]
 const nav = computed(() =>
   NAV.filter((item) => !item.area || can(farm.value.access, item.area, item.level)).map(
     (item) => ({ ...item, label: translate(item.label) }),
   ),
 )
+/** The tabs a swipe moves between: the ones in the phone's bar. */
+const tabs = computed(() =>
+  nav.value.filter((item) => !item.computerOnly).map((item) => item.to),
+)
+const mayLogWork = computed(() => can(farm.value.access, 'work', 'change'))
+/** The + sits in the middle of the phone's bar: after half of its tabs. */
+const plusSlot = computed(() => Math.ceil(tabs.value.length / 2))
+/** Where an item sits in the phone's bar (CSS order), leaving the middle to the +. */
+function phoneOrder(to: string) {
+  const index = tabs.value.indexOf(to)
+  return index < plusSlot.value ? index : index + 1
+}
 
 /** Whether a tab of the bottom menu is the one open (its own page or one opened from it). */
 function isOpen(item: NavItem) {
@@ -236,6 +261,7 @@ function openTab(event: MouseEvent, to: string) {
 
 /** Pages that need an area: opening one without access goes to the first page allowed. */
 const PAGE_ACCESS: { prefix: string; area: Area; level: 'see' | 'change' }[] = [
+  { prefix: '/new', area: 'work', level: 'change' },
   { prefix: '/entry/', area: 'work', level: 'change' },
   { prefix: '/journal', area: 'work', level: 'see' },
   { prefix: '/oil/', area: 'oil', level: 'change' },
@@ -250,12 +276,9 @@ watch(
     if (current !== 'ready') {
       return
     }
-    const rule =
-      path === '/'
-        ? { area: 'work' as Area, level: 'change' as const }
-        : PAGE_ACCESS.find((page) => path.startsWith(page.prefix))
+    const rule = PAGE_ACCESS.find((page) => path.startsWith(page.prefix))
     if (rule && !can(farm.value.access, rule.area, rule.level)) {
-      void router.replace(nav.value[0]?.to ?? '/settings')
+      void router.replace('/')
     }
   },
   { immediate: true },
@@ -293,17 +316,30 @@ watch(
   <SetupWizard v-else-if="state === 'setup'" />
   <div v-else class="shell">
     <header class="brand-bar"><AppLogo /></header>
-    <PageSwiper ref="pageSwiper" :tabs="nav.map((item) => item.to)">
+    <PageSwiper ref="pageSwiper" :tabs="tabs">
       <div class="page-host current">
         <RouterView :key="route.path" />
       </div>
     </PageSwiper>
     <nav class="bottom-nav">
       <div class="nav-logo"><AppLogo /></div>
+      <RouterLink
+        v-if="mayLogWork"
+        to="/new"
+        class="nav-new"
+        :style="{ '--phone-order': plusSlot }"
+        :aria-label="translate('nav.newTask')"
+      >
+        <span class="nav-new-button" aria-hidden="true"
+          ><AppIcon name="plus" :size="28"
+        /></span>
+        <span class="nav-new-text">{{ $t('nav.newTask') }}</span>
+      </RouterLink>
       <RouterLink v-for="item in nav" :key="item.to" v-slot="{ href }" :to="item.to" custom>
         <a
           :href="href"
-          :class="{ active: isOpen(item) }"
+          :class="{ 'active': isOpen(item), 'computer-only': item.computerOnly }"
+          :style="item.computerOnly ? undefined : { '--phone-order': phoneOrder(item.to) }"
           :aria-current="isOpen(item) ? 'page' : undefined"
           @click="openTab($event, item.to)"
         >

@@ -45,33 +45,35 @@ function entry(id: string, date: string, extra: Partial<TaskEntry> = {}): TaskEn
 }
 
 const today = '2026-11-20'
-const may = { enterWork: true, enterOil: true, seeReports: true }
+const may = { enterWork: true, enterOil: true }
 const none = { extraction: false, task: false }
 const base = { today, fields, taskTypes, drafts: none, may }
 
 describe('landingPage', () => {
-  it('opens the task page when nothing is entered for today', () => {
-    expect(landingPage({ ...base, entries: [entry('1', '2026-11-19')] })).toBe('/')
+  it('opens the task form when nothing is entered for today', () => {
+    expect(landingPage({ ...base, entries: [entry('1', '2026-11-19')] })).toBe('/new')
   })
 
-  it("opens this year's report once work is entered for today", () => {
-    expect(landingPage({ ...base, entries: [entry('1', today)] })).toBe('/reports')
+  it('opens the home page once work is entered for today', () => {
+    expect(landingPage({ ...base, entries: [entry('1', today)] })).toBe('/')
     // Any task counts, and a deleted one does not.
     expect(landingPage({ ...base, entries: [entry('1', today, { taskTypeId: 'p' })] })).toBe(
-      '/reports',
+      '/',
     )
 
-    expect(landingPage({ ...base, entries: [entry('1', today, { deletedAt: 1 })] })).toBe('/')
+    expect(landingPage({ ...base, entries: [entry('1', today, { deletedAt: 1 })] })).toBe(
+      '/new',
+    )
   })
 
-  it('opens the report when the harvest is finished in every field', () => {
+  it('opens the home page when the harvest is finished in every field', () => {
     const finished = [
       entry('1', '2026-11-02', { trees: 20 }),
       entry('2', '2026-11-03', { fieldId: 'b', trees: 4, fieldFinished: true }),
     ]
 
     expect(harvestFinished({ today, entries: finished, fields, taskTypes })).toBe(true)
-    expect(landingPage({ ...base, entries: finished })).toBe('/reports')
+    expect(landingPage({ ...base, entries: finished })).toBe('/')
     expect(harvestFinished({ today, entries: finished.slice(0, 1), fields, taskTypes })).toBe(
       false,
     )
@@ -100,7 +102,7 @@ describe('landingPage', () => {
         entries: [entry('1', today)],
         drafts: { extraction: false, task: true },
       }),
-    ).toBe('/')
+    ).toBe('/new')
   })
 
   it('skips pages the person may not use', () => {
@@ -113,13 +115,14 @@ describe('landingPage', () => {
         drafts: { extraction: true, task: false },
         may: { ...may, enterOil: false },
       }),
-    ).toBe('/reports')
+    ).toBe('/')
 
-    expect(landingPage({ ...base, entries, may: { ...may, seeReports: false } })).toBe('/')
+    // Someone who may not enter work always opens the home page.
+    expect(landingPage({ ...base, entries: [], may: { ...may, enterWork: false } })).toBe('/')
   })
 
-  it('is the task page for a farm with no fields yet', () => {
+  it('is the task form for a farm with no fields yet', () => {
     expect(harvestFinished({ today, entries: [], fields: [], taskTypes })).toBe(false)
-    expect(landingPage({ ...base, fields: [], entries: [] })).toBe('/')
+    expect(landingPage({ ...base, fields: [], entries: [] })).toBe('/new')
   })
 })

@@ -517,7 +517,7 @@ const visibleReports = computed(() =>
 
       <div v-if="!hasData" class="empty-note">
         <p>{{ $t(`reports.empty.${report}`) }}</p>
-        <RouterLink v-if="canLogWork" to="/" class="btn small">
+        <RouterLink v-if="canLogWork" to="/new" class="btn small">
           {{ $t('reports.logHarvest') }}
         </RouterLink>
       </div>

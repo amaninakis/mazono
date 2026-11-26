@@ -1,5 +1,6 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import ExtractionPage from './screens/ExtractionPage.vue'
+import HomePage from './screens/HomePage.vue'
 import JournalPage from './screens/JournalPage.vue'
 import MoneyPage from './screens/MoneyPage.vue'
 import OilPage from './screens/OilPage.vue'
@@ -11,7 +12,8 @@ import TransactionPage from './screens/TransactionPage.vue'
 export const router = createRouter({
   history: createWebHistory(),
   routes: [
-    { path: '/', name: 'today', component: TodayPage },
+    { path: '/', name: 'home', component: HomePage },
+    { path: '/new', name: 'today', component: TodayPage },
     { path: '/entry/:id', name: 'entry', component: TodayPage },
     { path: '/journal', name: 'journal', component: JournalPage },
     { path: '/oil', name: 'oil', component: OilPage },
