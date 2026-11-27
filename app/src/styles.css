@@ -1007,7 +1007,19 @@ fieldset.plain:disabled .btn, fieldset.plain:disabled .input { opacity: 0.7; }
 .ring-text { fill: var(--ink); font-size: 20px; font-weight: 600; text-anchor: middle; dominant-baseline: central; }
 .page.home .home-ring { display: flex; align-items: center; gap: 16px; }
 .home-ring .ring { flex: none; }
-.home-ring-text { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.home-ring-text { display: flex; flex-direction: column; gap: 2px; min-width: 0; flex: 1; }
+/* The ring card opens the task form from anywhere on it (its first link covers the card), and
+   "Αναλυτικά ›" sits at the right of its top line, above that cover. */
+.page.home .home-ring { position: relative; }
+.home-ring-label { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.home-ring-open { color: var(--muted); text-decoration: none; }
+.home-ring-open::after { content: ''; position: absolute; inset: 0; border-radius: var(--radius); }
+.home-ring-label .home-link { position: relative; z-index: 1; flex: none; white-space: nowrap; }
+/* Small phones: a slightly smaller ring leaves room for the top line in one row. */
+@media (max-width: 380px) {
+  .home-ring .ring { width: 80px; height: 80px; }
+  .page.home .home-ring { gap: 12px; }
+}
 
 .home-task-dot { display: inline-grid; place-items: center; flex: none; width: 40px; height: 40px; border-radius: 12px;
   background: color-mix(in srgb, var(--c, var(--accent)) 16%, transparent); color: var(--c, var(--accent)); }

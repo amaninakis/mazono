@@ -56,6 +56,8 @@ const seeOil = computed(() => canDo(farm.value, 'oil', 'see'))
 const editOil = computed(() => canDo(farm.value, 'oil', 'change'))
 const seeMoney = computed(() => canDo(farm.value, 'money', 'see'))
 const seeReports = computed(() => canDo(farm.value, 'reports', 'see'))
+/** "Details ›" to This year's report, for the olives and oil figures. */
+const figuresLink = computed(() => seeOil.value && seeReports.value)
 
 /* ---------- greeting ---------- */
 /**
@@ -124,6 +126,13 @@ const mainTask = computed(() => {
     : undefined
 })
 const mainRing = computed(() => (mainTask.value ? ringFor(mainTask.value) : undefined))
+/**
+ * The ring card is on show: "Details ›" then goes in its top line, which has room, so it
+ * costs no height; otherwise it gets its own row above the two figures.
+ */
+const ringShown = computed(
+  () => seeWork.value && !!mainTask.value && mainRing.value?.unit === 'trees',
+)
 /** Several tasks in season: a small ring each. */
 const smallRings = computed(() =>
   focus.value.kind === 'tasks' && focus.value.tasks.length > 1
@@ -462,11 +471,7 @@ function millName(id: string | undefined) {
 
     <!-- The task that leads: a ring, or a field checklist for work done per field -->
     <template v-if="seeWork && mainTask && mainRing">
-      <RouterLink
-        v-if="mainRing.unit === 'trees'"
-        :to="editWork ? '/new' : '/journal'"
-        class="card home-ring"
-      >
+      <section v-if="mainRing.unit === 'trees'" class="card home-ring">
         <svg class="ring" viewBox="0 0 96 96" width="96" height="96" aria-hidden="true">
           <circle class="ring-track" cx="48" cy="48" r="42" />
           <circle
@@ -483,9 +488,17 @@ function millName(id: string | undefined) {
           </text>
         </svg>
         <span class="home-ring-text">
-          <span class="muted small">{{
-            $t('home.thisYear', { task: taskName(translate, mainTask) })
-          }}</span>
+          <span class="home-ring-label">
+            <!-- The whole card opens the task form (or the journal): this link covers it -->
+            <RouterLink
+              :to="editWork ? '/new' : '/journal'"
+              class="muted small home-ring-open"
+              >{{ $t('home.thisYear', { task: taskName(translate, mainTask) }) }}</RouterLink
+            >
+            <RouterLink v-if="figuresLink" to="/reports" class="home-link">
+              {{ $t('home.details') }} ›
+            </RouterLink>
+          </span>
           <strong class="home-big-line">{{ amountOf(mainRing) }}</strong>
           <span class="muted small">
             <AppIcon name="check" :size="14" class="inline-icon" />
@@ -503,7 +516,7 @@ function millName(id: string | undefined) {
             </template>
           </span>
         </span>
-      </RouterLink>
+      </section>
 
       <section v-else class="card home-checklist">
         <div class="home-checklist-head">
@@ -578,7 +591,7 @@ function millName(id: string | undefined) {
     </section>
 
     <!-- Olives and oil in the harvest; oil in stock and sold the rest of the year -->
-    <div v-if="seeOil && seeReports" class="home-checklist-head home-figures-head">
+    <div v-if="figuresLink && !ringShown" class="home-checklist-head home-figures-head">
       <RouterLink to="/reports" class="home-link">{{ $t('home.moreInfo') }} ›</RouterLink>
     </div>
     <div v-if="seeOil" class="home-tiles">
