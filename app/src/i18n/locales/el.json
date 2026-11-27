@@ -974,6 +974,7 @@
     "estimateNotWeighed": "εκτίμηση, πριν το ζύγισμα",
     "madePlusEstimate": "{{made}} παραδοτέο + ≈\u00a0{{estimated}} εκτίμηση",
     "estimateFromOlives": "εκτίμηση από τις ελιές που δεν ζυγίστηκαν",
-    "estimateLater": "εκτίμηση μετά την πρώτη παραγωγή"
+    "estimateLater": "εκτίμηση μετά την πρώτη παραγωγή",
+    "moreInfo": "Περισσότερες πληροφορίες"
   }
 }
