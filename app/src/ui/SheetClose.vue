@@ -8,6 +8,6 @@ import { sheetBackdrop } from './sheet'
 
 <template>
   <RouterLink :to="sheetBackdrop" class="back-link sheet-close">
-    <AppIcon name="clear" :size="24" /><span class="back-text">{{ $t('common.close') }}</span>
+    <AppIcon name="clear" :size="22" /><span class="back-text">{{ $t('common.close') }}</span>
   </RouterLink>
 </template>

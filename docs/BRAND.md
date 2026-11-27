@@ -126,8 +126,8 @@ header looks the same on every tab (the home page's title is its greeting): a pa
 controls go in a row just below the wave (Journal's year and months, Oil's "+ New production"
 and year). Only a settings section, with its back arrow, lets the logo step aside on phones,
 and shows only the arrow (its word stays for screen readers). An entry form slides up as a
-sheet with rounded top corners over the dimmed page; its own hill holds a × and the title,
-without the logo. The phone's top bar takes the same green.
+sheet with rounded top corners over the dimmed page; its own hill holds a × (in a round patch
+of the hill's green, a shade deeper) and the title, without the logo. The phone's top bar takes the same green.
 
 Ripe olive by day and olive oil by night mark what to press; green marks what is growing.
 Task colours stay the grower's own.

@@ -928,7 +928,8 @@
       "afternoon": "Good afternoon",
       "evening": "Good evening"
     },
-    "greetingName": "{{greeting}}, {{name}}",
+    "greetingAlone": "{{greeting}}!",
+    "greetingName": "{{greeting}}, {{name}}!",
     "nextHarvest": "Next harvest",
     "inDays_one": "in {{count}} day",
     "inDays_other": "in {{count}} days",
