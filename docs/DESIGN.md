@@ -81,7 +81,7 @@ The app is a TypeScript PWA with a local database on the device and a small sync
 - Touch targets are at least 48 px. Steppers must be usable with gloves.
 - Text is never below 12 px, and only three font weights are used (400, 500, 600); hierarchy comes from size.
 - Dialogs work by keyboard too: focus moves in and stays in, Escape closes, focus returns to what opened them.
-- **Drafts**: the Today, production and money forms keep what was typed but not saved on the device (`core/drafts.ts`, `ui/draft.ts`), only the values changed from how the form started. Coming back shows "Continuing your unsaved entry" with *Start over*; leaving shows a gentle note that it was kept; saving clears it. Drafts older than 7 days are dropped.
+- **Drafts**: the work, production and money forms keep what was typed but not saved on the device (`core/drafts.ts`, `ui/draft.ts`), only the values changed from how the form started. Coming back shows "Continuing your unsaved entry" with *Start over*; leaving shows a gentle note that it was kept; saving clears it. Drafts older than 7 days are dropped.
 - **Checking a box when you leave it** (forms with rules: account, new password, adding a person, dates): never while typing; the message goes as soon as it is corrected; saving checks every box and moves to the first problem (`ui/fieldChecks.ts`).
 - **Settings in sections**: `/settings` shows the language and a list of sections with a one-line summary each (Account, People, Fields, Units, Mill and oil, Money, Task types, General, Data); `/settings/<section>` shows one section with a back link. On a computer the list stays on the left. Archiving in lists is an icon on phones, icon and word on wider screens.
 - **Swipe between pages**: swiping sideways on a page goes to the neighbouring tab of the bottom menu (left: the next one), from any page including the ones opened from a tab (a form's unsaved changes are kept as a draft, as always). The page follows the finger and the neighbouring page, drawn live but only to look at, comes in beside it; let go past a third of the width, or flick, and it opens, otherwise it springs back. Past the first and last tab it only stretches. Pages sit edge to edge and their green hills join into one landscape, while the small logo and the settings gear stay put at the top right of every page (the home page too) and the titles slide beneath them. On a phone, a tab tapped in the bottom menu slides in the same way from its side. Anything on the page that moves sideways itself (dates, months, years, scrolling rows and tables), text boxes and open dialogs keep their own gestures.
@@ -91,6 +91,7 @@ The app is a TypeScript PWA with a local database on the device and a small sync
 - **Icons**: [Lucide](https://lucide.dev) line icons (`ui/AppIcon.vue`, `ui/icons.ts`) in the text colour, so the app looks the same on every phone. Nuxt Icon's Vite plugin (`@nuxt/icon/vite`) bundles every icon the app uses into the build, so they work offline and never come from the internet. Icons Lucide lacks (the olive, the sack) are drawn in the same style in `src/assets/icons/` (prefix `mazono:`).
   - **Task types** keep the emoji they were saved with (database, backups, sync), and the app draws each as a line icon (`core/taskIcons.ts`, `ui/TaskIcon.vue`): in the task's colour on the task page and the journal, white on the selected chip, the text colour at night. An emoji without an icon is shown as it is. In Settings → Task types the grower picks one of the ten icons from a grid.
   - Emoji stay only in the records board.
+- **Entry forms as sheets**: the forms that add or change something (work at "/new" and "/entry/…", a production at "/oil/…", a cost, sale or income at "/money/…") slide up as a sheet over the page they were opened from (`ui/PageSheet.vue`, `ui/sheet.ts`). That page stays drawn above it, dimmed and out of reach, so it is plain that the form sits on top of the pages. The form closes back to that page with the × at the top left (`ui/SheetClose.vue`), *Cancel*, a tap on the dimmed strip, or by dragging it down by its top; saving or deleting also goes back to it. A form opened directly (a link, a reload) sits over its own tab: the home page for work, Oil, Money. Its Save button stays at the bottom of the sheet. Pages don't swipe sideways while a sheet is open.
 - **Menu**: on phones a bottom bar with Home, Oil, + (raised, in the middle), Money and Reports; the journal (History) is opened from the home page's week and latest work, Settings from its gear. Swiping moves between these four tabs.
 - **Computer and tablet** (768 px and wider): the bottom bar becomes a side menu with the logo, "Καταγραφή εργασίας", every page and Settings at the bottom; forms stay a 640 px column; from 1024 px Money, Oil and History put the summary or calendar on the left and the list on the right.
 - Deleting work, a production, a move or a money entry is undone from the toast, not confirmed first (fast and forgiving). A question first only for what cannot be undone: deleting an account or a grove, removing a person, or a change that would leave oil missing.
@@ -124,7 +125,7 @@ Both need HTTPS, because browsers only allow offline mode and "install app" over
 
 ### People and permissions — v0.5b
 
-- **Roles**: in each grove a person is an **administrator** (sees and changes everything, manages people) or a **user** with a level per area: *no*, *see* or *change*. Areas: **Work** (Today and the Journal), **Oil**, **Money**, **Reports** (see only) and **Settings**. Ready-made sets: **Worker** (changes work, nothing else), **Family** (changes work and oil, sees money, reports and settings), **Accountant** (sees oil, money and reports, changes nothing). The rules live in `src/core/access.ts`, shared by the app and the server.
+- **Roles**: in each grove a person is an **administrator** (sees and changes everything, manages people) or a **user** with a level per area: *no*, *see* or *change*. Areas: **Work** (the task form and the Journal), **Oil**, **Money**, **Reports** (see only) and **Settings**. Ready-made sets: **Worker** (changes work, nothing else), **Family** (changes work and oil, sees money, reports and settings), **Accountant** (sees oil, money and reports, changes nothing). The rules live in `src/core/access.ts`, shared by the app and the server.
 - **The server enforces them**: a sync only sends the tables a person may see (`readableTables`), so data they may not see never reaches their phone, and it refuses changes to tables they may not change (`writableTables`) by sending its own version back. The app hides pages and buttons to match, removes tables that are no longer allowed, and reloads the grove when someone's access changes.
 - **Adding someone** (Settings → People, administrators only): a username and a **temporary password**, typed by the administrator or suggested (two Greeklish words and a number, e.g. `elia-ladi-27`). The screen then shows what to hand over. At the first sign-in they must choose their own password before anything syncs. An administrator can give a new temporary password later (this signs them out everywhere), change their access, or remove them from the grove; what they logged stays.
 - **Safety**: the installation owner always stays an administrator, and a grove always keeps at least one administrator. Only the owner can add a person who already has an account in another grove (they keep their own password), and only the owner can create someone who **starts their own grove** as its administrator. A person can be in several groves.
@@ -187,7 +188,7 @@ The first tab ("/", **Αρχική** / **Home**): the season at a glance, so the
 
 
 The trees box starts with the trees of a usual day of that work: the average trees per work day for the task (tasks counted together count together, and a day's fields add up), from this farming year's days, or all earlier years' before the first one, and 0 with no days at all. It is never more than the trees still left in the chosen field (if the field has a tree count). It follows the field, task and date until the user changes the number. A × button beside the box (shown above 0) sets it to 0 without opening the keyboard.
-Opened from the raised **+** in the middle of the phone's bottom bar ("Καταγραφή εργασίας" under the logo on a computer), at "/new" (an entry being changed at "/entry/…"). It slides up as a sheet over the page it was opened from, which stays drawn dimmed above it, so it is plain that the form sits on top of the pages (`ui/PageSheet.vue`). It closes back to that page with the × at the top left, a tap on the dimmed strip, or by dragging it down by its top; opened directly, it sits over the home page. Pages don't swipe sideways while it is open. Everything for one entry sits on a single scrollable page with a sticky **Save** button.
+Opened from the raised **+** in the middle of the phone's bottom bar ("Καταγραφή εργασίας" under the logo on a computer), at "/new" (an entry being changed at "/entry/…"), as a sheet over the page it was opened from (see *Entry forms as sheets*); after changing an entry from the journal it goes back to that entry's day. Everything for one entry sits on a single scrollable page with a sticky **Save** button.
 
 **Shared top area**
 
@@ -217,9 +218,11 @@ After saving, a confirmation shows units per tree for the day, and for the seaso
 An installed app always starts at its home address, also after the phone closed it in the background. So when it opens at "/", the first page is chosen once from today's state (`core/landing.ts`), skipping pages the person may not use:
 
 1. a new production being entered (unsaved draft): back to that form, values restored;
-2. a new task being entered (unsaved draft): the task page;
+2. a new task being entered (unsaved draft): the task form;
 3. work already entered for today, or the harvest finished in every field this farming year: the home page;
-4. otherwise: the task page.
+4. otherwise: the task form.
+
+A form the app opens on slides up over the home page.
 
 Someone who may not enter work always opens on the home page.
 
@@ -260,7 +263,7 @@ Here n is the number of units of type u in entry i, and w is that unit's weight.
 - Harvest days are pre-ticked when they are from the same season, on or before the extraction date and on or after the previous extraction, plus leftovers of days already partly milled. "Part" sets how many units of a day went into this batch.
 - An extraction is one record holding its charges, storage and allocations (`Extraction` in `app/src/core/types.ts`). Stock is never stored as a number: it is calculated from extractions (oil in) and stock movements (transfers, own use; sales in v0.3) in `stockLevels()`.
 - After saving: yield, net oil, kg of olives per unit (single unit type) and kg of oil per tree.
-- The Oil page opens with **+ New production** and the season year (« 2026 ») side by side below the header, then shows season totals, the extractions, an estimate of oil per field (≈, with kg per tree in the field) and the stock table.
+- The Oil page opens with **+ New production** (the production form slides up over it) and the season year (« 2026 ») side by side below the header, then shows season totals, the extractions, an estimate of oil per field (≈, with kg per tree in the field) and the stock table.
 
 ## Season overview and oil stock — v0.2
 
@@ -290,7 +293,7 @@ Totals per **calendar year**: income, expenses, net result, and the value of rem
 - Tax estimate = net result × tax % when the result is positive, counting only the sales, income and expenses marked "counts towards the tax estimate" (a checkbox shown when a tax % is set; on by default). A new entry starts with the choice last used for the same buyer, business or source, else for the same category (`taxChoiceFor`). Entries left out are marked "not for tax" in the list, and the tax line says what amount it was worked out on. Remaining stock is valued at the price of the most recent sale.
 - Money amounts use the date and number format setting: "1.234,50 €" in Greek style, "€1,234.50" otherwise.
 - Receipt photos are left for later (v1.0+).
-- After saving an entry, the Money page opens on the calendar year of its date (the Oil page on the season of an extraction), and the save message names it, so past entries never seem to disappear.
+- After saving an entry the form closes back to the page beneath; the Money page is then on the calendar year of its date (the Oil page on the season of an extraction), and the save message names it, so past entries never seem to disappear.
 
 ## Reports — v0.4
 
@@ -331,15 +334,15 @@ These are planned but not yet scheduled in detail. Open an issue before starting
 
 **Daily reminder**
 
-- Once a task has been logged in the current season, a notification at 16:00 on any day with no entry: "Nothing logged today — what did you do?". Tapping it opens Today.
+- Once a task has been logged in the current season, a notification at 16:00 on any day with no entry: "Nothing logged today — what did you do?". Tapping it opens the task form.
 - The time can be changed, or reminders turned off, in Settings.
-- The user can mark a task as "ended for this season" (on Today or from the reminder). When every started task has ended, reminders stop until a new task is logged.
+- The user can mark a task as "ended for this season" (on the task form or from the reminder). When every started task has ended, reminders stop until a new task is logged.
 - Limitation: a web app gets scheduled notifications only through web push from the server (on iPhone only when added to the home screen, iOS 16.4+). Reminders therefore arrive with the sync server; the native apps can schedule them on the phone itself.
 
 **Location-aware default field**
 
 - Each field can store its centre: "Use my current location" while standing in it, or a pin on a map (OpenStreetMap).
-- On Today, if the phone is within about 300 m of a field's centre, that field is preselected, ahead of "last field worked". If several are close, the nearest wins.
+- On the task form, if the phone is within about 300 m of a field's centre, that field is preselected, ahead of "last field worked". If several are close, the nearest wins.
 - Location is used only while the app is open, only with permission, and never leaves the farm's own data.
 
 **Equipment log**
@@ -360,7 +363,7 @@ These are planned but not yet scheduled in detail. Open an issue before starting
 - **Tree number per field**: numbering restarts at 1 in every field ("Monastiri #12"), which is easier to remember than one farm-wide number. Only trees that need it get a number; the field's tree count stays the main figure.
 - **Marking the tree in the field**, whichever suits the grower: a number sprayed on the trunk, a numbered tag nailed to the bark, or an NFC tag. The NFC tag stores a link to that tree, so scanning it with any phone opens the tree in the app (iPhones read link tags natively; Android too). A printed weatherproof QR code is a cheaper alternative.
 - **Marks**: needs pruning, sick / pests, did not bear, replant, or a custom note, with an optional photo. Added in two taps from the harvest screen ("Mark a tree" → number → mark).
-- **Follow-up**: when pruning that field, Today lists the marked trees ("3 trees marked: #4, #12, #18") and ticking them off closes the marks. Each tree keeps its own history.
+- **Follow-up**: when pruning that field, the task form lists the marked trees ("3 trees marked: #4, #12, #18") and ticking them off closes the marks. Each tree keeps its own history.
 - Data: Tree (farm, field, number unique per field, optional NFC tag id, location, notes) and Tree mark (tree, mark type or task type, note, photo, created, done).
 
 ## Decisions
@@ -397,4 +400,5 @@ These are planned but not yet scheduled in detail. Open an issue before starting
 4. **v0.4 — Reports** ✅: the four reports above, CSV export.
 5. **v0.5a — Server and sync** ✅: server in the Docker image, administrator account, sign-in, offline sync between devices, daily backups.
 6. **v0.5b — Users** ✅: administrators and users; per page, a user can see it or also change it; ready-made sets (worker, family, accountant); a temporary first password (typed by the admin or suggested) that must be changed at first sign-in; data a user may not see never reaches their phone; the installation owner can create new groves with their own administrator; one person in several groves; the last administrator cannot be removed; entries show who logged them.
-7. **v1.0+**: Android/iOS builds (Capacitor), weather integration, daily reminders, location-aware default field, equipment log, tasks per tree (tree numbers and NFC tags), Labour reports, spreadsheet import, receipt photos, more languages.
+7. **v0.29–0.31 — Home page** ✅: a home page with the season at a glance (rings, field checklist, harvest countdown, oil in stock and sold), this week with past weeks a drag away, and the latest work; a raised + in the middle of the phone's menu; the entry forms slide up as sheets over the page they came from; logo and settings gear at the top right of every phone page.
+8. **v1.0+**: Android/iOS builds (Capacitor), weather integration, daily reminders, location-aware default field, equipment log, tasks per tree (tree numbers and NFC tags), Labour reports, spreadsheet import, receipt photos, more languages.

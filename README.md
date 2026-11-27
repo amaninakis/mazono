@@ -17,12 +17,23 @@ Available in **English** and **Ελληνικά**. Works offline on your phone a
 Work is grouped by **farming year**: from the spring work (1 March) to the end of the harvest and
 the last mill visit (February), named by its year. Money is counted per calendar year.
 
+### Home page
+
+- **The season at a glance**: in the harvest, a ring of trees harvested with fields finished and
+  where to carry on, plus the olives and oil so far. The rest of the year it shows the tasks in
+  season (pruning, fertilizer as small rings; weed whacking as a checklist of fields), a countdown
+  to the next harvest, and the oil in stock and sold this year.
+- **This week** with a dot for each kind of work done; drag it sideways to look at earlier weeks.
+- **The latest work and mill visits**, one tap from changing them.
+- On a phone the menu is Home · Oil · **+** · Money · Reports, with the journal one tap away from
+  the home page and Settings behind the gear at the top right. On a computer, a side menu.
+
 ### Field work
 
 - **Quick setup**: language, collection units (sack, half sack, crate, pallet bin… or your own,
   with an optional approximate weight) and your fields with tree counts, in the order you usually
   work them.
-- **Today screen**: the task for the season is preselected (harvest, pruning, fertilizer,
+- **Log work with the +**: the form slides up over the page you were on. The task for the season is preselected (harvest, pruning, fertilizer,
   weed whacking, or your own task types), and so is the field you worked last while it still has
   trees left. Each field shows how many trees are left; finished fields go to the end.
 - **Harvest**: trees harvested and the units collected (mix several units, half steps). After saving
@@ -31,7 +42,8 @@ the last mill visit (February), named by its year. Money is counted per calendar
   order you worked the fields in earlier years.
 - **Journal**: day by day, with a month calendar showing a coloured dot for each task type.
   Tap an entry to change it; delete with undo.
-- Swipe dates, months and years to step through them, and swipe between pages.
+- Swipe dates, months and years to step through them, and swipe between pages. Forms slide up
+  over the page you were on and close with ×, a tap above them, or a drag down.
 
 ### Mill and oil
 
@@ -197,8 +209,8 @@ app/                 the web app (Vue 3 + TypeScript + Vite)
   src/core/          business logic, no UI (seasons, field progress, defaults) + tests
   src/db/            local database (Dexie / IndexedDB), multi-farm from the start
   src/i18n/locales/  translation files (en.json, el.json)
-  src/screens/       Setup, Today, Journal, Settings (Vue single-file components)
-  src/ui/            shared components (Stepper, Toggle, Modal, Toast) and farm state
+  src/screens/       Home, task form, Journal, Oil, Money, Reports, Settings (Vue single-file components)
+  src/ui/            shared components (Stepper, Toggle, Modal, Toast, page swiping, sheets) and farm state
   src/sync/          sign-in and sync with the server (api, sync engine, account state)
 app/server/          the server: Fastify + SQLite (Node's built-in), accounts, sync, backups
 deploy/Caddyfile     optional HTTPS front for a public server (docker compose --profile https)
