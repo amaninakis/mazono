@@ -55,6 +55,7 @@ const editWork = computed(() => canDo(farm.value, 'work', 'change'))
 const seeOil = computed(() => canDo(farm.value, 'oil', 'see'))
 const editOil = computed(() => canDo(farm.value, 'oil', 'change'))
 const seeMoney = computed(() => canDo(farm.value, 'money', 'see'))
+const seeReports = computed(() => canDo(farm.value, 'reports', 'see'))
 
 /* ---------- greeting ---------- */
 /**
@@ -577,6 +578,9 @@ function millName(id: string | undefined) {
     </section>
 
     <!-- Olives and oil in the harvest; oil in stock and sold the rest of the year -->
+    <div v-if="seeOil && seeReports" class="home-checklist-head home-figures-head">
+      <RouterLink to="/reports" class="home-link">{{ $t('home.moreInfo') }} ›</RouterLink>
+    </div>
     <div v-if="seeOil" class="home-tiles">
       <template v-if="inHarvest">
         <RouterLink to="/oil" class="card home-tile">
