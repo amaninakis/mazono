@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import type { TaskType } from '../core/types'
 import { useTranslation } from 'i18next-vue'
-import { computed, ref } from 'vue'
+import { computed, nextTick, onBeforeUnmount, onMounted, ref, useTemplateRef } from 'vue'
 import { RouterLink, useRouter } from 'vue-router'
 import {
   addDays,
@@ -57,12 +57,39 @@ const editOil = computed(() => canDo(farm.value, 'oil', 'change'))
 const seeMoney = computed(() => canDo(farm.value, 'money', 'see'))
 
 /* ---------- greeting ---------- */
+/**
+ * "Καλημέρα!" as the page's title, with the person's name ("Καλημέρα, Νίκο!") only when it
+ * fits beside the logo and gear in full; otherwise the name is left out rather than cut.
+ */
+const showName = ref(true)
 const greeting = computed(() => {
   const hello = translate(`home.greeting.${greetingTime(new Date().getHours())}`)
   const name = greetingName(account.user?.username)
 
-  return name ? translate('home.greetingName', { greeting: hello, name }) : hello
+  return name && showName.value
+    ? translate('home.greetingName', { greeting: hello, name })
+    : translate('home.greetingAlone', { greeting: hello })
 })
+const head = useTemplateRef<HTMLElement>('head')
+const title = useTemplateRef<HTMLElement>('title')
+/** Try the name, and drop it if the title would end in "…". */
+async function fitGreeting() {
+  showName.value = true
+  await nextTick()
+  if (title.value && title.value.scrollWidth > title.value.clientWidth) {
+    showName.value = false
+  }
+}
+let headObserver: ResizeObserver | undefined
+onMounted(() => {
+  void fitGreeting()
+  // The header's width changes only with the screen (not with the title), so this settles.
+  headObserver = new ResizeObserver(() => void fitGreeting())
+  if (head.value) {
+    headObserver.observe(head.value)
+  }
+})
+onBeforeUnmount(() => headObserver?.disconnect())
 const dateLine = computed(() =>
   new Intl.DateTimeFormat(formatLocale.value, {
     weekday: 'long',
@@ -343,8 +370,8 @@ function millName(id: string | undefined) {
 
 <template>
   <main class="page home">
-    <header class="page-head home-head">
-      <h1>{{ greeting }}</h1>
+    <header ref="head" class="page-head home-head">
+      <h1 ref="title">{{ greeting }}</h1>
     </header>
 
     <p v-if="!inHarvest" class="home-date muted">{{ dateLine }}</p>

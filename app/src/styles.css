@@ -124,7 +124,16 @@ html { scroll-padding-top: calc(var(--page-top) + var(--head-row) + 22px); }
 .sheet .save-bar { position: sticky; left: auto; right: auto; bottom: 0; margin: auto -14px 0; padding-bottom: calc(10px + env(safe-area-inset-bottom)); }
 .sheet .page > .save-bar ~ * { position: relative; }
 
-.sheet .page > .page-head .sheet-close { min-width: var(--tap); margin-left: -12px; justify-content: center; }
+.sheet .page > .page-head .sheet-close { width: var(--tap); min-width: var(--tap); height: var(--tap); margin-left: -7px; justify-content: center; }
+/* The close button: a round patch of the hill's own green, a shade deeper (lighter by night),
+   so it reads as a button and still belongs to the header; the tap target stays 48 px. */
+.sheet-close .app-icon { box-sizing: content-box; padding: 8px; border-radius: 50%; color: var(--accent);
+  background: color-mix(in srgb, var(--hill) 88%, var(--ink) 12%); }
+.sheet-close:hover .app-icon, .sheet-close:focus-visible .app-icon { background: color-mix(in srgb, var(--hill) 80%, var(--ink) 20%); }
+@media (prefers-color-scheme: dark) {
+  .sheet-close .app-icon { background: color-mix(in srgb, var(--hill) 84%, #fff 16%); }
+  .sheet-close:hover .app-icon, .sheet-close:focus-visible .app-icon { background: color-mix(in srgb, var(--hill) 76%, #fff 24%); }
+}
 .sheet-enter-active, .sheet-leave-active { transition: opacity 0.28s ease-out; }
 .sheet-enter-active .sheet, .sheet-leave-active .sheet { transition: transform 0.28s cubic-bezier(0.2, 0.8, 0.2, 1); }
 .sheet-leave-active .sheet { transition-duration: 0.2s; transition-timing-function: ease-in; }

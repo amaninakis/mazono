@@ -925,10 +925,11 @@
   "home": {
     "greeting": {
       "morning": "Καλημέρα",
-      "afternoon": "Καλό απόγευμα",
+      "afternoon": "Καλησπέρα",
       "evening": "Καλησπέρα"
     },
-    "greetingName": "{{greeting}}, {{name}}",
+    "greetingAlone": "{{greeting}}!",
+    "greetingName": "{{greeting}}, {{name}}!",
     "nextHarvest": "Επόμενο μάζεμα",
     "inDays_one": "σε {{count}} μέρα",
     "inDays_other": "σε {{count}} μέρες",
