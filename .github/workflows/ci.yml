@@ -28,20 +28,14 @@ jobs:
       - run: npm test
       - run: npm run build
 
+  # Runs alongside the tests: builds the real image for both platforms and starts it.
   docker:
-    needs: test
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - uses: docker/setup-qemu-action@v3
       - uses: docker/setup-buildx-action@v3
-      - uses: docker/login-action@v3
-        if: github.event_name == 'push'
-        with:
-          registry: ghcr.io
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
-      # Start the image and check that it answers, before publishing it
+      # Start the image and check that it answers
       - uses: docker/build-push-action@v6
         with:
           context: .
@@ -60,10 +54,33 @@ jobs:
           done
           docker logs mazono-check
           exit 1
+      # Also builds for arm64 (e.g. a Raspberry Pi), so a pull request shows it would publish
+      - uses: docker/build-push-action@v6
+        with:
+          context: .
+          platforms: linux/amd64,linux/arm64
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+  # Only for main, once the tests and the image check have passed: publishes the image,
+  # rebuilt from the cache the image check left.
+  publish:
+    if: github.event_name == 'push'
+    needs: [test, docker]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: docker/setup-qemu-action@v3
+      - uses: docker/setup-buildx-action@v3
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
       - uses: docker/build-push-action@v6
         with:
           context: .
           cache-from: type=gha
           platforms: linux/amd64,linux/arm64
-          push: ${{ github.event_name == 'push' }}
+          push: true
           tags: ghcr.io/${{ github.repository }}:latest

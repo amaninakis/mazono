@@ -1,5 +1,8 @@
-# Build the web app and check the server code
-FROM node:22-slim AS build
+# Build the web app and check the server code. This stage runs on the machine doing the build
+# (BUILDPLATFORM), once for every target: its output (the web app, the server's code and its
+# packages, none of which hold machine code) is the same on amd64 and arm64. Building it under
+# an arm64 emulator would give the same files, only many times slower.
+FROM --platform=$BUILDPLATFORM node:22-slim AS build
 WORKDIR /src/app
 COPY app/package.json app/package-lock.json ./
 RUN npm ci --ignore-scripts
