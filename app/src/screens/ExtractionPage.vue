@@ -27,6 +27,8 @@ import { chargeName, locationName, useFarm } from '../ui/farm'
 import NumberStepper from '../ui/NumberStepper.vue'
 import { oilPeriod } from '../ui/periods'
 import { useSaving } from '../ui/saving'
+import { sheetBackdrop } from '../ui/sheet'
+import SheetClose from '../ui/SheetClose.vue'
 import ShortfallModal from '../ui/ShortfallModal.vue'
 import { showToast } from '../ui/toast'
 
@@ -536,7 +538,7 @@ async function saveExtraction(confirmed = false) {
     title: editing ? translate('extraction.updated') : translate('extraction.saved'),
     lines,
   })
-  void router.push('/oil')
+  void router.push(sheetBackdrop.value)
 }
 
 async function remove(confirmed = false) {
@@ -560,13 +562,14 @@ async function remove(confirmed = false) {
       run: () => void repo.restore('extractions', editing.id),
     },
   })
-  void router.push('/oil')
+  void router.push(sheetBackdrop.value)
 }
 </script>
 
 <template>
   <main class="page extraction">
     <header class="page-head">
+      <SheetClose />
       <h1>{{ editing ? $t('extraction.editTitle') : $t('extraction.title') }}</h1>
     </header>
     <DraftNotice
@@ -714,7 +717,7 @@ async function remove(confirmed = false) {
     <p v-if="error" class="error">{{ error }}</p>
 
     <div class="save-bar">
-      <button type="button" class="btn ghost" @click="router.push('/oil')">
+      <button type="button" class="btn ghost" @click="router.push(sheetBackdrop)">
         {{ $t('common.cancel') }}
       </button>
       <button type="button" class="btn primary big" :disabled="saving" @click="save">

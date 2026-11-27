@@ -23,7 +23,7 @@ import { type FarmData, provideFarm } from './ui/farm'
 import { useLiveQuery } from './ui/live'
 import PageSheet from './ui/PageSheet.vue'
 import PageSwiper from './ui/PageSwiper.vue'
-import { isSheetPath, sheetBackdrop } from './ui/sheet'
+import { isSheetPath, sheetBackdrop, sheetParent } from './ui/sheet'
 
 /** The grove data on this phone (picked before the app started). */
 const db = localDb()
@@ -37,11 +37,18 @@ const router = useRouter()
  * app opens on it), which stays drawn beneath it, dimmed and out of reach.
  */
 const sheetOpen = computed(() => isSheetPath(route.path))
+let routesSeen = 0
 watch(
   () => route.fullPath,
   (path) => {
+    if (route.matched.length === 0) {
+      return // the router has not read the address yet
+    }
+    routesSeen += 1
     if (!isSheetPath(route.path)) {
       sheetBackdrop.value = path
+    } else if (routesSeen === 1) {
+      sheetBackdrop.value = sheetParent(route.path) // opened directly: over its own tab
     }
   },
   { immediate: true },

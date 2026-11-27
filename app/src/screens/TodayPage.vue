@@ -33,6 +33,7 @@ import NumberStepper from '../ui/NumberStepper.vue'
 import { useSaving } from '../ui/saving'
 import ScrollRow from '../ui/ScrollRow.vue'
 import { sheetBackdrop } from '../ui/sheet'
+import SheetClose from '../ui/SheetClose.vue'
 import { slideIn } from '../ui/slide'
 import TaskIcon from '../ui/TaskIcon.vue'
 import { showToast } from '../ui/toast'
@@ -530,11 +531,7 @@ const canEditSettings = computed(() => canDo(farm.value, 'settings', 'change'))
 <template>
   <main class="page today">
     <header class="page-head">
-      <RouterLink :to="sheetBackdrop" class="back-link sheet-close">
-        <AppIcon name="clear" :size="24" /><span class="back-text">{{
-          $t('common.close')
-        }}</span>
-      </RouterLink>
+      <SheetClose />
       <h1>{{ editing ? $t('today.editTitle') : $t('today.title') }}</h1>
     </header>
     <DraftNotice

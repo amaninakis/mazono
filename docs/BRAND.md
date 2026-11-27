@@ -121,11 +121,13 @@ Every page (not the first-start screens) opens with a green hill: the page title
 the small logo and the settings gear at the right end of the same row on phones, and the wavy lower edge falls in
 the space before the content, so nothing covers it. The title row is the same height on every
 page (48 px), so the hill and its wave sit at exactly the same place on every tab; a title too
-long for the row ends in "…". The row holds only the title and the logo, so the header looks
-the same on every tab: a page's own controls go in a row just below the wave (Journal's year
-and months, Oil's "+ New production" and year). Only a settings section, with its back arrow,
-lets the logo step aside on phones, and shows only the arrow (its word stays for screen
-readers). The phone's top bar takes the same green.
+long for the row ends in "…". The row holds only the title, the logo and the gear, so the
+header looks the same on every tab (the home page's title is its greeting): a page's own
+controls go in a row just below the wave (Journal's year and months, Oil's "+ New production"
+and year). Only a settings section, with its back arrow, lets the logo step aside on phones,
+and shows only the arrow (its word stays for screen readers). An entry form slides up as a
+sheet with rounded top corners over the dimmed page; its own hill holds a × and the title,
+without the logo. The phone's top bar takes the same green.
 
 Ripe olive by day and olive oil by night mark what to press; green marks what is growing.
 Task colours stay the grower's own.

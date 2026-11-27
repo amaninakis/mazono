@@ -27,6 +27,8 @@ import NameInput from '../ui/NameInput.vue'
 import NumberStepper from '../ui/NumberStepper.vue'
 import { moneyPeriod } from '../ui/periods'
 import { useSaving } from '../ui/saving'
+import { sheetBackdrop } from '../ui/sheet'
+import SheetClose from '../ui/SheetClose.vue'
 import { showToast } from '../ui/toast'
 
 const { t: translate } = useTranslation()
@@ -419,7 +421,7 @@ async function saveTransaction() {
   })
   draft.clear()
   showPeriodOf(date.value, translate('tx.saved'))
-  void router.push('/money')
+  void router.push(sheetBackdrop.value)
 }
 
 /** Open the Money page on the calendar year of this entry, and say so. */
@@ -443,13 +445,14 @@ async function remove() {
       run: () => void repo.restore('transactions', editing.id),
     },
   })
-  void router.push('/money')
+  void router.push(sheetBackdrop.value)
 }
 </script>
 
 <template>
   <main class="page transaction">
     <header class="page-head">
+      <SheetClose />
       <h1>{{ title }}</h1>
     </header>
     <DraftNotice
@@ -602,7 +605,7 @@ async function remove() {
     <p v-if="error" class="error">{{ error }}</p>
 
     <div class="save-bar">
-      <button type="button" class="btn ghost" @click="router.push('/money')">
+      <button type="button" class="btn ghost" @click="router.push(sheetBackdrop)">
         {{ $t('common.cancel') }}
       </button>
       <button type="button" class="btn primary big" :disabled="saving" @click="save">
