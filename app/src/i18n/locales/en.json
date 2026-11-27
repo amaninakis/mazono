@@ -975,6 +975,7 @@
     "madePlusEstimate": "{{made}} delivered + ≈\u00a0{{estimated}} estimated",
     "estimateFromOlives": "estimate from olives not weighed yet",
     "estimateLater": "estimate after the first production",
-    "moreInfo": "More information"
+    "moreInfo": "More information",
+    "details": "Details"
   }
 }
