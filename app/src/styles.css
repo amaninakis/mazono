@@ -119,21 +119,22 @@ html { scroll-padding-top: calc(var(--page-top) + var(--head-row) + 22px); }
   overflow-y: auto; border-radius: 20px 20px 0 0; background: var(--bg); box-shadow: 0 -8px 30px rgba(20, 12, 18, 0.25); }
 .sheet-handle { position: absolute; top: 6px; left: 50%; z-index: 5; width: 40px; height: 4px; margin-left: -20px; border-radius: 2px; background: var(--muted); opacity: 0.5; }
 .sheet .page { --page-top: 0px; display: flex; flex-direction: column; min-height: 100%; padding-top: 0; padding-bottom: 0; }
-.sheet .page > :first-child { padding-top: 10px; padding-right: 0; }
+/* Pop-up forms (sheets) have no hill and no logo: those belong to the main pages. The title
+   row stays at the top on the sheet's own ground, with a thin line under it once the form
+   scrolls beneath. */
+.sheet .page > :first-child { padding-top: 10px; padding-right: 0; margin-bottom: 14px; }
+.sheet .page > :first-child::before { height: calc(var(--head-row) + 10px); background: var(--bg);
+  border-bottom: 1px solid var(--line); -webkit-mask: none; mask: none; }
 .sheet .sheet-handle, .sheet .page > :first-child { touch-action: none; }
 .sheet .save-bar { position: sticky; left: auto; right: auto; bottom: 0; margin: auto -14px 0; padding-bottom: calc(10px + env(safe-area-inset-bottom)); }
 .sheet .page > .save-bar ~ * { position: relative; }
 
 .sheet .page > .page-head .sheet-close { width: var(--tap); min-width: var(--tap); height: var(--tap); margin-left: -7px; justify-content: center; }
-/* The close button: a round patch of the hill's own green, a shade deeper (lighter by night),
-   so it reads as a button and still belongs to the header; the tap target stays 48 px. */
+/* The close button: a round, quiet patch a shade off the sheet's ground, so it reads as a
+   button; the tap target stays 48 px. */
 .sheet-close .app-icon { box-sizing: content-box; padding: 8px; border-radius: 50%; color: var(--accent);
-  background: color-mix(in srgb, var(--hill) 88%, var(--ink) 12%); }
-.sheet-close:hover .app-icon, .sheet-close:focus-visible .app-icon { background: color-mix(in srgb, var(--hill) 80%, var(--ink) 20%); }
-@media (prefers-color-scheme: dark) {
-  .sheet-close .app-icon { background: color-mix(in srgb, var(--hill) 84%, #fff 16%); }
-  .sheet-close:hover .app-icon, .sheet-close:focus-visible .app-icon { background: color-mix(in srgb, var(--hill) 76%, #fff 24%); }
-}
+  background: color-mix(in srgb, var(--ink) 7%, var(--bg)); }
+.sheet-close:hover .app-icon, .sheet-close:focus-visible .app-icon { background: color-mix(in srgb, var(--ink) 13%, var(--bg)); }
 .sheet-enter-active, .sheet-leave-active { transition: opacity 0.28s ease-out; }
 .sheet-enter-active .sheet, .sheet-leave-active .sheet { transition: transform 0.28s cubic-bezier(0.2, 0.8, 0.2, 1); }
 .sheet-leave-active .sheet { transition-duration: 0.2s; transition-timing-function: ease-in; }
