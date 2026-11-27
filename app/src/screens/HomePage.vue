@@ -1,9 +1,16 @@
 <script setup lang="ts">
 import type { TaskType } from '../core/types'
 import { useTranslation } from 'i18next-vue'
-import { computed } from 'vue'
+import { computed, ref } from 'vue'
 import { RouterLink, useRouter } from 'vue-router'
-import { monthGrid, parseISODate, seasonLabel, seasonOf, todayISO } from '../core/dates'
+import {
+  addDays,
+  monthGrid,
+  parseISODate,
+  seasonLabel,
+  seasonOf,
+  todayISO,
+} from '../core/dates'
 import { formatMoney, formatNumber, formatYield } from '../core/format'
 import {
   greetingName,
@@ -22,10 +29,10 @@ import { yearSummary } from '../core/yearReport'
 import { formatLocale } from '../i18n'
 import { account } from '../sync/account'
 import AppIcon from '../ui/AppIcon.vue'
-import AppLogo from '../ui/AppLogo.vue'
 import { entryDetails } from '../ui/entryDetails'
 import { canDo, taskName, useFarm } from '../ui/farm'
 import OilDrop from '../ui/OilDrop.vue'
+import SwipeTrack from '../ui/SwipeTrack.vue'
 import TaskIcon from '../ui/TaskIcon.vue'
 
 /**
@@ -261,8 +268,10 @@ function dotsOn(date: string) {
 
   return colours.slice(0, 3)
 }
-const week = computed(() =>
-  weekDays(today).map((date) => ({
+/** Which week the strip shows: 0 this week, -1 last week, and so on (never ahead). */
+const weekShift = ref(0)
+function weekAt(shift: number) {
+  return weekDays(addDays(today, shift * 7)).map((date) => ({
     date,
     day: Number(date.slice(8)),
     weekday: new Intl.DateTimeFormat(formatLocale.value, { weekday: 'short' }).format(
@@ -270,8 +279,24 @@ const week = computed(() =>
     ),
     dots: dotsOn(date),
     future: date > today,
-  })),
-)
+  }))
+}
+const week = computed(() => weekAt(weekShift.value))
+const weekTitle = computed(() => {
+  if (weekShift.value === 0) {
+    return translate('home.week')
+  }
+  if (weekShift.value === -1) {
+    return translate('home.lastWeek')
+  }
+  const days = week.value
+  const range = new Intl.DateTimeFormat(formatLocale.value, {
+    day: 'numeric',
+    month: 'short',
+  }).formatRange(parseISODate(days[0].date), parseISODate(days[6].date))
+
+  return translate('home.weekOf', { range })
+})
 const monthTitle = computed(() =>
   new Intl.DateTimeFormat(formatLocale.value, { month: 'long', year: 'numeric' }).format(
     parseISODate(today),
@@ -284,7 +309,7 @@ const calendar = computed(() =>
       : null,
   ),
 )
-const weekdayNames = computed(() => week.value.map((day) => day.weekday))
+const weekdayNames = computed(() => weekAt(0).map((day) => day.weekday))
 
 function openDay(date: string) {
   void router.push({ path: '/journal', query: { date } })
@@ -319,21 +344,10 @@ function millName(id: string | undefined) {
 <template>
   <main class="page home">
     <header class="page-head home-head">
-      <AppLogo class="home-logo" />
-      <h1 class="home-title">{{ greeting }}</h1>
-      <RouterLink
-        to="/settings"
-        class="icon-btn home-settings"
-        :aria-label="$t('nav.settings')"
-      >
-        <AppIcon name="settings" :size="24" />
-      </RouterLink>
+      <h1>{{ greeting }}</h1>
     </header>
 
-    <div class="home-greeting">
-      <p class="home-hello" aria-hidden="true">{{ greeting }}</p>
-      <p v-if="!inHarvest" class="muted">{{ dateLine }}</p>
-    </div>
+    <p v-if="!inHarvest" class="home-date muted">{{ dateLine }}</p>
 
     <!-- The harvest countdown, outside the harvest when it is near -->
     <section v-if="countdown" class="card home-countdown">
@@ -506,27 +520,41 @@ function millName(id: string | undefined) {
     <!-- This week (phones); this month (computers) -->
     <section v-if="seeWork" class="card home-week">
       <div class="home-checklist-head">
-        <h2>{{ $t('home.week') }}</h2>
+        <h2>{{ weekTitle }}</h2>
+        <button
+          v-if="weekShift !== 0"
+          type="button"
+          class="chip selected home-this-week"
+          @click="weekShift = 0"
+        >
+          {{ $t('common.today') }}
+        </button>
         <RouterLink to="/journal" class="home-link">{{ $t('home.journal') }} ›</RouterLink>
       </div>
-      <div class="home-days">
-        <button
-          v-for="day in week"
-          :key="day.date"
-          type="button"
-          class="home-day"
-          :class="{ today: day.date === today, future: day.future }"
-          :disabled="day.future"
-          :aria-label="whenLabel(day.date)"
-          @click="openDay(day.date)"
-        >
-          <span class="muted">{{ day.weekday }}</span>
-          <strong>{{ day.day }}</strong>
-          <span class="home-dots" aria-hidden="true">
-            <i v-for="(colour, i) in day.dots" :key="i" :style="{ background: colour }"></i>
-          </span>
-        </button>
-      </div>
+      <SwipeTrack
+        v-slot="{ offset }"
+        :can-go="(step) => weekShift + step <= 0"
+        @step="(step) => (weekShift += step)"
+      >
+        <div class="home-days">
+          <button
+            v-for="day in weekAt(weekShift + offset)"
+            :key="day.date"
+            type="button"
+            class="home-day"
+            :class="{ today: day.date === today, future: day.future }"
+            :disabled="day.future"
+            :aria-label="whenLabel(day.date)"
+            @click="openDay(day.date)"
+          >
+            <span class="muted">{{ day.weekday }}</span>
+            <strong>{{ day.day }}</strong>
+            <span class="home-dots" aria-hidden="true">
+              <i v-for="(colour, i) in day.dots" :key="i" :style="{ background: colour }"></i>
+            </span>
+          </button>
+        </div>
+      </SwipeTrack>
     </section>
 
     <section v-if="seeWork" class="card home-month">

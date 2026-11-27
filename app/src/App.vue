@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import type { RouteLocationNormalizedLoaded } from 'vue-router'
 import type { IconName } from './ui/icons'
 import { useTranslation } from 'i18next-vue'
 import { computed, useTemplateRef, watch } from 'vue'
@@ -20,7 +21,9 @@ import AppToast from './ui/AppToast.vue'
 import { hasDraft } from './ui/draft'
 import { type FarmData, provideFarm } from './ui/farm'
 import { useLiveQuery } from './ui/live'
+import PageSheet from './ui/PageSheet.vue'
 import PageSwiper from './ui/PageSwiper.vue'
+import { isSheetPath, sheetBackdrop } from './ui/sheet'
 
 /** The grove data on this phone (picked before the app started). */
 const db = localDb()
@@ -28,6 +31,27 @@ const db = localDb()
 const { t: translate } = useTranslation()
 const route = useRoute()
 const router = useRouter()
+
+/**
+ * The task form slides up as a sheet over the page it was opened from (the home page when the
+ * app opens on it), which stays drawn beneath it, dimmed and out of reach.
+ */
+const sheetOpen = computed(() => isSheetPath(route.path))
+watch(
+  () => route.fullPath,
+  (path) => {
+    if (!isSheetPath(route.path)) {
+      sheetBackdrop.value = path
+    }
+  },
+  { immediate: true },
+)
+const backdrop = computed(
+  () => router.resolve(sheetBackdrop.value) as RouteLocationNormalizedLoaded,
+)
+function closeSheet() {
+  void router.push(sheetBackdrop.value)
+}
 
 function notDeleted<T extends { deletedAt?: number }>(rows: T[]) {
   return rows.filter((row) => !row.deletedAt)
@@ -315,12 +339,33 @@ watch(
   </main>
   <SetupWizard v-else-if="state === 'setup'" />
   <div v-else class="shell">
-    <header class="brand-bar"><AppLogo /></header>
+    <header class="brand-bar">
+      <AppLogo />
+      <RouterLink
+        to="/settings"
+        class="brand-settings"
+        :aria-label="translate('nav.settings')"
+      >
+        <AppIcon name="settings" :size="22" />
+      </RouterLink>
+    </header>
     <PageSwiper ref="pageSwiper" :tabs="tabs">
-      <div class="page-host current">
-        <RouterView :key="route.path" />
+      <div
+        class="page-host current"
+        :inert="sheetOpen || undefined"
+        :aria-hidden="sheetOpen || undefined"
+      >
+        <RouterView
+          :key="sheetOpen ? backdrop.path : route.path"
+          :route="sheetOpen ? backdrop : undefined"
+        />
       </div>
     </PageSwiper>
+    <Transition name="sheet" appear>
+      <PageSheet v-if="sheetOpen" @close="closeSheet">
+        <RouterView :key="route.path" />
+      </PageSheet>
+    </Transition>
     <nav class="bottom-nav">
       <div class="nav-logo"><AppLogo /></div>
       <RouterLink
