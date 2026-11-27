@@ -56,7 +56,8 @@
     "scrollBack": "Previous",
     "scrollMore": "More",
     "openCalendar": "Open calendar",
-    "today": "Today"
+    "today": "Today",
+    "close": "Close"
   },
   "setup": {
     "welcome": "Welcome to Mazono",
@@ -965,6 +966,8 @@
     "nothingYet": "Nothing yet. Tap + to log your first work.",
     "today": "Today",
     "yesterday": "Yesterday",
-    "oilKg": "{{kg}} kg oil"
+    "oilKg": "{{kg}} kg oil",
+    "lastWeek": "Last week",
+    "weekOf": "{{range}}"
   }
 }

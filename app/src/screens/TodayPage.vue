@@ -32,6 +32,7 @@ import NewUnitModal from '../ui/NewUnitModal.vue'
 import NumberStepper from '../ui/NumberStepper.vue'
 import { useSaving } from '../ui/saving'
 import ScrollRow from '../ui/ScrollRow.vue'
+import { sheetBackdrop } from '../ui/sheet'
 import { slideIn } from '../ui/slide'
 import TaskIcon from '../ui/TaskIcon.vue'
 import { showToast } from '../ui/toast'
@@ -429,7 +430,11 @@ async function saveEntry() {
   draft.clear()
   if (editing) {
     showToast({ title: translate('today.updated') })
-    void router.push({ path: '/journal', query: { date: date.value } })
+    void router.push(
+      sheetBackdrop.value.startsWith('/journal')
+        ? { path: '/journal', query: { date: date.value } }
+        : sheetBackdrop.value,
+    )
 
     return
   }
@@ -525,12 +530,9 @@ const canEditSettings = computed(() => canDo(farm.value, 'settings', 'change'))
 <template>
   <main class="page today">
     <header class="page-head">
-      <RouterLink
-        :to="editing ? { path: '/journal', query: { date: editing.date } } : '/'"
-        class="back-link"
-      >
-        <AppIcon name="chevronLeft" :size="24" /><span class="back-text">{{
-          editing ? $t('nav.journal') : $t('nav.home')
+      <RouterLink :to="sheetBackdrop" class="back-link sheet-close">
+        <AppIcon name="clear" :size="24" /><span class="back-text">{{
+          $t('common.close')
         }}</span>
       </RouterLink>
       <h1>{{ editing ? $t('today.editTitle') : $t('today.title') }}</h1>
@@ -712,7 +714,12 @@ const canEditSettings = computed(() => canDo(farm.value, 'settings', 'change'))
     <p v-if="error" class="error">{{ error }}</p>
 
     <div v-if="fieldId" class="save-bar">
-      <button v-if="editing" type="button" class="btn ghost" @click="router.back()">
+      <button
+        v-if="editing"
+        type="button"
+        class="btn ghost"
+        @click="router.push(sheetBackdrop)"
+      >
         {{ $t('common.cancel') }}
       </button>
       <button type="button" class="btn primary big" :disabled="saving" @click="save">
