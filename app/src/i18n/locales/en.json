@@ -951,7 +951,7 @@
     "productions_other": "from {{count}} productions",
     "noProductions": "Nothing picked yet",
     "notWeighed": "before weighing",
-    "oil": "Oil",
+    "oil": "Olive oil",
     "yield": "yield {{value}}",
     "seasonOf": "year {{season}}",
     "stock": "Oil in stock",
@@ -969,6 +969,11 @@
     "yesterday": "Yesterday",
     "oilKg": "{{kg}} kg oil",
     "lastWeek": "Last week",
-    "weekOf": "{{range}}"
+    "weekOf": "{{range}}",
+    "weighedPlusEstimate": "{{weighed}} weighed + ≈\u00a0{{estimated}} estimated",
+    "estimateNotWeighed": "estimate, before weighing",
+    "madePlusEstimate": "{{made}} delivered + ≈\u00a0{{estimated}} estimated",
+    "estimateFromOlives": "estimate from olives not weighed yet",
+    "estimateLater": "estimate after the first production"
   }
 }
