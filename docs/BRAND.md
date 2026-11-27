@@ -117,7 +117,7 @@ stress falls. The olive is always green; the leaf is always the letters' colour.
 | Growth `--grow` (progress bars, income, shading) | `#5F7230` | `#A9BD63` |
 | The hill `--hill` | `#DCE5C4` | `#25301C` |
 
-Every page (not the first-start screens) opens with a green hill: the page title sits in it,
+Every main page (not the first-start screens, and not the forms that slide up as sheets, which have a plain title row) opens with a green hill: the page title sits in it,
 the small logo and the settings gear at the right end of the same row on phones, and the wavy lower edge falls in
 the space before the content, so nothing covers it. The title row is the same height on every
 page (48 px), so the hill and its wave sit at exactly the same place on every tab; a title too
