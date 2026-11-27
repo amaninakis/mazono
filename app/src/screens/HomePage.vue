@@ -25,7 +25,7 @@ import {
   weekDays,
 } from '../core/home'
 import { stockLevels } from '../core/oil'
-import { yearSummary } from '../core/yearReport'
+import { oilEstimate, oliveEstimate, yearSummary } from '../core/yearReport'
 import { formatLocale } from '../i18n'
 import { account } from '../sync/account'
 import AppIcon from '../ui/AppIcon.vue'
@@ -204,12 +204,57 @@ const summary = computed(() =>
     seasonStartMonth: startMonth.value,
   }),
 )
-/** Olives: weighed at the mill once there is a production, else the units collected. */
+/**
+ * Olives of the year: weighed at the mill, plus an estimate (≈) for those not taken to the
+ * mill yet, from what each unit weighed (see oliveEstimate, the same as in This year's
+ * report). Without any way to tell their weight yet, the units collected.
+ */
+const olives = computed(() =>
+  oliveEstimate({
+    season: season.value,
+    entries: farm.value.entries,
+    extractions: farm.value.extractions,
+    units: farm.value.units,
+    harvestTypeIds: new Set(
+      farm.value.taskTypes
+        .filter((type) => type.inputKind === 'harvest' && !type.deletedAt)
+        .map((type) => type.id),
+    ),
+    seasonStartMonth: startMonth.value,
+  }),
+)
+/** Olive oil: delivered so far, plus what the olives not weighed yet should give (≈). */
+const oil = computed(() =>
+  oilEstimate({
+    season: season.value,
+    extractions: farm.value.extractions,
+    olives: olives.value,
+    seasonStartMonth: startMonth.value,
+  }),
+)
+
+function kgText(value: number) {
+  return formatNumber(value, formatLocale.value, 0)
+}
+
 const olivesLine = computed(() => {
-  const loc = formatLocale.value
-  if (summary.value.oliveKg > 0) {
+  const { weighedKg, estimatedKg, totalKg } = olives.value
+  if (estimatedKg > 0) {
     return {
-      value: formatNumber(summary.value.oliveKg, loc, 0),
+      value: `≈\u00A0${kgText(totalKg)}`,
+      unit: 'kg',
+      note:
+        weighedKg > 0
+          ? translate('home.weighedPlusEstimate', {
+              weighed: kgText(weighedKg),
+              estimated: kgText(estimatedKg),
+            })
+          : translate('home.estimateNotWeighed'),
+    }
+  }
+  if (weighedKg > 0) {
+    return {
+      value: kgText(weighedKg),
       unit: 'kg',
       note: translate('home.productions', { count: summary.value.productions }),
     }
@@ -222,25 +267,46 @@ const olivesLine = computed(() => {
   }
 
   return {
-    value: formatNumber(amount, loc, 0),
+    value: kgText(amount),
     unit: unit.name,
     note: translate('home.notWeighed'),
   }
 })
-const oilLine = computed(() => ({
-  value: formatNumber(summary.value.netOilKg, formatLocale.value, 0),
-  note:
-    summary.value.oliveKg > 0
-      ? translate('home.yield', {
-          value: formatYield(
-            summary.value.oliveKg,
-            summary.value.oilKg,
-            farm.value.settings.yieldFormat,
-            formatLocale.value,
-          ),
-        })
-      : translate('home.seasonOf', { season: seasonLabel(season.value) }),
-}))
+const oilLine = computed(() => {
+  const { netMadeKg, expectedNetKg } = oil.value
+  if (expectedNetKg > 0) {
+    return {
+      value: `≈\u00A0${kgText(netMadeKg + expectedNetKg)}`,
+      note:
+        netMadeKg > 0
+          ? translate('home.madePlusEstimate', {
+              made: kgText(netMadeKg),
+              estimated: kgText(expectedNetKg),
+            })
+          : translate('home.estimateFromOlives'),
+    }
+  }
+
+  if (oil.value.missing.includes('yield')) {
+    // Olives are waiting, but without any production yet there is no yield to go by.
+    return { value: kgText(summary.value.netOilKg), note: translate('home.estimateLater') }
+  }
+
+  return {
+    value: kgText(summary.value.netOilKg),
+    note:
+      summary.value.oliveKg > 0
+        ? translate('home.yield', {
+            value: formatYield(
+              summary.value.oliveKg,
+              summary.value.oilKg,
+              farm.value.settings.yieldFormat,
+              formatLocale.value,
+            ),
+          })
+        : translate('home.seasonOf', { season: seasonLabel(season.value) }),
+  }
+})
 
 const stock = computed(() =>
   oilInStock(

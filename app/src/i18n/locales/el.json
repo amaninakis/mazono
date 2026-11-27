@@ -951,7 +951,7 @@
     "productions_other": "από {{count}} παραγωγές",
     "noProductions": "Ακόμα δεν μαζέψατε",
     "notWeighed": "πριν το ζύγισμα",
-    "oil": "Λάδι",
+    "oil": "Ελαιόλαδο",
     "yield": "απόδοση {{value}}",
     "seasonOf": "χρονιά {{season}}",
     "stock": "Λάδι σε απόθεμα",
@@ -969,6 +969,11 @@
     "yesterday": "Χθες",
     "oilKg": "{{kg}} kg λάδι",
     "lastWeek": "Προηγούμενη εβδομάδα",
-    "weekOf": "{{range}}"
+    "weekOf": "{{range}}",
+    "weighedPlusEstimate": "{{weighed}} ζυγισμένα + ≈\u00a0{{estimated}} εκτίμηση",
+    "estimateNotWeighed": "εκτίμηση, πριν το ζύγισμα",
+    "madePlusEstimate": "{{made}} παραδοτέο + ≈\u00a0{{estimated}} εκτίμηση",
+    "estimateFromOlives": "εκτίμηση από τις ελιές που δεν ζυγίστηκαν",
+    "estimateLater": "εκτίμηση μετά την πρώτη παραγωγή"
   }
 }
